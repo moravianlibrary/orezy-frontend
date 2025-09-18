@@ -1,5 +1,6 @@
-import { Component } from '@angular/core';
+import { Component, inject, signal } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
+import { ImagesService } from '../../services/images.service';
 
 @Component({
   selector: 'app-main',
@@ -8,5 +9,5 @@ import { RouterOutlet } from '@angular/router';
   styleUrl: './main.component.scss'
 })
 export class MainComponent {
-
+  imagesService = inject(ImagesService);
 }

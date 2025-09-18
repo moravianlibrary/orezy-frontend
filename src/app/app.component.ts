@@ -1,7 +1,7 @@
 import { Component } from '@angular/core';
-import { MainComponent } from './main/main.component';
-import { PreviewbarComponent } from './previewbar/previewbar.component';
-import { ToolbarComponent } from './toolbar/toolbar.component';
+import { MainComponent } from './layout/main/main.component';
+import { PreviewbarComponent } from './layout/previewbar/previewbar.component';
+import { ToolbarComponent } from './layout/toolbar/toolbar.component';
 
 @Component({
   selector: 'app-root',
@@ -10,5 +10,4 @@ import { ToolbarComponent } from './toolbar/toolbar.component';
   styleUrl: './app.component.scss'
 })
 export class AppComponent {
-  title = 'orezy-frontend';
 }

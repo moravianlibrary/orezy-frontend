@@ -1,0 +1,3 @@
+@for (imageUrl of imagesService.imageUrls(); track $index) {
+  <img [src]="imageUrl" [alt]="'preview image ' + ($index + 1)" />
+}

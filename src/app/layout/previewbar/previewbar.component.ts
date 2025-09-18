@@ -1,4 +1,5 @@
-import { Component } from '@angular/core';
+import { Component, inject } from '@angular/core';
+import { ImagesService } from '../../services/images.service';
 
 @Component({
   selector: 'app-previewbar',
@@ -7,5 +8,5 @@ import { Component } from '@angular/core';
   styleUrl: './previewbar.component.scss'
 })
 export class PreviewbarComponent {
-
+  imagesService = inject(ImagesService);
 }
