@@ -12,6 +12,7 @@ export class ImagesService {
 
   images = signal<Image[]>([]);
   imageUrls = computed(() => this.images().map((i: Image) => i.url));
+  mainImageUrl = signal<string>('');
 
   fetchImages(): Observable<Image[]> {
     return this.http.get<Image[]>(`${this.imagesBaseUrl}/api/images`);

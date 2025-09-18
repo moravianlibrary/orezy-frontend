@@ -9,4 +9,8 @@ import { ImagesService } from '../../services/images.service';
 })
 export class PreviewbarComponent {
   imagesService = inject(ImagesService);
+
+  becomeMainImage(imageUrl: string): void {
+    this.imagesService.mainImageUrl.set(imageUrl);
+  }
 }

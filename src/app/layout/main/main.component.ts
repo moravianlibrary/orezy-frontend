@@ -10,4 +10,8 @@ import { ImagesService } from '../../services/images.service';
 })
 export class MainComponent {
   imagesService = inject(ImagesService);
+
+  ngOnInit(): void {
+    this.imagesService.mainImageUrl.set(this.imagesService.imageUrls()[0]);
+  }
 }
