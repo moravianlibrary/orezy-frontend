@@ -1,7 +1,40 @@
-@for (imageUrl of imagesService.imageUrls(); track $index) {
-  <img
-    [src]="imageUrl"
-    [alt]="'preview image ' + ($index + 1)"
-    (click)="becomeMainImage(imageUrl)"
-  />
+@if (imagesService.flaggedImages().length) {
+  <p>Skeny v nepořádku:</p>
+  @for (image of imagesService.flaggedImages(); track $index) {
+    <div class="wrapper">
+      <img
+        [src]="image.url"
+        [alt]="'preview image ' + ($index + 1)"
+        [class.selected]="imagesService.mainImageUrl() === image.url"
+        (click)="becomeMainImage(image.url)"
+      />
+      <div>
+        {{ image.name }}
+        @if (image.lowConfidence) { 🫥 }
+        @if (image.badSidesRatio) { 📐 }
+      </div>
+    </div>
+  }
+} @else {
+  <p>Všechny skeny jsou v pořádku.</p>
+}
+
+<button (click)="toggleMorePreview()">Zobrazit zbytek, co je cajkoš</button>
+
+@if (toggledMore) {
+  @if (imagesService.notFlaggedImages().length) {
+    @for (image of imagesService.notFlaggedImages(); track $index) {
+      <div class="wrapper">
+        <img
+          [src]="image.url"
+          [alt]="'preview image ' + ($index + 1)"
+          [class.selected]="imagesService.mainImageUrl() === image.url"
+          (click)="becomeMainImage(image.url)"
+        />
+        <div>{{ image.name }}</div>
+      </div>
+    }
+  } @else {
+    <p>Žádné skeny nejsou v pořádku.</p>
+  }
 }
