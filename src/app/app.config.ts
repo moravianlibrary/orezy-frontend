@@ -19,7 +19,7 @@ export const appConfig: ApplicationConfig = {
         tap(({ images, transformations }) => {
           imagesService.images.set(images);
           imagesService.transformations.set(transformations);
-          imagesService.avgSideRation = transformations.reduce((acc, curr) => acc + curr.width/curr.height, 0) / transformations.length;
+          imagesService.avgSideRatio = transformations.reduce((acc, curr) => acc + curr.width/curr.height, 0) / transformations.length;
         })
       );
     })

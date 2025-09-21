@@ -16,8 +16,8 @@ export class ImagesService {
   leftTransformations = computed<Transformation[]>(() => this.transformations().filter((t, i, a) => t.image_path === a[i + 1]?.image_path));
   rightTransformations = computed<Transformation[]>(() => this.transformations().filter((t, i, a) => t.image_path === a[i - 1]?.image_path));
   confidenceThreshold: number = .9;
-  avgSideRation: number = 0;
-  sideRationThreshold: number = .02;
+  avgSideRatio: number = 0;
+  sideRatioThreshold: number = .02;
 
   flaggedImages = computed<ImageItem[]>(() => {    
     const imgs = this.images();
@@ -26,11 +26,11 @@ export class ImagesService {
     const flagsByName = new Map<string, ImageFlags>();
 
     for (const t of tfs) {
-      const ratioDiff = Math.abs(t.width/t.height - this.avgSideRation);
+      const ratioDiff = Math.abs(t.width/t.height - this.avgSideRatio);
       const flags: ImageFlags = flagsByName.get(t.image_path) ?? {};
 
       if (t.confidence < this.confidenceThreshold) flags.lowConfidence = true;
-      if (ratioDiff > this.sideRationThreshold) flags.badSidesRatio = true;
+      if (ratioDiff > this.sideRatioThreshold) flags.badSidesRatio = true;
       if (flags.lowConfidence || flags.badSidesRatio) flagsByName.set(t.image_path, flags);
     }
 
