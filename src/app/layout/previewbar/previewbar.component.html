@@ -1,5 +1,5 @@
 @if (imagesService.flaggedImages().length) {
-  <p>Skeny v nepořádku:</p>
+  <p>Skeny v nepořádku ({{ imagesService.flaggedImages().length }}):</p>
   @for (image of imagesService.flaggedImages(); track $index) {
     <div class="wrapper">
       <img
@@ -19,7 +19,7 @@
   <p>Všechny skeny jsou v pořádku.</p>
 }
 
-<button (click)="toggleMorePreview()">Zobrazit zbytek, co je cajkoš</button>
+<button (click)="toggleMorePreview()">Zobrazit zbytek, co je cajkoš ({{ imagesService.notFlaggedImages().length }})</button>
 
 @if (toggledMore) {
   @if (imagesService.notFlaggedImages().length) {
