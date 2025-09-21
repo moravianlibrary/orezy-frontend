@@ -12,18 +12,10 @@ export class PreviewbarComponent {
   toggledMore: boolean = false;
 
   becomeMainImage(imageUrl: string): void {
-    this.imagesService.mainImageUrl.set(imageUrl);
+    this.imagesService.setMainImage(imageUrl);
   }
 
   toggleMorePreview(): void {
     this.toggledMore = !this.toggledMore;
-  }
-
-  ngAfterViewInit(): void {
-    // console.log(this.imagesService.leftTransformations());
-    // console.log(this.imagesService.rightTransformations());
-    // console.log(this.imagesService.avgSideRation);
-    // console.log(this.imagesService.flaggedImages());
-    // console.log(this.imagesService.notFlaggedImages().length);
   }
 }

@@ -12,6 +12,6 @@ export class MainComponent {
   imagesService = inject(ImagesService);
 
   ngOnInit(): void {
-    this.imagesService.mainImageUrl.set(this.imagesService.flaggedImages()[0].url);
+    this.imagesService.setMainImage(this.imagesService.flaggedImages()[0].url);
   }
 }

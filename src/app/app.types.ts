@@ -1,4 +1,4 @@
-export interface Image {
+export interface ImageItem {
   name: string;
   url: string;
   lowConfidence: boolean;

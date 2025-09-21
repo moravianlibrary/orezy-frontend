@@ -5,7 +5,7 @@
       <img
         [src]="image.url"
         [alt]="'preview image ' + ($index + 1)"
-        [class.selected]="imagesService.mainImageUrl() === image.url"
+        [class.selected]="imagesService.mainImageUrl === image.url"
         (click)="becomeMainImage(image.url)"
       />
       <div>
@@ -28,7 +28,7 @@
         <img
           [src]="image.url"
           [alt]="'preview image ' + ($index + 1)"
-          [class.selected]="imagesService.mainImageUrl() === image.url"
+          [class.selected]="imagesService.mainImageUrl === image.url"
           (click)="becomeMainImage(image.url)"
         />
         <div>{{ image.name }}</div>
