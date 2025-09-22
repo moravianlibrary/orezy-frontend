@@ -13,14 +13,14 @@ export class ImagesService {
   images = signal<ImageItem[]>([]);
   mainImageUrl: string = '';
   transformations = signal<Transformation[]>([]);
-  // leftTransformations = computed<Transformation[]>(() => this.transformations().filter((t, i, a) => t.image_path === a[i + 1]?.image_path));
-  // rightTransformations = computed<Transformation[]>(() => this.transformations().filter((t, i, a) => t.image_path === a[i - 1]?.image_path));
+  leftTransformations = computed<Transformation[]>(() => this.transformations().filter(t => t.image_part === 1));
+  rightTransformations = computed<Transformation[]>(() => this.transformations().filter(t => t.image_part === 2));
   confidenceThreshold: number = .9;
   avgSideRatio: number = 0;
   sideRatioThreshold: number = .02;
 
-  flaggedImages = computed<ImageItem[]>(() => this.images().filter(img => img.lowConfidence || img.badSidesRatio));
-  notFlaggedImages = computed<ImageItem[]>(() => this.images().filter(img => !img.lowConfidence && !img.badSidesRatio));
+  flaggedImages = computed<ImageItem[]>(() => this.images().filter(img => img.low_confidence || img.bad_sides_ratio));
+  notFlaggedImages = computed<ImageItem[]>(() => this.images().filter(img => !img.low_confidence && !img.bad_sides_ratio));
 
   mode = signal<'edit' | 'final'>('final');
 

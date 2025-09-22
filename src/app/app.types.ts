@@ -1,13 +1,13 @@
 export interface ImageItem {
   name: string;
   url: string;
-  lowConfidence: boolean;
-  badSidesRatio: boolean;
+  low_confidence: boolean;
+  bad_sides_ratio: boolean;
 }
 
 export interface ImageFlags {
-  lowConfidence?: boolean;
-  badSidesRatio?: boolean;
+  low_confidence?: boolean;
+  bad_sides_ratio?: boolean;
 }
 
 export interface Transformation {
@@ -19,6 +19,6 @@ export interface Transformation {
   confidence: number;
   angle: number;
   image_part: number;
-  lowConfidence: boolean;
-  badSidesRatio: boolean;
+  low_confidence: boolean;
+  bad_sides_ratio: boolean;
 }

@@ -14,34 +14,40 @@ export const appConfig: ApplicationConfig = {
     provideAppInitializer(() => {
       const imagesService = inject(ImagesService);
       return forkJoin({
-        images: imagesService.fetchImages(),
-        transformations: imagesService.fetchTransformations()
+        imgs: imagesService.fetchImages(),
+        tfs: imagesService.fetchTransformations()
       }).pipe(
-        tap(({ images, transformations }) => {
-          imagesService.avgSideRatio = transformations.length ? transformations.reduce((sum, t) => sum + t.width / t.height, 0) / transformations.length : 0;
+        tap(({ imgs, tfs }) => {
+          imagesService.avgSideRatio = tfs.length ? tfs.reduce((sum, t) => sum + t.width / t.height, 0) / tfs.length : 0;
           const flagsByName = new Map<string, ImageFlags>();
 
-          // Enrich transformations by lowConfidence and badSidesRatio
-          for (const t of transformations) {
+          // Enrich transformations...
+          for (let i = 0; i < tfs.length; i++) {
+            const t = tfs[i];
+
+            // ...by low_confidence and bad_sides_ratio
             const ratioDiff = Math.abs(t.width/t.height - imagesService.avgSideRatio);
-            t.lowConfidence = t.confidence < imagesService.confidenceThreshold;
-            t.badSidesRatio = ratioDiff > imagesService.sideRatioThreshold;
+            t.low_confidence = t.confidence < imagesService.confidenceThreshold;
+            t.bad_sides_ratio = ratioDiff > imagesService.sideRatioThreshold;
 
             const flags: ImageFlags = flagsByName.get(t.image_path) ?? {};
-            flags.lowConfidence = flags.lowConfidence ? flags.lowConfidence : t.lowConfidence;
-            flags.badSidesRatio = flags.badSidesRatio ? flags.badSidesRatio : t.badSidesRatio;
+            flags.low_confidence = flags.low_confidence ? flags.low_confidence : t.low_confidence;
+            flags.bad_sides_ratio = flags.bad_sides_ratio ? flags.bad_sides_ratio : t.bad_sides_ratio;
             flagsByName.set(t.image_path, flags);
+            
+            // ...by image_part
+            t.image_part = t.image_path === tfs[i - 1]?.image_path ? 2 : 1;
           }
 
           // Enrich images
           const resultImages: ImageItem[] = [];
-          for (const img of images) {
+          for (const img of imgs) {
             const f = flagsByName.get(img.name);
             resultImages.push({ ...img, ...f });
           }
           
           imagesService.images.set(resultImages);
-          imagesService.transformations.set(transformations);
+          imagesService.transformations.set(tfs);
         })
       );
     })
