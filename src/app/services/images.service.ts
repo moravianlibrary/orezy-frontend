@@ -13,40 +13,16 @@ export class ImagesService {
   images = signal<ImageItem[]>([]);
   mainImageUrl: string = '';
   transformations = signal<Transformation[]>([]);
-  leftTransformations = computed<Transformation[]>(() => this.transformations().filter((t, i, a) => t.image_path === a[i + 1]?.image_path));
-  rightTransformations = computed<Transformation[]>(() => this.transformations().filter((t, i, a) => t.image_path === a[i - 1]?.image_path));
+  // leftTransformations = computed<Transformation[]>(() => this.transformations().filter((t, i, a) => t.image_path === a[i + 1]?.image_path));
+  // rightTransformations = computed<Transformation[]>(() => this.transformations().filter((t, i, a) => t.image_path === a[i - 1]?.image_path));
   confidenceThreshold: number = .9;
   avgSideRatio: number = 0;
   sideRatioThreshold: number = .02;
 
-  flaggedImages = computed<ImageItem[]>(() => {    
-    const imgs = this.images();
-    const tfs = this.transformations();
+  flaggedImages = computed<ImageItem[]>(() => this.images().filter(img => img.lowConfidence || img.badSidesRatio));
+  notFlaggedImages = computed<ImageItem[]>(() => this.images().filter(img => !img.lowConfidence && !img.badSidesRatio));
 
-    const flagsByName = new Map<string, ImageFlags>();
-
-    for (const t of tfs) {
-      const ratioDiff = Math.abs(t.width/t.height - this.avgSideRatio);
-      const flags: ImageFlags = flagsByName.get(t.image_path) ?? {};
-
-      if (t.confidence < this.confidenceThreshold) flags.lowConfidence = true;
-      if (ratioDiff > this.sideRatioThreshold) flags.badSidesRatio = true;
-      if (flags.lowConfidence || flags.badSidesRatio) flagsByName.set(t.image_path, flags);
-    }
-
-    const result: ImageItem[] = [];
-    for (const img of imgs) {
-      const f = flagsByName.get(img.name);
-      if (f) result.push({ ...img, ...f });
-    }
-
-    return result;
-  });
-
-  notFlaggedImages = computed<ImageItem[]>(() => {
-    const flaggedNames = new Set(this.flaggedImages().map(f => f.name));
-    return this.images().filter(img => !flaggedNames.has(img.name));
-  });
+  mode = signal<'edit' | 'final'>('final');
 
   fetchImages(): Observable<ImageItem[]> {
     return this.http.get<ImageItem[]>(`${this.serverBaseUrl}/api/images`);
@@ -67,6 +43,7 @@ export class ImagesService {
 
     const img = new Image();
     img.src = imageUrl;
+    this.mainImageUrl = imageUrl;
 
     img.onload = () => {
       ctx.drawImage(img, 0, 0, c.width, c.height);

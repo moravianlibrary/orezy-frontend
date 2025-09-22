@@ -18,4 +18,7 @@ export interface Transformation {
   height: number;
   confidence: number;
   angle: number;
+  image_part: number;
+  lowConfidence: boolean;
+  badSidesRatio: boolean;
 }
