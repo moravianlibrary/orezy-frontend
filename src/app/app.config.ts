@@ -22,9 +22,7 @@ export const appConfig: ApplicationConfig = {
           const flagsByName = new Map<string, ImageFlags>();
 
           // Enrich transformations...
-          for (let i = 0; i < tfs.length; i++) {
-            const t = tfs[i];
-
+          for (const t of tfs) {
             // ...by low_confidence and bad_sides_ratio
             const ratioDiff = Math.abs(t.width/t.height - imagesService.avgSideRatio);
             t.low_confidence = t.confidence < imagesService.confidenceThreshold;
@@ -36,7 +34,7 @@ export const appConfig: ApplicationConfig = {
             flagsByName.set(t.image_path, flags);
             
             // ...by crop_part
-            t.crop_part = t.image_path === tfs[i - 1]?.image_path ? 2 : 1;
+            t.crop_part = t.x_center > 0.5 ? 2 : 1;
           }
 
           // Enrich images

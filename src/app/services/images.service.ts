@@ -26,6 +26,8 @@ export class ImagesService {
   // Main
   mainImageUrl: string = '';
   mode = signal<'edit' | 'final'>('edit');
+  leftColor: string = '#00BFFF';
+  rightColor: string = '#FF10F0';
 
   fetchImages(): Observable<ImageItem[]> {
     return this.http.get<ImageItem[]>(`${this.serverBaseUrl}/api/images`);
@@ -67,6 +69,7 @@ export class ImagesService {
   }
 
   private drawRectangle(ctx: CanvasRenderingContext2D, cWidth: number, cHeight: number, t: Transformation): void {
+    console.log(t);
     const centerX = cWidth * t.x_center;
     const centerY = cHeight * t.y_center;
     const angle = (t.angle * Math.PI) / 180;
@@ -79,9 +82,9 @@ export class ImagesService {
     // Rotate
     ctx.rotate(angle);
 
-    // Draw rectangle (adjust because pivot is now origin)
-    ctx.fillStyle = 'transparent';
-    ctx.strokeStyle = t.crop_part === 1 ? '#00BFFF' : '#FF10F0';
+    // Draw rectangle
+    ctx.fillStyle = (t.crop_part === 1 ? this.leftColor : this.rightColor) + '10';
+    ctx.strokeStyle = t.crop_part === 1 ? this.leftColor : this.rightColor;
     ctx.lineWidth = 2;
     ctx.beginPath();
     ctx.rect(centerX - (width / 2), centerY - (height / 2), width, height);
