@@ -6,7 +6,7 @@
         [src]="image.url"
         [alt]="'preview image ' + ($index + 1)"
         [class.selected]="imagesService.mainImageUrl === image.url"
-        (click)="becomeMainImage(image.url)"
+        (click)="imagesService.setMainImage(image.name, 'flagged')"
       />
       <div>
         {{ image.name }}
@@ -19,7 +19,7 @@
   <p>Všechny skeny jsou v pořádku.</p>
 }
 
-<button (click)="toggleMorePreview()">Zobrazit zbytek, co je cajkoš ({{ imagesService.notFlaggedImages().length }})</button>
+@if (imagesService.notFlaggedImages().length) { <button (click)="toggleMorePreview()">Zobrazit zbytek, co je cajkoš ({{ imagesService.notFlaggedImages().length }})</button> }
 
 @if (toggledMore) {
   @if (imagesService.notFlaggedImages().length) {
@@ -29,7 +29,7 @@
           [src]="image.url"
           [alt]="'preview image ' + ($index + 1)"
           [class.selected]="imagesService.mainImageUrl === image.url"
-          (click)="becomeMainImage(image.url)"
+          (click)="imagesService.setMainImage(image.name, 'not flagged')"
         />
         <div>{{ image.name }}</div>
       </div>

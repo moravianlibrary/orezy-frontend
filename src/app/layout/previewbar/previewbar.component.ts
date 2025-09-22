@@ -11,10 +11,6 @@ export class PreviewbarComponent {
   imagesService = inject(ImagesService);
   toggledMore: boolean = false;
 
-  becomeMainImage(imageUrl: string): void {
-    this.imagesService.setMainImage(imageUrl);
-  }
-
   toggleMorePreview(): void {
     this.toggledMore = !this.toggledMore;
   }

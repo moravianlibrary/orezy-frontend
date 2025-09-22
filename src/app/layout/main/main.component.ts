@@ -1,4 +1,4 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
 import { ImagesService } from '../../services/images.service';
 
@@ -12,6 +12,6 @@ export class MainComponent {
   imagesService = inject(ImagesService);
 
   ngOnInit(): void {
-    this.imagesService.setMainImage(this.imagesService.flaggedImages()[0].url);
+    this.imagesService.setMainImage(this.imagesService.flaggedImages()[0].name, 'flagged');
   }
 }

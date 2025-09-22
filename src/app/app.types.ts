@@ -18,7 +18,7 @@ export interface Transformation {
   height: number;
   confidence: number;
   angle: number;
-  image_part: number;
+  crop_part: number;
   low_confidence: boolean;
   bad_sides_ratio: boolean;
 }
