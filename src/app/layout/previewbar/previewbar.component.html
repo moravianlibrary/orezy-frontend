@@ -1,5 +1,7 @@
 @if (imagesService.flaggedImages().length) {
   <p>Skeny v nepořádku ({{ imagesService.flaggedImages().length }}):</p>
+  <p>confidenceThreshold: {{ imagesService.confidenceThreshold }}</p>
+  <p>sideRatioThreshold: {{ imagesService.sideRatioThreshold }}</p>
   @for (image of imagesService.flaggedImages(); track $index) {
     <div class="wrapper">
       <img
