@@ -24,7 +24,7 @@ export class ImagesService {
   avgSideRatio: number = 0;
 
   // Main
-  mainImageUrl: string = '';
+  mainImageName: string = '';
   modes: string[] = ['edit', 'final-single', 'final-full'];
   mode = signal<string>(this.modes[0]);
   leftColor: string = '#00BFFF';
@@ -38,7 +38,7 @@ export class ImagesService {
     return this.http.get<Transformation[]>(`${this.serverBaseUrl}/api/transformations`);
   }
 
-  setMainImage(imageName: string, type: 'flagged' | 'not flagged'): void {
+  setMainImage(imageName: string): void {
     const c = document.getElementById('canvas') as HTMLCanvasElement;
     const ctx = c.getContext('2d');
     if (!ctx) return;
@@ -49,18 +49,27 @@ export class ImagesService {
     c.height = rect.height;
 
     // Set mode & url
-    this.mode.set(type === 'flagged' ? 'edit' : 'final-single');
-    this.mainImageUrl = this.getImageUrl(imageName);
+    this.mainImageName = imageName;
 
     // Draw image
     const img = new Image();
-    img.src = this.mainImageUrl;
+    img.src = this.getImageUrl(imageName);
     img.onerror = () => { console.error('Failed to load image.') };
     img.onload = () => {
       ctx.drawImage(img, 0, 0, c.width, c.height);
 
-    // Draw cropping rectangles
-    this.transformations().filter(t => t.image_path === imageName).map(t => this.drawRectangle(ctx, c.width, c.height, t));
+      // Show crops
+      switch (this.mode()) {
+        case 'edit':
+          // this.transformations().filter(t => t.image_path === imageName).map(t => this.drawRectangle(ctx, c.width, c.height, t));
+          break;
+        case 'final-single':
+          // this.transformations().filter(t => t.image_path === imageName).map(t => this.drawRectangle(ctx, c.width, c.height, t));
+          break;
+        case 'final-full':
+          this.transformations().filter(t => t.image_path === imageName).map(t => this.drawRectangle(ctx, c.width, c.height, t));
+          break;
+      }
     };
   }
   
@@ -80,14 +89,15 @@ export class ImagesService {
     ctx.save();
 
     // Rotate
-    ctx.rotate(angle);
+    ctx.translate(centerX, centerY);
+    ctx.rotate(-angle);
 
     // Draw rectangle
     ctx.fillStyle = (t.crop_part === 1 ? this.leftColor : this.rightColor) + '10';
     ctx.strokeStyle = t.crop_part === 1 ? this.leftColor : this.rightColor;
     ctx.lineWidth = 2;
     ctx.beginPath();
-    ctx.rect(centerX - (width / 2), centerY - (height / 2), width, height);
+    ctx.rect(-width / 2, -height / 2, width, height);
     ctx.fill();
     ctx.stroke();
 

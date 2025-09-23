@@ -13,6 +13,6 @@ export class MainComponent {
   imagesService = inject(ImagesService);
 
   ngOnInit(): void {
-    this.imagesService.setMainImage(this.imagesService.flaggedImages()[0].name, 'flagged');
+    this.imagesService.setMainImage(this.imagesService.flaggedImages()[0].name);
   }
 }

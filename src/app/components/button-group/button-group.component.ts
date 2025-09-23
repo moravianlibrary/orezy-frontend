@@ -12,5 +12,6 @@ export class ButtonGroupComponent {
 
   select(mode: string): void {
     this.imagesService.mode.set(mode);
+    this.imagesService.setMainImage(this.imagesService.mainImageName);
   }
 }

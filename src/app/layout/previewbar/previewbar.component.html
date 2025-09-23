@@ -7,8 +7,8 @@
       <img
         [src]="image.url"
         [alt]="'preview image ' + ($index + 1)"
-        [class.selected]="imagesService.mainImageUrl === image.url"
-        (click)="imagesService.setMainImage(image.name, 'flagged')"
+        [class.selected]="imagesService.mainImageName === image.name"
+        (click)="imagesService.setMainImage(image.name)"
       />
       <div>
         {{ image.name }}
@@ -30,8 +30,8 @@
         <img
           [src]="image.url"
           [alt]="'preview image ' + ($index + 1)"
-          [class.selected]="imagesService.mainImageUrl === image.url"
-          (click)="imagesService.setMainImage(image.name, 'not flagged')"
+          [class.selected]="imagesService.mainImageName === image.name"
+          (click)="imagesService.setMainImage(image.name)"
         />
         <div>{{ image.name }}</div>
       </div>
