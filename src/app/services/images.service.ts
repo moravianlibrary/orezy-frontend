@@ -20,12 +20,13 @@ export class ImagesService {
   rightTransformations = computed<Transformation[]>(() => this.transformations().filter(t => t.crop_part === 2));
 
   confidenceThreshold: number = .9;
-  sideRatioThreshold: number = .02;
+  sideRatioThreshold: number = .1;
   avgSideRatio: number = 0;
 
   // Main
   mainImageUrl: string = '';
-  mode = signal<'edit' | 'final'>('edit');
+  modes: string[] = ['edit', 'final-single', 'final-full'];
+  mode = signal<string>(this.modes[0]);
   leftColor: string = '#00BFFF';
   rightColor: string = '#FF10F0';
 
@@ -48,7 +49,7 @@ export class ImagesService {
     c.height = rect.height;
 
     // Set mode & url
-    this.mode.set(type === 'flagged' ? 'edit' : 'final');
+    this.mode.set(type === 'flagged' ? 'edit' : 'final-single');
     this.mainImageUrl = this.getImageUrl(imageName);
 
     // Draw image
@@ -58,9 +59,8 @@ export class ImagesService {
     img.onload = () => {
       ctx.drawImage(img, 0, 0, c.width, c.height);
 
-      // Draw cropping rectangles
-      // if (this.mode() === 'final')
-      this.transformations().filter(t => t.image_path === imageName).map(t => this.drawRectangle(ctx, c.width, c.height, t));
+    // Draw cropping rectangles
+    this.transformations().filter(t => t.image_path === imageName).map(t => this.drawRectangle(ctx, c.width, c.height, t));
     };
   }
   

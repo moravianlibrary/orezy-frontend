@@ -4,6 +4,13 @@
   display: flex;
   justify-content: center;
   align-items: center;
+  position: relative;
+}
+
+app-button-group {
+  position: absolute;
+  top: 0;
+  right: 0;
 }
 
 #canvas {
