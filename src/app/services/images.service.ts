@@ -170,7 +170,6 @@ export class ImagesService {
     c.height = cropRatio * appender.clientWidth;
 
     if (type === 'main' && this.mode() === 'final-single') {
-      appender.style.height = '100%';
       cropRatio = cropW / cropH;
       c.width = cropRatio * appender.clientHeight;
       c.height = appender.clientHeight;
@@ -191,9 +190,8 @@ export class ImagesService {
 
     const thumbImg = new Image();
     thumbImg.src = c.toDataURL('image/jpeg');
-    c.width > c.height
-      ? thumbImg.style.width = '100%'
-      : thumbImg.style.height = '100%';
+    thumbImg.style.maxWidth = '100%'
+    thumbImg.style.maxHeight = '100%';
     thumbImg.style.objectFit = 'contain';
     if (type !== 'main') thumbImg.onclick = () => this.setMainImage(t);
 
@@ -219,8 +217,8 @@ export class ImagesService {
 
       const mainImg = new Image();
       mainImg.src = c.toDataURL('image/jpeg');
-      mainImg.style.width = '100%';
-      mainImg.style.height = '100%';
+      mainImg.style.maxWidth = '100%';
+      mainImg.style.maxHeight = '100%';
       mainImg.style.objectFit = 'contain';
       mainContainer.appendChild(mainImg);
     };
