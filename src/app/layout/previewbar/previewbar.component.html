@@ -1,42 +1,49 @@
-@if (imagesService.flaggedImages().length) {
-  <p>Skeny v nepořádku ({{ imagesService.flaggedImages().length }}):</p>
-  <p>confidenceThreshold: {{ imagesService.confidenceThreshold }}</p>
-  <p>sideRatioThreshold: {{ imagesService.sideRatioThreshold }}</p>
-  @for (image of imagesService.flaggedImages(); track $index) {
-    <div class="wrapper">
-      <img
-        [src]="image.url"
-        [alt]="'preview image ' + ($index + 1)"
-        [class.selected]="imagesService.mainImageName === image.name"
-        (click)="imagesService.setMainImage(image.name)"
-      />
-      <div>
-        {{ image.name }}
-        @if (image.low_confidence) { 🫥 }
-        @if (image.bad_sides_ratio) { 📐 }
-      </div>
-    </div>
-  }
-} @else {
-  <p>Všechny skeny jsou v pořádku.</p>
-}
-
-@if (imagesService.notFlaggedImages().length) { <button (click)="toggleMorePreview()">Zobrazit zbytek, co je cajkoš ({{ imagesService.notFlaggedImages().length }})</button> }
-
-@if (toggledMore) {
-  @if (imagesService.notFlaggedImages().length) {
-    @for (image of imagesService.notFlaggedImages(); track $index) {
-      <div class="wrapper">
+<div class="thumbnails-flagged-wrapper">
+  @if (imagesService.mode() === 'final-single' && imagesService.flaggedTransformations().length) {
+    <p>Skeny v nepořádku ({{ imagesService.flaggedTransformations().length }}):</p>
+  } @else if (imagesService.mode() === 'final-full' && imagesService.flaggedImages().length) {
+    <p>Skeny v nepořádku ({{ imagesService.flaggedImages().length }}):</p>
+    @for (image of imagesService.flaggedImages(); track $index) {
+      <div class="thumbnail-wrapper">
         <img
           [src]="image.url"
-          [alt]="'preview image ' + ($index + 1)"
-          [class.selected]="imagesService.mainImageName === image.name"
-          (click)="imagesService.setMainImage(image.name)"
+          [class.selected]="imagesService.mainImageTransformation.image_path === image.name"
+          (click)="imagesService.setMainImage(imagesService.imageItemToTransformation(image))"
         />
-        <div>{{ image.name }}</div>
+        <div>
+          @if (image.low_confidence) { 🫥 }
+          @if (image.bad_sides_ratio) { 📐 }
+        </div>
       </div>
     }
+  } @else if (imagesService.mode() === 'edit') {
+
   } @else {
-    <p>Žádné skeny nejsou v pořádku.</p>
+    <p>Všechny skeny jsou v pořádku.</p>
   }
-}
+</div>
+
+@if (imagesService.mode() === 'final-single' && imagesService.notFlaggedTransformations().length) { <button (click)="toggleMorePreview()">{{ imagesService.toggledMore ? 'Skrýt' : 'Zobrazit' }} zbytek, co je cajkoš ({{ imagesService.notFlaggedTransformations().length }})</button> }
+@if (imagesService.mode() === 'final-full' && imagesService.notFlaggedImages().length) { <button (click)="toggleMorePreview()">{{ imagesService.toggledMore ? 'Skrýt' : 'Zobrazit' }} zbytek, co je cajkoš ({{ imagesService.notFlaggedImages().length }})</button> }
+
+<div class="thumbnails-notflagged-wrapper">
+  @if (imagesService.toggledMore) {
+    @if (imagesService.mode() === 'final-single') {
+
+    } @else if (imagesService.mode() === 'final-full' && imagesService.notFlaggedImages().length) {
+      @for (image of imagesService.notFlaggedImages(); track $index) {
+        <div class="thumbnail-wrapper">
+          <img
+            [src]="image.url"
+            [class.selected]="imagesService.mainImageTransformation.image_path === image.name"
+            (click)="imagesService.setMainImage(imagesService.imageItemToTransformation(image))"
+          />
+        </div>
+      }
+    } @else if (imagesService.mode() === 'edit') {
+
+    } @else {
+      <p>Žádné skeny nejsou v pořádku.</p>
+    }
+  }
+</div>

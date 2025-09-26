@@ -1,5 +1,6 @@
-import { Component, inject } from '@angular/core';
+import { Component, inject, signal } from '@angular/core';
 import { ImagesService } from '../../services/images.service';
+import { defer, getImageUrl } from '../../utils/utils';
 
 @Component({
   selector: 'app-previewbar',
@@ -9,9 +10,16 @@ import { ImagesService } from '../../services/images.service';
 })
 export class PreviewbarComponent {
   imagesService = inject(ImagesService);
-  toggledMore: boolean = false;
+  previewbarHTML = signal<string>('');
+
+  getImageUrl = getImageUrl;
 
   toggleMorePreview(): void {
-    this.toggledMore = !this.toggledMore;
+    this.imagesService.toggledMore = !this.imagesService.toggledMore;
+    if (this.imagesService.toggledMore) this.imagesService.loadCroppedImgs('notflagged');
+  }
+
+  ngAfterViewInit(): void {
+    this.imagesService.loadCroppedImgs('flagged');
   }
 }
