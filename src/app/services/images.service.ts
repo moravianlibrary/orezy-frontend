@@ -31,7 +31,8 @@ export class ImagesService {
 
   // Main
   mainImageTransformation: Transformation = this.transformations()[0];
-  modes: string[] = ['edit', 'final-single', 'final-full'];
+  editable = signal<boolean>(false);
+  modes: string[] = ['final-single', 'final-full'];
   mode = signal<string>(this.modes[1]);
   lastMode: string = '';
   leftColor: string = '#00BFFF';
@@ -57,9 +58,6 @@ export class ImagesService {
     mainContainer.innerHTML = '';
 
     switch (this.mode()) {
-      case 'edit':
-        // this.transformations().filter(t => t.image_path === imageName).map(t => this.drawRectangle(ctx, c.width, c.height, t));
-        break;
       case 'final-single':
         document.querySelectorAll('.final-single-flagged-thumb, .final-single-notflagged-thumb').forEach(img => (img as HTMLElement).style.outline = 'none');
         defer(() => {
