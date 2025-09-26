@@ -16,7 +16,18 @@ export class PreviewbarComponent {
 
   toggleMorePreview(): void {
     this.imagesService.toggledMore = !this.imagesService.toggledMore;
-    if (this.imagesService.toggledMore) this.imagesService.loadCroppedImgs('notflagged');
+    const thumbsNotFlagged = document.querySelectorAll<HTMLImageElement>('.final-single-notflagged-thumb');
+
+    if (this.imagesService.toggledMore) {
+      if (!this.imagesService.notFlaggedCroppedImages.length) {
+        this.imagesService.loadCroppedImgs('notflagged');
+        return;
+      }
+    }
+
+    thumbsNotFlagged.forEach(img => {
+      img.style.display = this.imagesService.toggledMore ? 'initial' : 'none';
+    });
   }
 
   ngAfterViewInit(): void {

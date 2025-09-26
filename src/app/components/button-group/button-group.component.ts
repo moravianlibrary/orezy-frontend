@@ -20,20 +20,29 @@ export class ButtonGroupComponent {
     
     this.imagesService.setMainImage(this.imagesService.mainImageTransformation);
 
-    const thumbsFlagged = document.querySelectorAll('.final-single-flagged-thumb');
-    const thumbsNotFlagged = document.querySelectorAll('.final-single-notflagged-thumb');
-    if (mode === 'final-full') {
-      thumbsFlagged.forEach(img => (img as HTMLImageElement).style.display = 'none');
-      thumbsNotFlagged.forEach(img => (img as HTMLImageElement).style.display = 'none');
-    } else {
-      !this.imagesService.flaggedCroppedImages.length
-        ? this.imagesService.loadCroppedImgs('flagged')
-        : thumbsFlagged.forEach(img => (img as HTMLImageElement).style.display = 'initial');
+    const thumbsFlagged = document.querySelectorAll<HTMLImageElement>('.final-single-flagged-thumb');
+    const thumbsNotFlagged = document.querySelectorAll<HTMLImageElement>('.final-single-notflagged-thumb');
 
-      if (!this.imagesService.toggledMore) return;
-      !this.imagesService.notFlaggedCroppedImages.length
-        ? this.imagesService.loadCroppedImgs('notflagged')
-        : thumbsNotFlagged.forEach(img => (img as HTMLImageElement).style.display = 'initial');
+    if (mode === 'final-full') {
+      this.toggleThumbs(thumbsFlagged, false);
+      this.toggleThumbs(thumbsNotFlagged, false);
+      return;
     }
+
+    // Handle flagged thumbs
+    !this.imagesService.flaggedCroppedImages.length
+      ? this.imagesService.loadCroppedImgs('flagged')
+      : this.toggleThumbs(thumbsFlagged, true);
+
+    if (!this.imagesService.toggledMore) return;
+
+    // Handle not-flagged thumbs
+    !this.imagesService.notFlaggedCroppedImages.length
+      ? this.imagesService.loadCroppedImgs('notflagged')
+      : this.toggleThumbs(thumbsNotFlagged, true);
   }
+
+  private toggleThumbs = (thumbs: NodeListOf<HTMLImageElement>, visible: boolean) => {
+    thumbs.forEach(img => (img.style.display = visible ? 'initial' : 'none'));
+  };
 }

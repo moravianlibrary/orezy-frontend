@@ -64,40 +64,28 @@ export class ImagesService {
         document.querySelectorAll('.final-single-flagged-thumb, .final-single-notflagged-thumb').forEach(img => (img as HTMLElement).style.outline = 'none');
         defer(() => {
           this.appendCroppedImgs(mainContainer, this.transformations().filter(t => t.image_path === imgt.image_path && t.confidence === imgt.confidence), 'main');
-          defer(() => (document.getElementById(imgt.image_path + '-' + imgt.confidence) as HTMLElement).style.outline = '4px solid #FF10F0', 0);
+          defer(() => (document.getElementById(imgt.image_path + '-' + imgt.confidence) as HTMLElement).style.outline = '4px solid #FF10F0', 100);
         });
         break;
       case 'final-full':
-        const c = document.createElement('canvas');
-        const ctx = c.getContext('2d');
-        if (!ctx) return;
-
-        const img = new Image();
-        img.crossOrigin = 'anonymous';
-        img.src = getImageUrl(imgt.image_path);
-
-        img.onload = () => {
-          mainContainer.style.height = '';
-          c.width = mainContainer.clientWidth;
-          c.height = (img.height / img.width) * c.width;
-
-          ctx.drawImage(img, 0, 0, c.width, c.height);
-          this.transformations().filter(t => t.image_path === imgt.image_path).map(t => this.drawRectangle(ctx, c.width, c.height, t));
-
-          const mainImg = new Image();
-          mainImg.src = c.toDataURL('image/jpeg');
-          mainImg.style.width = '100%';
-          mainImg.style.height = '100%';
-          mainImg.style.objectFit = 'contain';
-          mainContainer.appendChild(mainImg);
-        };
-
-        img.onerror = () => { console.error('Failed to load image.') };
+        this.getMainFinalFullImage(mainContainer, imgt);
         break;
     }
   }
 
-  getCroppedImgs(appender: HTMLElement | null, tfs: Transformation[], type?: 'main' | 'flagged' | 'notflagged'): Promise<HTMLImageElement[]> {
+  loadCroppedImgs(type: 'flagged' | 'notflagged'): void {
+    const appender = document.querySelector('.thumbnails-' + type + '-wrapper') as HTMLElement;
+    if (!appender || this.mode() !== 'final-single') return;
+
+    this.getCroppedImgs(appender, type === 'flagged' ? this.flaggedTransformations() : this.notFlaggedTransformations(), type).then(imgs => {
+      imgs.map(img => appender.appendChild(img));
+      type === 'flagged'
+        ? this.flaggedCroppedImages = imgs
+        : this.notFlaggedCroppedImages = imgs;
+    });
+  }
+
+  private getCroppedImgs(appender: HTMLElement | null, tfs: Transformation[], type?: 'main' | 'flagged' | 'notflagged'): Promise<HTMLImageElement[]> {
     if (!appender) return Promise.resolve([]);
     
     const promises = tfs.map(t => {
@@ -136,8 +124,9 @@ export class ImagesService {
           const thumbImg = new Image();
           thumbImg.src = c.toDataURL('image/jpeg');
           if (type !== 'main') {
-            thumbImg.className = 'final-single-' + type + '-thumb';
             thumbImg.id = t.image_path + '-' + t.confidence;
+            thumbImg.className = 'final-single-' + type + '-thumb';
+            thumbImg.style.cursor = 'pointer';
             thumbImg.onclick = () => this.setMainImage(t);
           }
 
@@ -147,18 +136,6 @@ export class ImagesService {
     });
 
     return Promise.all(promises);
-  }
-
-  loadCroppedImgs(type: 'flagged' | 'notflagged'): void {
-    const appender = document.querySelector('.thumbnails-' + type + '-wrapper') as HTMLElement;
-    if (!appender || this.mode() !== 'final-single') return;
-
-    this.getCroppedImgs(appender, type === 'flagged' ? this.flaggedTransformations() : this.notFlaggedTransformations(), type).then(imgs => {
-      imgs.map(img => appender.appendChild(img));
-      type === 'flagged'
-        ? this.flaggedCroppedImages = imgs
-        : this.notFlaggedCroppedImages = imgs;
-    });
   }
 
   appendCroppedImgs(appender: HTMLElement | null, tfs: Transformation[], type?: 'main' | 'flagged' | 'notflagged'): void {
@@ -223,6 +200,34 @@ export class ImagesService {
     if (type !== 'main') thumbImg.onclick = () => this.setMainImage(t);
 
     return thumbImg;
+  }
+
+  private getMainFinalFullImage(mainContainer: HTMLElement, imgt: Transformation): void {
+    const c = document.createElement('canvas');
+    const ctx = c.getContext('2d');
+    if (!ctx) return;
+
+    const img = new Image();
+    img.crossOrigin = 'anonymous';
+    img.src = getImageUrl(imgt.image_path);
+
+    img.onload = () => {
+      mainContainer.style.height = '';
+      c.width = mainContainer.clientWidth;
+      c.height = (img.height / img.width) * c.width;
+
+      ctx.drawImage(img, 0, 0, c.width, c.height);
+      this.transformations().filter(t => t.image_path === imgt.image_path).map(t => this.drawRectangle(ctx, c.width, c.height, t));
+
+      const mainImg = new Image();
+      mainImg.src = c.toDataURL('image/jpeg');
+      mainImg.style.width = '100%';
+      mainImg.style.height = '100%';
+      mainImg.style.objectFit = 'contain';
+      mainContainer.appendChild(mainImg);
+    };
+
+    img.onerror = () => { console.error('Failed to load image.') };
   }
 
   private drawRectangle(ctx: CanvasRenderingContext2D, cWidth: number, cHeight: number, t: Transformation): void {
