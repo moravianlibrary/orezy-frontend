@@ -2,7 +2,6 @@ import { Component, inject } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
 import { ImagesService } from '../../services/images.service';
 import { ButtonGroupComponent } from '../../components/button-group/button-group.component';
-import { getImageUrl } from '../../utils/utils';
 
 @Component({
   selector: 'app-main',
@@ -13,9 +12,11 @@ import { getImageUrl } from '../../utils/utils';
 export class MainComponent {
   imagesService = inject(ImagesService);
 
-  getImageUrl = getImageUrl;
-
-  ngOnInit(): void {
-    this.imagesService.setMainImage(this.imagesService.flaggedTransformations()[0]);
+  ngAfterViewInit(): void {
+    const mainContainer = document.getElementById('main-container') as HTMLElement;
+    mainContainer.style.width = this.imagesService.mode() === 'final-full' ? '100%' : 'initial';
+    mainContainer.style.height = this.imagesService.mode() === 'final-full' ? '100%' : 'initial';
+    
+    if (this.imagesService.mode() === 'final-full') this.imagesService.setMainImage(this.imagesService.flaggedImages()[0]);
   }
 }

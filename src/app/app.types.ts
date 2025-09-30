@@ -1,8 +1,9 @@
 export interface ImageItem {
-  name: string;
-  url: string;
-  low_confidence: boolean;
-  bad_sides_ratio: boolean;
+  name?: string;
+  url?: string;
+  crop_part?: number;
+  low_confidence?: boolean;
+  bad_sides_ratio?: boolean;
 }
 
 export interface ImageFlags {

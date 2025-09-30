@@ -16,8 +16,10 @@ export class ImagesService {
   flaggedImages = computed<ImageItem[]>(() => this.images().filter(img => img.low_confidence || img.bad_sides_ratio));
   notFlaggedImages = computed<ImageItem[]>(() => this.images().filter(img => !img.low_confidence && !img.bad_sides_ratio));
 
-  flaggedCroppedImages: HTMLImageElement[] = [];
-  notFlaggedCroppedImages: HTMLImageElement[] = [];
+  croppedImages = signal<ImageItem[]>([]);
+  flaggedCroppedImages = computed<ImageItem[]>(() => this.croppedImages().filter(img => img.low_confidence || img.bad_sides_ratio));
+  notFlaggedCroppedImages = computed<ImageItem[]>(() => this.croppedImages().filter(img => !img.low_confidence && !img.bad_sides_ratio));
+  // notFlaggedCroppedImages: HTMLImageElement[] = [];
 
   transformations = signal<Transformation[]>([]);
   flaggedTransformations = computed<Transformation[]>(() => this.transformations().filter(t => t.low_confidence || t.bad_sides_ratio));
@@ -29,12 +31,14 @@ export class ImagesService {
 
   toggledMore: boolean = false;
 
+  loading: boolean = false;
+
   // Main
-  mainImageTransformation: Transformation = this.transformations()[0];
   editable = signal<boolean>(false);
   modes: string[] = ['final-single', 'final-full'];
   mode = signal<string>(this.modes[1]);
   lastMode: string = '';
+  mainImageItem = signal<ImageItem>({ url: 'https://media.tenor.com/WX_LDjYUrMsAAAAi/loading.gif' });
   leftColor: string = '#00BFFF';
   rightColor: string = '#FF10F0';
 
@@ -46,51 +50,29 @@ export class ImagesService {
     return this.http.get<Transformation[]>(`${serverBaseUrl}/api/transformations`);
   }
 
-  imageItemToTransformation(imageItem: ImageItem): Transformation {
-    return this.transformations().filter(t => t.image_path === imageItem.name)[0];
+  setMainImage(img: ImageItem): void {
+    this.mode() === 'final-full'
+      ? this.setMainFinalFullImage(img)
+      : this.mainImageItem.set(img);
   }
 
-  setMainImage(imgt: Transformation): void {
-    this.mainImageTransformation = imgt;
+  setCroppedImgs(tfs: Transformation[]): void {
+    this.loading = true;    
 
-    const mainContainer = document.getElementById('main-container');
-    if (!mainContainer) return;
-    mainContainer.innerHTML = '';
-
-    switch (this.mode()) {
-      case 'final-single':
-        document.querySelectorAll('.final-single-flagged-thumb, .final-single-notflagged-thumb').forEach(img => (img as HTMLElement).style.outline = 'none');
-        defer(() => {
-          this.appendCroppedImgs(mainContainer, this.transformations().filter(t => t.image_path === imgt.image_path && t.confidence === imgt.confidence), 'main');
-          defer(() => (document.getElementById(imgt.image_path + '-' + imgt.confidence) as HTMLElement).style.outline = '4px solid #FF10F0', 100);
-        });
-        break;
-      case 'final-full':
-        this.getMainFinalFullImage(mainContainer, imgt);
-        break;
-    }
-  }
-
-  loadCroppedImgs(type: 'flagged' | 'notflagged'): void {
-    const appender = document.querySelector('.thumbnails-' + type + '-wrapper') as HTMLElement;
-    if (!appender || this.mode() !== 'final-single') return;
-
-    this.getCroppedImgs(appender, type === 'flagged' ? this.flaggedTransformations() : this.notFlaggedTransformations(), type).then(imgs => {
-      imgs.map(img => appender.appendChild(img));
-      type === 'flagged'
-        ? this.flaggedCroppedImages = imgs
-        : this.notFlaggedCroppedImages = imgs;
+    const promisesCroppedImages = this.getPromisesImages(tfs);
+    Promise.all(promisesCroppedImages).then((imgs: ImageItem[]) => { 
+      this.croppedImages.set(imgs);
+      if (this.mode() === 'final-single') this.mainImageItem.set(this.flaggedCroppedImages()[0]);
+      this.loading = false;
     });
   }
 
-  private getCroppedImgs(appender: HTMLElement | null, tfs: Transformation[], type?: 'main' | 'flagged' | 'notflagged'): Promise<HTMLImageElement[]> {
-    if (!appender) return Promise.resolve([]);
-    
-    const promises = tfs.map(t => {
-      return new Promise<HTMLImageElement>((resolve) => {
+  private getPromisesImages(tfs: Transformation[]): Promise<ImageItem>[] {
+    return tfs.map(t => {
+      return new Promise<ImageItem>((resolve) => {
         const c = document.createElement('canvas');
         const ctx = c.getContext('2d');
-        if (!ctx) return resolve(new Image());
+        if (!ctx) return resolve({});
 
         const img = new Image();
         img.crossOrigin = 'anonymous';
@@ -100,127 +82,51 @@ export class ImagesService {
           const centerX = t.x_center * img.width;
           const centerY = t.y_center * img.height;
           const angle = degreeToRadian(t.angle);
-          const cropW = t.width * img.width;
-          const cropH = t.height * img.height;
-          const cropRatio = cropH / cropW;
-          c.width = appender.clientWidth;
-          c.height = cropRatio * appender.clientWidth;
-
-          const scaleX = c.width / cropW;
-          const scaleY = c.height / cropH;
-          const scale = Math.min(scaleX, scaleY);
+          
+          c.width = t.width * img.width;
+          c.height = t.height * img.height;
 
           ctx.save();
-          ctx.clearRect(0, 0, c.width, c.height);
           ctx.translate(c.width / 2, c.height / 2);
-          ctx.scale(scale, scale);
           ctx.rotate(angle);
           ctx.drawImage(img, -centerX, -centerY);
-          ctx.setTransform(1, 0, 0, 1, 0, 0);
           ctx.restore();
 
-          const thumbImg = new Image();
-          thumbImg.src = c.toDataURL('image/jpeg');
-          if (type !== 'main') {
-            thumbImg.id = t.image_path + '-' + t.confidence;
-            thumbImg.className = 'final-single-' + type + '-thumb';
-            thumbImg.style.cursor = 'pointer';
-            thumbImg.onclick = () => this.setMainImage(t);
-          }
+          const resultImg: ImageItem = {
+            name: t.image_path,
+            url: c.toDataURL('image/jpeg'),
+            crop_part: t.crop_part,
+            low_confidence: t.low_confidence,
+            bad_sides_ratio: t.bad_sides_ratio
+          };
 
-          resolve(thumbImg);
+          resolve(resultImg);
         };
+
+        img.onerror = () => { console.error('Failed to load image.') };
       });
     });
-
-    return Promise.all(promises);
   }
 
-  appendCroppedImgs(appender: HTMLElement | null, tfs: Transformation[], type?: 'main' | 'flagged' | 'notflagged'): void {
-    if (!appender) return;
-
-    tfs.map(t => {
-      const c = document.createElement('canvas');
-      const ctx = c.getContext('2d');
-      if (!ctx) return;
-      
-      const img = new Image();
-      img.crossOrigin = 'anonymous';
-      img.src = getImageUrl(t.image_path);
-
-      img.onload = () => {
-        const thumbImg = this.getCroppedImg(t, appender, c, ctx, img, type);
-        if (type && type !== 'main') thumbImg.className = 'final-single-' + type + '-thumb';
-        appender.appendChild(thumbImg);
-      };
-
-      img.onerror = () => { console.error('Failed to load image.') };
-    });
-  }
-
-  private getCroppedImg(t: Transformation, appender: HTMLElement, c: HTMLCanvasElement, ctx: CanvasRenderingContext2D, img: HTMLImageElement, type?: string): HTMLImageElement {
-    const centerX = t.x_center * img.width;
-    const centerY = t.y_center * img.height;
-    const angle = degreeToRadian(t.angle);
-    const cropW = t.width * img.width;
-    const cropH = t.height * img.height;
-
-    let cropRatio = cropH / cropW;
-    c.width = appender.clientWidth;
-    c.height = cropRatio * appender.clientWidth;
-
-    if (type === 'main' && this.mode() === 'final-single') {
-      cropRatio = cropW / cropH;
-      c.width = cropRatio * appender.clientHeight;
-      c.height = appender.clientHeight;
-    }
-
-    const scaleX = c.width / cropW;
-    const scaleY = c.height / cropH;
-    const scale = Math.min(scaleX, scaleY);
-
-    ctx.save();
-    ctx.clearRect(0, 0, c.width, c.height);
-    ctx.translate(c.width / 2, c.height / 2);
-    ctx.scale(scale, scale);
-    ctx.rotate(angle);
-    ctx.drawImage(img, -centerX, -centerY);
-    ctx.setTransform(1, 0, 0, 1, 0, 0);
-    ctx.restore();
-
-    const thumbImg = new Image();
-    thumbImg.src = c.toDataURL('image/jpeg');
-    thumbImg.style.maxWidth = '100%'
-    thumbImg.style.maxHeight = '100%';
-    thumbImg.style.objectFit = 'contain';
-    if (type !== 'main') thumbImg.onclick = () => this.setMainImage(t);
-
-    return thumbImg;
-  }
-
-  private getMainFinalFullImage(mainContainer: HTMLElement, imgt: Transformation): void {
+  private setMainFinalFullImage(imgItem: ImageItem): void {
     const c = document.createElement('canvas');
     const ctx = c.getContext('2d');
     if (!ctx) return;
 
     const img = new Image();
     img.crossOrigin = 'anonymous';
-    img.src = getImageUrl(imgt.image_path);
+    img.src = imgItem.url ?? '';
 
     img.onload = () => {
-      mainContainer.style.height = '';
-      c.width = mainContainer.clientWidth;
+      const appMain = (document.querySelector('app-main') as HTMLElement);
+      const appMainStyle = getComputedStyle(appMain);
+      c.width = appMain.getBoundingClientRect().width - parseFloat(appMainStyle.paddingLeft) - parseFloat(appMainStyle.paddingRight) - parseFloat(appMainStyle.borderLeftWidth) - parseFloat(appMainStyle.borderRightWidth);;
       c.height = (img.height / img.width) * c.width;
 
       ctx.drawImage(img, 0, 0, c.width, c.height);
-      this.transformations().filter(t => t.image_path === imgt.image_path).map(t => this.drawRectangle(ctx, c.width, c.height, t));
+      this.transformations().filter(t => t.image_path === imgItem.name).map(t => this.drawRectangle(ctx, c.width, c.height, t));
 
-      const mainImg = new Image();
-      mainImg.src = c.toDataURL('image/jpeg');
-      mainImg.style.maxWidth = '100%';
-      mainImg.style.maxHeight = '100%';
-      mainImg.style.objectFit = 'contain';
-      mainContainer.appendChild(mainImg);
+      this.mainImageItem.set({ ...imgItem, url: c.toDataURL('image/jpeg') });
     };
 
     img.onerror = () => { console.error('Failed to load image.') };
@@ -233,14 +139,11 @@ export class ImagesService {
     const width = cWidth * t.width;
     const height = cHeight * t.height;
     
-    // Save current context state
     ctx.save();
 
-    // Rotate
     ctx.translate(centerX, centerY);
     ctx.rotate(-angle);
 
-    // Draw rectangle
     ctx.fillStyle = (t.crop_part === 1 ? this.leftColor : this.rightColor) + '10';
     ctx.strokeStyle = t.crop_part === 1 ? this.leftColor : this.rightColor;
     ctx.lineWidth = 1;
@@ -249,7 +152,6 @@ export class ImagesService {
     ctx.fill();
     ctx.stroke();
 
-    // Restore context
     ctx.restore();
   }
 }

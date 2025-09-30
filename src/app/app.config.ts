@@ -25,6 +25,7 @@ export const appConfig: ApplicationConfig = {
 
           // Enrich transformations...
           for (const t of tfs) {
+            
             // ...by low_confidence and bad_sides_ratio
             const ratioDiff = Math.abs(t.width/t.height - imagesService.avgSideRatio);
             t.low_confidence = t.confidence < imagesService.confidenceThreshold;
@@ -36,22 +37,24 @@ export const appConfig: ApplicationConfig = {
             flagsByName.set(t.image_path, flags);
             
             // ...by crop_part
-            t.crop_part = t.x_center > 0.5 ? 2 : 1;
+            t.crop_part = t.x_center > 0.6 ? 2 : 1;
           }
 
           // Enrich images
           const resultImages: ImageItem[] = [];
           for (const img of imgs) {
-            const f = flagsByName.get(img.name);
+            const f = flagsByName.get(img.name ?? '');
             resultImages.push({ ...img, ...f });
           }
           
-          imagesService.images.set(resultImages);
-          imagesService.transformations.set(tfs);
-
           // Get mode
           const mode = localStorage.getItem('mode');
           if (mode) imagesService.mode.set(mode);
+
+          // Preset everything
+          imagesService.images.set(resultImages);
+          imagesService.transformations.set(tfs);
+          imagesService.setCroppedImgs(tfs);
         })
       );
     })

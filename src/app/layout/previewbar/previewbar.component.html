@@ -1,14 +1,27 @@
 <div class="thumbnails-flagged-wrapper">
-  @if (imagesService.mode() === 'final-single' && imagesService.flaggedTransformations().length) {
-    <p>Skeny v nepořádku ({{ imagesService.flaggedTransformations().length }}):</p>
+  @if (imagesService.mode() === 'final-single' && imagesService.flaggedCroppedImages().length) {
+    <p>Skeny v nepořádku ({{ imagesService.flaggedCroppedImages().length }}):</p>
+    @for (image of imagesService.flaggedCroppedImages(); track $index) {
+      <div class="thumbnail-wrapper">
+        <img
+          [src]="image.url"
+          [class.selected]="imagesService.mainImageItem().name === image.name && imagesService.mainImageItem().crop_part === image.crop_part"
+          (click)="imagesService.setMainImage(image)"
+        />
+        <div>
+          @if (image.low_confidence) { 🫥 }
+          @if (image.bad_sides_ratio) { 📐 }
+        </div>
+      </div>
+    }
   } @else if (imagesService.mode() === 'final-full' && imagesService.flaggedImages().length) {
     <p>Skeny v nepořádku ({{ imagesService.flaggedImages().length }}):</p>
     @for (image of imagesService.flaggedImages(); track $index) {
       <div class="thumbnail-wrapper">
         <img
           [src]="image.url"
-          [class.selected]="imagesService.mainImageTransformation.image_path === image.name"
-          (click)="imagesService.setMainImage(imagesService.imageItemToTransformation(image))"
+          [class.selected]="imagesService.mainImageItem().name === image.name && imagesService.mainImageItem().crop_part === image.crop_part"
+          (click)="imagesService.setMainImage(image)"
         />
         <div>
           @if (image.low_confidence) { 🫥 }
@@ -17,24 +30,32 @@
       </div>
     }
   } @else {
-    <p>Všechny skeny jsou v pořádku.</p>
+    <p>{{ imagesService.loading ? 'Skeny se načítají...' : 'Všechny skeny jsou v pořádku.' }}</p>
   }
 </div>
 
-@if (imagesService.mode() === 'final-single' && imagesService.notFlaggedTransformations().length) { <button (click)="toggleMorePreview()">{{ imagesService.toggledMore ? 'Skrýt' : 'Zobrazit' }} zbytek, co je cajkoš ({{ imagesService.notFlaggedTransformations().length }})</button> }
+@if (imagesService.mode() === 'final-single' && imagesService.notFlaggedCroppedImages().length) { <button (click)="toggleMorePreview()">{{ imagesService.toggledMore ? 'Skrýt' : 'Zobrazit' }} zbytek, co je cajkoš ({{ imagesService.notFlaggedCroppedImages().length }})</button> }
 @if (imagesService.mode() === 'final-full' && imagesService.notFlaggedImages().length) { <button (click)="toggleMorePreview()">{{ imagesService.toggledMore ? 'Skrýt' : 'Zobrazit' }} zbytek, co je cajkoš ({{ imagesService.notFlaggedImages().length }})</button> }
 
 <div class="thumbnails-notflagged-wrapper">
   @if (imagesService.toggledMore) {
-    @if (imagesService.mode() === 'final-single') {
-
+    @if (imagesService.mode() === 'final-single' && imagesService.notFlaggedTransformations().length) {
+      @for (image of imagesService.notFlaggedCroppedImages(); track $index) {
+        <div class="thumbnail-wrapper">
+          <img
+            [src]="image.url"
+            [class.selected]="imagesService.mainImageItem().name === image.name && imagesService.mainImageItem().crop_part === image.crop_part"
+            (click)="imagesService.setMainImage(image)"
+          />
+        </div>
+      }
     } @else if (imagesService.mode() === 'final-full' && imagesService.notFlaggedImages().length) {
       @for (image of imagesService.notFlaggedImages(); track $index) {
         <div class="thumbnail-wrapper">
           <img
             [src]="image.url"
-            [class.selected]="imagesService.mainImageTransformation.image_path === image.name"
-            (click)="imagesService.setMainImage(imagesService.imageItemToTransformation(image))"
+            [class.selected]="imagesService.mainImageItem().name === image.name && imagesService.mainImageItem().crop_part === image.crop_part"
+            (click)="imagesService.setMainImage(image)"
           />
         </div>
       }
