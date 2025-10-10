@@ -7,7 +7,7 @@ import { forkJoin, tap } from 'rxjs';
 import { ImageFlags, ImageItem } from './app.types';
 
 export const serverBaseUrl: string = 'https://ai-orezy-data.test.api.trinera.cloud/Y6QBR1bLTTYxGBszk0rnhopOF';
-export const bookId: string = '2619387078';
+export const books = ['2610078027', '2610267219', '2619387078', '2619611960', '2619711148'];
 
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -16,6 +16,8 @@ export const appConfig: ApplicationConfig = {
     provideRouter(routes),
     provideAppInitializer(() => {
       const imagesService = inject(ImagesService);
+      const book = localStorage.getItem('book');
+      if (book) imagesService.book.set(book);
       return forkJoin({
         imgs: imagesService.fetchImages(),
         tfs: imagesService.fetchTransformations()

@@ -37,12 +37,19 @@
   left: 50%;
   top: 50%;
   transform: translate(-50%, -50%);
-  // display: none;
 }
 
-app-button-group {
+#mode-switcher {
   position: absolute;
   top: 0;
   left: 0;
   z-index: 100;
+}
+
+#book-switcher {
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  z-index: 100;
+  grid-template-columns: 1fr 1fr 1fr 1fr 1fr;
 }

@@ -1,15 +1,19 @@
-import { HttpClient, HttpHeaders } from '@angular/common/http';
-import { computed, effect, inject, Injectable, signal } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
+import { computed, inject, Injectable, signal } from '@angular/core';
 import { ImageItem, Rect, Transformation } from '../app.types';
-import { map, Observable, of } from 'rxjs';
-import { bookId, serverBaseUrl } from '../app.config';
-import { defer, degreeToRadian, getImageUrl } from '../utils/utils';
+import { map, Observable } from 'rxjs';
+import { books, serverBaseUrl } from '../app.config';
+import { degreeToRadian, getImageUrl } from '../utils/utils';
 
 @Injectable({
   providedIn: 'root'
 })
 export class ImagesService {
   private http = inject(HttpClient);
+  books: string[] = books;
+  book = signal<string>(books[2]);
+  lastBook: string = '';
+  loading: boolean = false;
 
   // Previews
   images = signal<ImageItem[]>([]);
@@ -26,12 +30,10 @@ export class ImagesService {
   notFlaggedTransformations = computed<Transformation[]>(() => this.transformations().filter(t => !t.low_confidence && !t.bad_sides_ratio));
 
   confidenceThreshold: number = .9;
-  sideRatioThreshold: number = .1;
+  sideRatioThreshold: number = .02;
   avgSideRatio: number = 0;
 
   toggledMore: boolean = false;
-
-  loading: boolean = false;
 
   // Main
   editable = signal<boolean>(false);
@@ -46,7 +48,7 @@ export class ImagesService {
   selectedRect: Rect | null = null;
 
   fetchImages(): Observable<ImageItem[]> {
-    return this.http.get<any>(`${serverBaseUrl}/${bookId}/`, { 'responseType': 'text' as 'json' }).pipe(
+    return this.http.get<any>(`${serverBaseUrl}/${this.book()}/`, { 'responseType': 'text' as 'json' }).pipe(
       map((html: any) => {
         const parser = new DOMParser();
         const doc = parser.parseFromString(html, 'text/html');
@@ -59,8 +61,8 @@ export class ImagesService {
         const images = files
           .filter(f => f.toLowerCase().endsWith('.jpg'))
           .map(f => ({
-          name: `${bookId}/` + f,
-          url: serverBaseUrl + `/${bookId}/` + f
+          name: `${this.book()}/` + f,
+          url: serverBaseUrl + `/${this.book()}/` + f
         }));
 
         return images;
@@ -69,11 +71,11 @@ export class ImagesService {
   }
 
   fetchTransformations(): Observable<Transformation[]> {
-    return this.http.get<Transformation[]>(`${serverBaseUrl}/${bookId}/transformations.json`);
+    return this.http.get<Transformation[]>(`${serverBaseUrl}/${this.book()}/transformations.json`);
   }
 
   setCroppedImgs(tfs: Transformation[]): void {
-    this.loading = true;    
+    this.loading = true;
 
     const promisesCroppedImages = this.getPromisesImages(tfs);
     Promise.all(promisesCroppedImages).then((imgs: ImageItem[]) => { 

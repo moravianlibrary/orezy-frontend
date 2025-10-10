@@ -1,8 +1,8 @@
-@for (mode of imagesService.modes; track $index) {
+@for (item of items(); track $index) {
   <button
-    (click)="select(mode)"
-    [class.selected]="imagesService.mode() === mode"
+    (click)="select(item)"
+    [class.selected]="currentItem() === item"
   >
-    {{ mode }}
+    {{ item }}
   </button>
 }
