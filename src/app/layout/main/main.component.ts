@@ -13,10 +13,6 @@ export class MainComponent {
   imagesService = inject(ImagesService);
 
   ngAfterViewInit(): void {
-    const mainContainer = document.getElementById('main-container') as HTMLElement;
-    mainContainer.style.width = this.imagesService.mode() === 'full' ? '100%' : 'initial';
-    mainContainer.style.height = this.imagesService.mode() === 'full' ? '100%' : 'initial';
-
     if (this.imagesService.mode() === 'full') this.imagesService.setMainImage(this.imagesService.flaggedImages()[0]);
 
     const mainImage = document.getElementById('main-image') as HTMLElement;

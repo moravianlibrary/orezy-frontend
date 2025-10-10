@@ -78,8 +78,49 @@ export class ImagesService {
     const promisesCroppedImages = this.getPromisesImages(tfs);
     Promise.all(promisesCroppedImages).then((imgs: ImageItem[]) => { 
       this.croppedImages.set(imgs);
-      if (this.mode() === 'single') this.mainImageItem.set(this.flaggedCroppedImages()[0]);
+      if (this.mode() === 'single') this.setMainImage(this.flaggedCroppedImages()[0]);
       this.loading = false;
+    });
+  }
+
+  private getPromisesImages(tfs: Transformation[]): Promise<ImageItem>[] {
+    return tfs.map(t => {
+      return new Promise<ImageItem>((resolve) => {
+        const c = document.createElement('canvas');
+        const ctx = c.getContext('2d');
+        if (!ctx) return resolve({});
+
+        const img = new Image();
+        img.crossOrigin = 'anonymous';
+        img.src = getImageUrl(t.image_path);
+
+        img.onload = () => {
+          const centerX = t.x_center * img.width;
+          const centerY = t.y_center * img.height;
+          const angle = degreeToRadian(t.angle);
+
+          c.width = t.width * img.width;
+          c.height = t.height * img.height;
+
+          ctx.save();
+          ctx.translate(c.width / 2, c.height / 2);
+          ctx.rotate(-angle);
+          ctx.drawImage(img, -centerX, -centerY);
+          ctx.restore();
+
+          const resultImg: ImageItem = {
+            name: t.image_path,
+            url: c.toDataURL('image/jpeg'),
+            crop_part: t.crop_part,
+            low_confidence: t.low_confidence,
+            bad_sides_ratio: t.bad_sides_ratio
+          };
+
+          resolve(resultImg);
+        };
+
+        img.onerror = () => { console.error('Failed to load image.') };
+      });
     });
   }
 
@@ -165,47 +206,6 @@ export class ImagesService {
       }
 
       ctx.restore();
-    });
-  }
-
-  private getPromisesImages(tfs: Transformation[]): Promise<ImageItem>[] {
-    return tfs.map(t => {
-      return new Promise<ImageItem>((resolve) => {
-        const c = document.createElement('canvas');
-        const ctx = c.getContext('2d');
-        if (!ctx) return resolve({});
-
-        const img = new Image();
-        img.crossOrigin = 'anonymous';
-        img.src = getImageUrl(t.image_path);
-
-        img.onload = () => {
-          const centerX = t.x_center * img.width;
-          const centerY = t.y_center * img.height;
-          const angle = degreeToRadian(t.angle);
-
-          c.width = t.width * img.width;
-          c.height = t.height * img.height;
-
-          ctx.save();
-          ctx.translate(c.width / 2, c.height / 2);
-          ctx.rotate(-angle);
-          ctx.drawImage(img, -centerX, -centerY);
-          ctx.restore();
-
-          const resultImg: ImageItem = {
-            name: t.image_path,
-            url: c.toDataURL('image/jpeg'),
-            crop_part: t.crop_part,
-            low_confidence: t.low_confidence,
-            bad_sides_ratio: t.bad_sides_ratio
-          };
-
-          resolve(resultImg);
-        };
-
-        img.onerror = () => { console.error('Failed to load image.') };
-      });
     });
   }
 

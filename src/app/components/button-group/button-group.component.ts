@@ -16,15 +16,13 @@ export class ButtonGroupComponent {
     this.imagesService.lastMode = mode;
     this.imagesService.mode.set(mode);
     localStorage.setItem('mode', mode);
-    
-    const mainContainer = document.getElementById('main-container') as HTMLElement;
-    mainContainer.style.width = mode === 'full' ? '100%' : 'initial';
-    mainContainer.style.height = mode === 'full' ? '100%' : 'initial';
 
     this.imagesService.setMainImage(
       mode === 'full'
         ? this.imagesService.images().filter(img => img.name === this.imagesService.mainImageItem().name)[0]
         : this.imagesService.croppedImages().filter(img => img.name === this.imagesService.mainImageItem().name)[0]
     );
+
+    (document.getElementById('main-canvas') as HTMLElement).style.opacity = mode === 'full' ? '1' : '0';
   }
 }
