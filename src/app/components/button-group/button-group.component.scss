@@ -1,14 +1,15 @@
 :host {
-  display: inline-flex;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
   padding: 10px;
 }
 
 button {
   flex: 1;
   padding: 0.5rem 1rem;
-  cursor: pointer;
   background: white;
   border: 1px solid black;
+  cursor: pointer;
 }
 
 button:not(:last-child) {

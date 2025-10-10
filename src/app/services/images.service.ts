@@ -1,8 +1,8 @@
-import { HttpClient } from '@angular/common/http';
-import { computed, inject, Injectable, signal } from '@angular/core';
-import { ImageItem, Transformation } from '../app.types';
-import { Observable } from 'rxjs';
-import { serverBaseUrl } from '../app.config';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
+import { computed, effect, inject, Injectable, signal } from '@angular/core';
+import { ImageItem, Rect, Transformation } from '../app.types';
+import { map, Observable, of } from 'rxjs';
+import { bookId, serverBaseUrl } from '../app.config';
 import { defer, degreeToRadian, getImageUrl } from '../utils/utils';
 
 @Injectable({
@@ -22,7 +22,7 @@ export class ImagesService {
   // notFlaggedCroppedImages: HTMLImageElement[] = [];
 
   transformations = signal<Transformation[]>([]);
-  flaggedTransformations = computed<Transformation[]>(() => this.transformations().filter(t => t.low_confidence || t.bad_sides_ratio));
+  // flaggedTransformations = computed<Transformation[]>(() => this.transformations().filter(t => t.low_confidence || t.bad_sides_ratio));
   notFlaggedTransformations = computed<Transformation[]>(() => this.transformations().filter(t => !t.low_confidence && !t.bad_sides_ratio));
 
   confidenceThreshold: number = .9;
@@ -35,25 +35,94 @@ export class ImagesService {
 
   // Main
   editable = signal<boolean>(false);
-  modes: string[] = ['final-single', 'final-full'];
+  modes: string[] = ['single', 'full'];
   mode = signal<string>(this.modes[1]);
   lastMode: string = '';
   mainImageItem = signal<ImageItem>({ url: 'https://media.tenor.com/WX_LDjYUrMsAAAAi/loading.gif' });
   leftColor: string = '#00BFFF';
   rightColor: string = '#FF10F0';
+  rects: Rect[] = [];
 
   fetchImages(): Observable<ImageItem[]> {
-    return this.http.get<ImageItem[]>(`${serverBaseUrl}/api/images`);
+    return this.http.get<any>(`${serverBaseUrl}/${bookId}/`, { 'responseType': 'text' as 'json' }).pipe(
+      map((html: any) => {
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(html, 'text/html');
+
+        const anchors = Array.from(doc.querySelectorAll('a[href]'));
+        const files = anchors
+          .map(a => a.getAttribute('href')!)
+          .filter(href => href && href !== '../');
+
+        const images = files
+          .filter(f => f.toLowerCase().endsWith('.jpg'))
+          .map(f => ({
+          name: `${bookId}/` + f,
+          url: serverBaseUrl + `/${bookId}/` + f
+        }));
+
+        return images;
+      })
+    );
   }
 
   fetchTransformations(): Observable<Transformation[]> {
-    return this.http.get<Transformation[]>(`${serverBaseUrl}/api/transformations`);
+    return this.http.get<Transformation[]>(`${serverBaseUrl}/${bookId}/transformations.json`);
   }
 
   setMainImage(img: ImageItem): void {
-    this.mode() === 'final-full'
-      ? this.setMainFinalFullImage(img)
-      : this.mainImageItem.set(img);
+    this.editable.set(false);
+    this.toggleMainImageOrCanvas();
+    if (this.mode() === 'full') {
+      this.setMainFullImageOrCanvas('image', img);
+      this.setMainFullImageOrCanvas('canvas', img);
+      return;
+    }
+      
+    this.mainImageItem.set(img);
+  }
+
+  isCursorInsideRect(e: MouseEvent): boolean {
+    const mainImage = document.getElementById('main-image') as HTMLElement;
+    const rect = mainImage.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY;
+
+    const rectClicked = this.rects.find(r => {
+      const angle = degreeToRadian(r.angle);
+      const halfW = r.width / 2;
+      const halfH = r.height / 2;
+
+      const dx = x - r.x_center;
+      const dy = y - (r.y_center + r.realTop);
+      const cos = Math.cos(-angle);
+      const sin = Math.sin(-angle);
+      const localX = dx * cos - dy * sin;
+      const localY = dx * sin + dy * cos;
+
+      return (
+        localX >= -halfW &&
+        localX <= halfW &&
+        localY >= -halfH &&
+        localY <= halfH
+      );
+    });
+    
+    return Boolean(rectClicked);
+  }
+
+  toggleMainImageOrCanvas(): void {
+    const mainImage = document.getElementById('main-image') as HTMLElement;
+    const mainCanvas = document.getElementById('main-canvas') as HTMLElement;
+
+    if (this.editable()) {
+      if (mainImage) mainImage.style.zIndex = '5';
+      if (mainCanvas) mainCanvas.style.zIndex = '10';
+      return;
+    }
+
+    if (mainImage) mainImage.style.zIndex = '10';
+    if (mainCanvas) mainCanvas.style.zIndex = '5';
   }
 
   setCroppedImgs(tfs: Transformation[]): void {
@@ -62,7 +131,7 @@ export class ImagesService {
     const promisesCroppedImages = this.getPromisesImages(tfs);
     Promise.all(promisesCroppedImages).then((imgs: ImageItem[]) => { 
       this.croppedImages.set(imgs);
-      if (this.mode() === 'final-single') this.mainImageItem.set(this.flaggedCroppedImages()[0]);
+      if (this.mode() === 'single') this.mainImageItem.set(this.flaggedCroppedImages()[0]);
       this.loading = false;
     });
   }
@@ -82,13 +151,13 @@ export class ImagesService {
           const centerX = t.x_center * img.width;
           const centerY = t.y_center * img.height;
           const angle = degreeToRadian(t.angle);
-          
+
           c.width = t.width * img.width;
           c.height = t.height * img.height;
 
           ctx.save();
           ctx.translate(c.width / 2, c.height / 2);
-          ctx.rotate(angle);
+          ctx.rotate(-angle);
           ctx.drawImage(img, -centerX, -centerY);
           ctx.restore();
 
@@ -108,8 +177,8 @@ export class ImagesService {
     });
   }
 
-  private setMainFinalFullImage(imgItem: ImageItem): void {
-    const c = document.createElement('canvas');
+  private setMainFullImageOrCanvas(type: 'image' | 'canvas', imgItem: ImageItem): void {
+    const c = type === 'image' ? document.createElement('canvas') : document.getElementById('main-canvas') as HTMLCanvasElement;
     const ctx = c.getContext('2d');
     if (!ctx) return;
 
@@ -120,13 +189,24 @@ export class ImagesService {
     img.onload = () => {
       const appMain = (document.querySelector('app-main') as HTMLElement);
       const appMainStyle = getComputedStyle(appMain);
-      c.width = appMain.getBoundingClientRect().width - parseFloat(appMainStyle.paddingLeft) - parseFloat(appMainStyle.paddingRight) - parseFloat(appMainStyle.borderLeftWidth) - parseFloat(appMainStyle.borderRightWidth);;
+      c.width = appMain.getBoundingClientRect().width - parseFloat(appMainStyle.paddingLeft) - parseFloat(appMainStyle.paddingRight) - parseFloat(appMainStyle.borderLeftWidth) - parseFloat(appMainStyle.borderRightWidth);
       c.height = (img.height / img.width) * c.width;
-
+      
       ctx.drawImage(img, 0, 0, c.width, c.height);
-      this.transformations().filter(t => t.image_path === imgItem.name).map(t => this.drawRectangle(ctx, c.width, c.height, t));
+      this.rects = [];
+      this.transformations().filter(t => t.image_path === imgItem.name).map(t => {
+        this.rects = [...this.rects, {
+          x_center: t.x_center * c.width,
+          y_center: t.y_center * c.height,
+          width: t.width * c.width,
+          height: t.height * c.height,
+          realTop: (appMain.getBoundingClientRect().height - c.height) / 2,
+          angle: t.angle
+        }]
+        this.drawRectangle(ctx, c.width, c.height, t);
+      });
 
-      this.mainImageItem.set({ ...imgItem, url: c.toDataURL('image/jpeg') });
+      if (type === 'image') this.mainImageItem.set({ ...imgItem, url: c.toDataURL('image/jpeg') });
     };
 
     img.onerror = () => { console.error('Failed to load image.') };
@@ -142,15 +222,16 @@ export class ImagesService {
     ctx.save();
 
     ctx.translate(centerX, centerY);
-    ctx.rotate(-angle);
+    ctx.rotate(angle);
 
     ctx.fillStyle = (t.crop_part === 1 ? this.leftColor : this.rightColor) + '10';
-    ctx.strokeStyle = t.crop_part === 1 ? this.leftColor : this.rightColor;
-    ctx.lineWidth = 1;
     ctx.beginPath();
     ctx.rect(-width / 2, -height / 2, width, height);
     ctx.fill();
-    ctx.stroke();
+
+    // ctx.strokeStyle = t.crop_part === 1 ? this.leftColor : this.rightColor;
+    // ctx.lineWidth = 1;
+    // ctx.stroke();
 
     ctx.restore();
   }

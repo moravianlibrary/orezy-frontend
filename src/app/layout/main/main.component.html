@@ -1,13 +1,18 @@
 <app-button-group />
 
 <div id="main-container">
-  @if (!imagesService.editable()) {
+  <!-- @if (!imagesService.editable()) {
     <img
       id="main-image"
       [src]="imagesService.mainImageItem().url"
     />
   }
-  @else { <canvas id="main-canvas"></canvas> }
+  @else { <canvas id="main-canvas"></canvas> } -->
+  <img
+    id="main-image"
+    [src]="imagesService.mainImageItem().url"
+  />
+  <canvas id="main-canvas"></canvas>
 </div>
 
 <router-outlet />

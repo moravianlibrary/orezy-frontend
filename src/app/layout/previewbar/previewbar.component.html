@@ -1,5 +1,5 @@
 <div class="thumbnails-flagged-wrapper">
-  @if (imagesService.mode() === 'final-single' && imagesService.flaggedCroppedImages().length) {
+  @if (imagesService.mode() === 'single' && imagesService.flaggedCroppedImages().length) {
     <p>Skeny v nepořádku ({{ imagesService.flaggedCroppedImages().length }}):</p>
     @for (image of imagesService.flaggedCroppedImages(); track $index) {
       <div class="thumbnail-wrapper">
@@ -14,7 +14,7 @@
         </div>
       </div>
     }
-  } @else if (imagesService.mode() === 'final-full' && imagesService.flaggedImages().length) {
+  } @else if (imagesService.mode() === 'full' && imagesService.flaggedImages().length) {
     <p>Skeny v nepořádku ({{ imagesService.flaggedImages().length }}):</p>
     @for (image of imagesService.flaggedImages(); track $index) {
       <div class="thumbnail-wrapper">
@@ -34,12 +34,12 @@
   }
 </div>
 
-@if (imagesService.mode() === 'final-single' && imagesService.notFlaggedCroppedImages().length) { <button (click)="toggleMorePreview()">{{ imagesService.toggledMore ? 'Skrýt' : 'Zobrazit' }} zbytek, co je cajkoš ({{ imagesService.notFlaggedCroppedImages().length }})</button> }
-@if (imagesService.mode() === 'final-full' && imagesService.notFlaggedImages().length) { <button (click)="toggleMorePreview()">{{ imagesService.toggledMore ? 'Skrýt' : 'Zobrazit' }} zbytek, co je cajkoš ({{ imagesService.notFlaggedImages().length }})</button> }
+@if (imagesService.mode() === 'single' && imagesService.notFlaggedCroppedImages().length) { <button (click)="toggleMorePreview()">{{ imagesService.toggledMore ? 'Skrýt' : 'Zobrazit' }} zbytek, co je cajkoš ({{ imagesService.notFlaggedCroppedImages().length }})</button> }
+@if (imagesService.mode() === 'full' && imagesService.notFlaggedImages().length) { <button (click)="toggleMorePreview()">{{ imagesService.toggledMore ? 'Skrýt' : 'Zobrazit' }} zbytek, co je cajkoš ({{ imagesService.notFlaggedImages().length }})</button> }
 
 <div class="thumbnails-notflagged-wrapper">
   @if (imagesService.toggledMore) {
-    @if (imagesService.mode() === 'final-single' && imagesService.notFlaggedTransformations().length) {
+    @if (imagesService.mode() === 'single' && imagesService.notFlaggedTransformations().length) {
       @for (image of imagesService.notFlaggedCroppedImages(); track $index) {
         <div class="thumbnail-wrapper">
           <img
@@ -49,7 +49,7 @@
           />
         </div>
       }
-    } @else if (imagesService.mode() === 'final-full' && imagesService.notFlaggedImages().length) {
+    } @else if (imagesService.mode() === 'full' && imagesService.notFlaggedImages().length) {
       @for (image of imagesService.notFlaggedImages(); track $index) {
         <div class="thumbnail-wrapper">
           <img

@@ -1,7 +1,7 @@
 import { serverBaseUrl } from '../app.config';
 
 export function getImageUrl(imageName: string): string {
-  return serverBaseUrl + '/images/' + imageName;
+  return serverBaseUrl + '/' + imageName;
 }
 
 export function degreeToRadian(angle: number): number {

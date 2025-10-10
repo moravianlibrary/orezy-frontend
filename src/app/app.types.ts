@@ -23,3 +23,12 @@ export interface Transformation {
   low_confidence: boolean;
   bad_sides_ratio: boolean;
 }
+
+export interface Rect {
+  x_center: number;
+  y_center: number;
+  width: number;
+  height: number;
+  realTop: number;
+  angle: number;
+}

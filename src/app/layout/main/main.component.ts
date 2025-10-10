@@ -14,9 +14,34 @@ export class MainComponent {
 
   ngAfterViewInit(): void {
     const mainContainer = document.getElementById('main-container') as HTMLElement;
-    mainContainer.style.width = this.imagesService.mode() === 'final-full' ? '100%' : 'initial';
-    mainContainer.style.height = this.imagesService.mode() === 'final-full' ? '100%' : 'initial';
-    
-    if (this.imagesService.mode() === 'final-full') this.imagesService.setMainImage(this.imagesService.flaggedImages()[0]);
+    mainContainer.style.width = this.imagesService.mode() === 'full' ? '100%' : 'initial';
+    mainContainer.style.height = this.imagesService.mode() === 'full' ? '100%' : 'initial';
+
+    if (this.imagesService.mode() === 'full') this.imagesService.setMainImage(this.imagesService.flaggedImages()[0]);
+
+    const mainImage = document.getElementById('main-image') as HTMLElement;
+    mainImage.onclick = (e) => {
+      this.imagesService.editable.set(this.imagesService.isCursorInsideRect(e));
+      this.imagesService.toggleMainImageOrCanvas();
+    }
+    mainImage.onmousemove = (e) =>  {
+      const isCursorInsideRect = this.imagesService.isCursorInsideRect(e);
+      this.imagesService.editable.set(isCursorInsideRect);
+      this.imagesService.toggleMainImageOrCanvas();
+
+      const c = document.getElementById('main-canvas') as HTMLCanvasElement;
+      const ctx = c.getContext('2d');
+      if (!ctx) return;
+
+      if (isCursorInsideRect) {
+        ctx.strokeStyle = this.imagesService.rightColor;
+        ctx.lineWidth = 1;
+        ctx.stroke();
+      } else {
+        ctx.strokeStyle = 'none';
+        ctx.lineWidth = 1;
+        ctx.stroke();
+      }
+    }
   }
 }

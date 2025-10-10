@@ -6,7 +6,8 @@ import { ImagesService } from './services/images.service';
 import { forkJoin, tap } from 'rxjs';
 import { ImageFlags, ImageItem } from './app.types';
 
-export const serverBaseUrl: string = 'http://127.0.0.1:8000';
+export const serverBaseUrl: string = 'https://ai-orezy-data.test.api.trinera.cloud/Y6QBR1bLTTYxGBszk0rnhopOF';
+export const bookId: string = '2619387078';
 
 export const appConfig: ApplicationConfig = {
   providers: [
