@@ -25,10 +25,12 @@ export interface Transformation {
 }
 
 export interface Rect {
+  id: string;
   x_center: number;
   y_center: number;
   width: number;
   height: number;
   realTop: number;
   angle: number;
+  crop_part: number;
 }

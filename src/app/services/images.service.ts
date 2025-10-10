@@ -39,9 +39,11 @@ export class ImagesService {
   mode = signal<string>(this.modes[1]);
   lastMode: string = '';
   mainImageItem = signal<ImageItem>({ url: 'https://media.tenor.com/WX_LDjYUrMsAAAAi/loading.gif' });
+  mainImage: HTMLImageElement | null = null;
   leftColor: string = '#00BFFF';
   rightColor: string = '#FF10F0';
   rects: Rect[] = [];
+  selectedRect: Rect | null = null;
 
   fetchImages(): Observable<ImageItem[]> {
     return this.http.get<any>(`${serverBaseUrl}/${bookId}/`, { 'responseType': 'text' as 'json' }).pipe(
@@ -70,6 +72,17 @@ export class ImagesService {
     return this.http.get<Transformation[]>(`${serverBaseUrl}/${bookId}/transformations.json`);
   }
 
+  setCroppedImgs(tfs: Transformation[]): void {
+    this.loading = true;    
+
+    const promisesCroppedImages = this.getPromisesImages(tfs);
+    Promise.all(promisesCroppedImages).then((imgs: ImageItem[]) => { 
+      this.croppedImages.set(imgs);
+      if (this.mode() === 'single') this.mainImageItem.set(this.flaggedCroppedImages()[0]);
+      this.loading = false;
+    });
+  }
+
   setMainImage(img: ImageItem): void {
     this.editable.set(false);
     this.toggleMainImageOrCanvas();
@@ -82,13 +95,13 @@ export class ImagesService {
     this.mainImageItem.set(img);
   }
 
-  isCursorInsideRect(e: MouseEvent): boolean {
-    const mainImage = document.getElementById('main-image') as HTMLElement;
+  isCursorInsideRect(e: MouseEvent): string {
+    const mainImage = document.getElementById(this.editable() ? 'main-canvas' : 'main-image') as HTMLElement;
     const rect = mainImage.getBoundingClientRect();
     const x = e.clientX - rect.left;
     const y = e.clientY;
 
-    const rectClicked = this.rects.find(r => {
+    const rectCursorIsInside = this.rects.find(r => {
       const angle = degreeToRadian(r.angle);
       const halfW = r.width / 2;
       const halfH = r.height / 2;
@@ -108,7 +121,7 @@ export class ImagesService {
       );
     });
     
-    return Boolean(rectClicked);
+    return rectCursorIsInside?.id ?? '';
   }
 
   toggleMainImageOrCanvas(): void {
@@ -125,14 +138,33 @@ export class ImagesService {
     if (mainCanvas) mainCanvas.style.zIndex = '5';
   }
 
-  setCroppedImgs(tfs: Transformation[]): void {
-    this.loading = true;    
+  hoveringRect(hoveredRectId: string) {
+    const c = document.getElementById('main-canvas') as HTMLCanvasElement;
+    const ctx = c.getContext('2d');
+    if (!ctx) return;
 
-    const promisesCroppedImages = this.getPromisesImages(tfs);
-    Promise.all(promisesCroppedImages).then((imgs: ImageItem[]) => { 
-      this.croppedImages.set(imgs);
-      if (this.mode() === 'single') this.mainImageItem.set(this.flaggedCroppedImages()[0]);
-      this.loading = false;
+    ctx.clearRect(0, 0, c.width, c.height);
+
+    const img = this.mainImage;
+    if (img) ctx.drawImage(img, 0, 0, c.width, c.height);
+
+    this.rects.forEach(r => {
+      ctx.save();
+      ctx.translate(r.x_center, r.y_center);
+      ctx.rotate(degreeToRadian(r.angle));
+
+      ctx.fillStyle = (r.crop_part === 1 ? this.leftColor : this.rightColor) + '10';
+      ctx.beginPath();
+      ctx.rect(-r.width / 2, -r.height / 2, r.width, r.height);
+      ctx.fill();
+
+      if (r.id === hoveredRectId) {
+        ctx.strokeStyle = r.crop_part === 1 ? this.leftColor : this.rightColor;
+        ctx.lineWidth = 2;
+        ctx.stroke();
+      }
+
+      ctx.restore();
     });
   }
 
@@ -178,13 +210,14 @@ export class ImagesService {
   }
 
   private setMainFullImageOrCanvas(type: 'image' | 'canvas', imgItem: ImageItem): void {
-    const c = type === 'image' ? document.createElement('canvas') : document.getElementById('main-canvas') as HTMLCanvasElement;
+    const c = document.getElementById('main-canvas') as HTMLCanvasElement;
     const ctx = c.getContext('2d');
     if (!ctx) return;
 
     const img = new Image();
     img.crossOrigin = 'anonymous';
     img.src = imgItem.url ?? '';
+    this.mainImage = img;
 
     img.onload = () => {
       const appMain = (document.querySelector('app-main') as HTMLElement);
@@ -196,12 +229,14 @@ export class ImagesService {
       this.rects = [];
       this.transformations().filter(t => t.image_path === imgItem.name).map(t => {
         this.rects = [...this.rects, {
+          id: t.image_path + String(t.confidence),
           x_center: t.x_center * c.width,
           y_center: t.y_center * c.height,
           width: t.width * c.width,
           height: t.height * c.height,
           realTop: (appMain.getBoundingClientRect().height - c.height) / 2,
-          angle: t.angle
+          angle: t.angle,
+          crop_part: t.crop_part
         }]
         this.drawRectangle(ctx, c.width, c.height, t);
       });
@@ -228,10 +263,6 @@ export class ImagesService {
     ctx.beginPath();
     ctx.rect(-width / 2, -height / 2, width, height);
     ctx.fill();
-
-    // ctx.strokeStyle = t.crop_part === 1 ? this.leftColor : this.rightColor;
-    // ctx.lineWidth = 1;
-    // ctx.stroke();
 
     ctx.restore();
   }

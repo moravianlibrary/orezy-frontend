@@ -21,27 +21,30 @@ export class MainComponent {
 
     const mainImage = document.getElementById('main-image') as HTMLElement;
     mainImage.onclick = (e) => {
-      this.imagesService.editable.set(this.imagesService.isCursorInsideRect(e));
+      const rectCursorIsInside = this.imagesService.isCursorInsideRect(e);
+      this.imagesService.editable.set(Boolean(rectCursorIsInside));
       this.imagesService.toggleMainImageOrCanvas();
+      this.imagesService.selectedRect = this.imagesService.rects.find(r => r.id === rectCursorIsInside) ?? null;
     }
     mainImage.onmousemove = (e) =>  {
-      const isCursorInsideRect = this.imagesService.isCursorInsideRect(e);
-      this.imagesService.editable.set(isCursorInsideRect);
+      const rectCursorIsInside = this.imagesService.isCursorInsideRect(e);
+      this.imagesService.editable.set(Boolean(rectCursorIsInside));
       this.imagesService.toggleMainImageOrCanvas();
+      this.imagesService.hoveringRect(rectCursorIsInside);
+    }
 
-      const c = document.getElementById('main-canvas') as HTMLCanvasElement;
-      const ctx = c.getContext('2d');
-      if (!ctx) return;
-
-      if (isCursorInsideRect) {
-        ctx.strokeStyle = this.imagesService.rightColor;
-        ctx.lineWidth = 1;
-        ctx.stroke();
-      } else {
-        ctx.strokeStyle = 'none';
-        ctx.lineWidth = 1;
-        ctx.stroke();
-      }
+    const mainCanvas = document.getElementById('main-canvas') as HTMLElement;
+    mainCanvas.onclick = (e) => {
+      const rectCursorIsInside = this.imagesService.isCursorInsideRect(e);
+      this.imagesService.editable.set(Boolean(rectCursorIsInside));
+      this.imagesService.toggleMainImageOrCanvas();
+      this.imagesService.selectedRect = this.imagesService.rects.find(r => r.id === rectCursorIsInside) ?? null;
+    }
+    mainCanvas.onmousemove = (e) =>  {
+      const rectCursorIsInside = this.imagesService.isCursorInsideRect(e);
+      this.imagesService.editable.set(Boolean(rectCursorIsInside));
+      this.imagesService.toggleMainImageOrCanvas();
+      this.imagesService.hoveringRect(rectCursorIsInside);
     }
   }
 }
