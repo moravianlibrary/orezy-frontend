@@ -142,7 +142,7 @@ export class ImagesService {
     const mainImage = document.getElementById(this.editable() ? 'main-canvas' : 'main-image') as HTMLElement;
     const rect = mainImage.getBoundingClientRect();
     const x = e.clientX - rect.left;
-    const y = e.clientY;
+    const y = e.clientY - rect.top;
 
     const rectCursorIsInside = this.rects.find(r => {
       const angle = degreeToRadian(r.angle);
@@ -150,7 +150,7 @@ export class ImagesService {
       const halfH = r.height / 2;
 
       const dx = x - r.x_center;
-      const dy = y - (r.y_center + r.realTop);
+      const dy = y - r.y_center;
       const cos = Math.cos(-angle);
       const sin = Math.sin(-angle);
       const localX = dx * cos - dy * sin;
@@ -223,9 +223,16 @@ export class ImagesService {
 
     img.onload = () => {
       const appMain = (document.querySelector('app-main') as HTMLElement);
+      const appRect = appMain.getBoundingClientRect();
       const appMainStyle = getComputedStyle(appMain);
-      c.width = appMain.getBoundingClientRect().width - parseFloat(appMainStyle.paddingLeft) - parseFloat(appMainStyle.paddingRight) - parseFloat(appMainStyle.borderLeftWidth) - parseFloat(appMainStyle.borderRightWidth);
-      c.height = (img.height / img.width) * c.width;
+
+      if (img.width / img.height > appRect.width / appRect.height) {
+        c.width = appRect.width - parseFloat(appMainStyle.paddingLeft) - parseFloat(appMainStyle.paddingRight) - parseFloat(appMainStyle.borderLeftWidth) - parseFloat(appMainStyle.borderRightWidth);
+        c.height = (img.height / img.width) * c.width;  
+      } else {
+        c.height = appRect.height - parseFloat(appMainStyle.paddingTop) - parseFloat(appMainStyle.paddingBottom) - parseFloat(appMainStyle.borderTopWidth) - parseFloat(appMainStyle.borderBottomWidth);
+        c.width = (img.width / img.height) * c.height;
+      }
       
       ctx.drawImage(img, 0, 0, c.width, c.height);
       this.rects = [];
