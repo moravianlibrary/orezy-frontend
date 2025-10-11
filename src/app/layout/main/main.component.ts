@@ -18,10 +18,10 @@ export class MainComponent {
     const mainImage = document.getElementById('main-image') as HTMLElement;
     mainImage.onclick = (e) => {
       const rectCursorIsInside = this.imagesService.isCursorInsideRect(e);
-      console.log('image: ', rectCursorIsInside);
       this.imagesService.editable.set(Boolean(rectCursorIsInside));
       this.imagesService.toggleMainImageOrCanvas();
-      this.imagesService.selectedRect = this.imagesService.rects.find(r => r.id === rectCursorIsInside) ?? null;
+      this.imagesService.selectedRect = this.imagesService.rects.find(r => r.id === rectCursorIsInside) || null;
+      this.imagesService.hoveringRect(rectCursorIsInside);
     }
     mainImage.onmousemove = (e) =>  {
       const rectCursorIsInside = this.imagesService.isCursorInsideRect(e);
@@ -33,10 +33,10 @@ export class MainComponent {
     const mainCanvas = document.getElementById('main-canvas') as HTMLElement;
     mainCanvas.onclick = (e) => {
       const rectCursorIsInside = this.imagesService.isCursorInsideRect(e);
-      console.log('canvas: ', rectCursorIsInside);
       this.imagesService.editable.set(Boolean(rectCursorIsInside));
       this.imagesService.toggleMainImageOrCanvas();
-      this.imagesService.selectedRect = this.imagesService.rects.find(r => r.id === rectCursorIsInside) ?? null;
+      this.imagesService.selectedRect = this.imagesService.rects.find(r => r.id === rectCursorIsInside) || null;
+      this.imagesService.hoveringRect(rectCursorIsInside);
     }
     mainCanvas.onmousemove = (e) =>  {
       const rectCursorIsInside = this.imagesService.isCursorInsideRect(e);

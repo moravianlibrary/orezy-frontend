@@ -171,7 +171,7 @@ export class ImagesService {
     const mainImage = document.getElementById('main-image') as HTMLElement;
     const mainCanvas = document.getElementById('main-canvas') as HTMLElement;
 
-    if (this.editable()) {
+    if (this.editable() || this.selectedRect) {
       if (mainImage) mainImage.style.zIndex = '5';
       if (mainCanvas) mainCanvas.style.zIndex = '10';
       return;
@@ -201,7 +201,7 @@ export class ImagesService {
       ctx.rect(-r.width / 2, -r.height / 2, r.width, r.height);
       ctx.fill();
 
-      if (r.id === hoveredRectId) {
+      if (r.id === hoveredRectId || this.selectedRect?.id === r.id) {
         ctx.strokeStyle = r.crop_part === 1 ? this.leftColor : this.rightColor;
         ctx.lineWidth = 2;
         ctx.stroke();
