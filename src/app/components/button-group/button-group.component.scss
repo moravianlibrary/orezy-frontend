@@ -7,7 +7,7 @@
 button {
   flex: 1;
   padding: 0.5rem 1rem;
-  background: white;
+  background: lightgray;
   border: 1px solid black;
   cursor: pointer;
 }
@@ -17,5 +17,5 @@ button:not(:last-child) {
 }
 
 .selected {
-  background-color: lightgray;
+  background-color: white;
 }
