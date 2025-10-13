@@ -13,36 +13,35 @@ export class MainComponent {
   imagesService = inject(ImagesService);
 
   ngAfterViewInit(): void {
-    if (this.imagesService.mode() === 'full') this.imagesService.setMainImage(this.imagesService.flaggedImages()[0]);
-
-    const mainImage = document.getElementById('main-image') as HTMLElement;
-    mainImage.onclick = (e) => {
-      const rectCursorIsInside = this.imagesService.isCursorInsideRect(e);
-      this.imagesService.editable.set(Boolean(rectCursorIsInside));
-      this.imagesService.toggleMainImageOrCanvas();
-      this.imagesService.selectedRect = this.imagesService.rects.find(r => r.id === rectCursorIsInside) || null;
-      this.imagesService.hoveringRect(rectCursorIsInside);
-    }
-    mainImage.onmousemove = (e) =>  {
-      const rectCursorIsInside = this.imagesService.isCursorInsideRect(e);
-      this.imagesService.editable.set(Boolean(rectCursorIsInside));
-      this.imagesService.toggleMainImageOrCanvas();
-      this.imagesService.hoveringRect(rectCursorIsInside);
+    if (this.imagesService.mode() === 'full') {
+      const [firstFlagged] = this.imagesService.flaggedImages();
+      if (firstFlagged) this.imagesService.setMainImage(firstFlagged);
     }
 
-    const mainCanvas = document.getElementById('main-canvas') as HTMLElement;
-    mainCanvas.onclick = (e) => {
-      const rectCursorIsInside = this.imagesService.isCursorInsideRect(e);
-      this.imagesService.editable.set(Boolean(rectCursorIsInside));
-      this.imagesService.toggleMainImageOrCanvas();
-      this.imagesService.selectedRect = this.imagesService.rects.find(r => r.id === rectCursorIsInside) || null;
-      this.imagesService.hoveringRect(rectCursorIsInside);
-    }
-    mainCanvas.onmousemove = (e) =>  {
-      const rectCursorIsInside = this.imagesService.isCursorInsideRect(e);
-      this.imagesService.editable.set(Boolean(rectCursorIsInside));
-      this.imagesService.toggleMainImageOrCanvas();
-      this.imagesService.hoveringRect(rectCursorIsInside);
-    }
+    this.attachImageEvents('main-image');
+    this.attachImageEvents('main-canvas');
+  }
+
+  private attachImageEvents(elementId: string): void {
+    const element = document.getElementById(elementId);
+    if (!element) return;
+
+    element.onclick = (e) => this.handleInteraction(e, true);
+    element.onmousemove = (e) => this.handleInteraction(e, false);
+  }
+
+  private handleInteraction(e: MouseEvent, isClick: boolean): void {
+    const rectId = this.imagesService.rectIdCursorInside(e);
+    const insideRect = Boolean(rectId);
+    const { lastRectCursorIsInside, selectedRect } = this.imagesService;
+    const sameState = lastRectCursorIsInside === insideRect && (isClick ? selectedRect?.id === rectId : false);
+    if (sameState) return;
+
+    if (isClick) this.imagesService.selectedRect = this.imagesService.rects.find((r) => r.id === rectId) || null;
+
+    this.imagesService.lastRectCursorIsInside = insideRect;
+    this.imagesService.editable.set(insideRect);
+    this.imagesService.toggleMainImageOrCanvas();
+    this.imagesService.hoveringRect(rectId);
   }
 }

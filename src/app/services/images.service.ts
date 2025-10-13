@@ -10,82 +10,83 @@ import { degreeToRadian, getImageUrl } from '../utils/utils';
 })
 export class ImagesService {
   private http = inject(HttpClient);
+
+
+  // ---------- STATE ----------
   books: string[] = books;
+  modes: string[] = ['single', 'full'];
+
   book = signal<string>(books[2]);
+  mode = signal<string>(this.modes[1]);
+  editable = signal<boolean>(false);
+
+  mainImageItem = signal<ImageItem>({ url: 'https://media.tenor.com/WX_LDjYUrMsAAAAi/loading.gif' });
+  
+  images = signal<ImageItem[]>([]);
+  croppedImages = signal<ImageItem[]>([]);
+  transformations = signal<Transformation[]>([]);
+
+  mainImage: HTMLImageElement | null = null;
+  rects: Rect[] = [];
+  selectedRect: Rect | null = null;
+  lastRectCursorIsInside: boolean = false;
   lastBook: string = '';
+  lastMode: string = '';
   loading: boolean = false;
 
-  // Previews
-  images = signal<ImageItem[]>([]);
-  flaggedImages = computed<ImageItem[]>(() => this.images().filter(img => img.low_confidence || img.bad_sides_ratio));
-  notFlaggedImages = computed<ImageItem[]>(() => this.images().filter(img => !img.low_confidence && !img.bad_sides_ratio));
-
-  croppedImages = signal<ImageItem[]>([]);
-  flaggedCroppedImages = computed<ImageItem[]>(() => this.croppedImages().filter(img => img.low_confidence || img.bad_sides_ratio));
-  notFlaggedCroppedImages = computed<ImageItem[]>(() => this.croppedImages().filter(img => !img.low_confidence && !img.bad_sides_ratio));
-  // notFlaggedCroppedImages: HTMLImageElement[] = [];
-
-  transformations = signal<Transformation[]>([]);
-  // flaggedTransformations = computed<Transformation[]>(() => this.transformations().filter(t => t.low_confidence || t.bad_sides_ratio));
-  notFlaggedTransformations = computed<Transformation[]>(() => this.transformations().filter(t => !t.low_confidence && !t.bad_sides_ratio));
-
+  leftColor: string = '#00BFFF';
+  rightColor: string = '#FF10F0';
   confidenceThreshold: number = .9;
   sideRatioThreshold: number = .02;
   avgSideRatio: number = 0;
-
   toggledMore: boolean = false;
 
-  // Main
-  editable = signal<boolean>(false);
-  modes: string[] = ['single', 'full'];
-  mode = signal<string>(this.modes[1]);
-  lastMode: string = '';
-  mainImageItem = signal<ImageItem>({ url: 'https://media.tenor.com/WX_LDjYUrMsAAAAi/loading.gif' });
-  mainImage: HTMLImageElement | null = null;
-  leftColor: string = '#00BFFF';
-  rightColor: string = '#FF10F0';
-  rects: Rect[] = [];
-  selectedRect: Rect | null = null;
 
+  // ---------- DERIVED STATE ----------
+  flaggedImages = computed<ImageItem[]>(() => this.images().filter(img => img.low_confidence || img.bad_sides_ratio));
+  notFlaggedImages = computed<ImageItem[]>(() => this.images().filter(img => !img.low_confidence && !img.bad_sides_ratio));
+  flaggedCroppedImages = computed<ImageItem[]>(() => this.croppedImages().filter(img => img.low_confidence || img.bad_sides_ratio));
+  notFlaggedCroppedImages = computed<ImageItem[]>(() => this.croppedImages().filter(img => !img.low_confidence && !img.bad_sides_ratio));
+  notFlaggedTransformations = computed<Transformation[]>(() => this.transformations().filter(t => !t.low_confidence && !t.bad_sides_ratio));
+
+
+  // ---------- FETCHING ----------
   fetchImages(): Observable<ImageItem[]> {
-    return this.http.get<any>(`${serverBaseUrl}/${this.book()}/`, { 'responseType': 'text' as 'json' }).pipe(
-      map((html: any) => {
-        const parser = new DOMParser();
-        const doc = parser.parseFromString(html, 'text/html');
-
-        const anchors = Array.from(doc.querySelectorAll('a[href]'));
-        const files = anchors
-          .map(a => a.getAttribute('href')!)
-          .filter(href => href && href !== '../');
-
-        const images = files
-          .filter(f => f.toLowerCase().endsWith('.jpg'))
-          .map(f => ({
-          name: `${this.book()}/` + f,
-          url: serverBaseUrl + `/${this.book()}/` + f
-        }));
-
-        return images;
-      })
-    );
+    return this.http.get(`${serverBaseUrl}/${this.book()}/`, { responseType: 'text' })
+      .pipe(map((html) => this.parseImageList(html)));
   }
 
   fetchTransformations(): Observable<Transformation[]> {
     return this.http.get<Transformation[]>(`${serverBaseUrl}/${this.book()}/transformations.json`);
   }
 
+  private parseImageList(html: string): ImageItem[] {
+    const doc = new DOMParser().parseFromString(html, 'text/html');
+    return Array.from(doc.querySelectorAll('a[href]'))
+      .map((a) => a.getAttribute('href'))
+      .filter((href): href is string => !!href && href !== '../')
+      .filter((f) => f.toLowerCase().endsWith('.jpg'))
+      .map((f) => ({
+        name: `${this.book()}/${f}`,
+        url: `${serverBaseUrl}/${this.book()}/${f}`,
+      }));
+  }
+
+
+  // ---------- CROPPED IMAGES ----------
   setCroppedImgs(tfs: Transformation[]): void {
     this.loading = true;
-
-    const promisesCroppedImages = this.getPromisesImages(tfs);
-    Promise.all(promisesCroppedImages).then((imgs: ImageItem[]) => { 
+    Promise.all(this.buildCroppedImagePromises(tfs)).then((imgs: ImageItem[]) => { 
       this.croppedImages.set(imgs);
-      if (this.mode() === 'single') this.setMainImage(this.flaggedCroppedImages()[0]);
+      if (this.mode() === 'single') {
+        const [firstFlagged] = this.flaggedCroppedImages();
+        if (firstFlagged) this.setMainImage(firstFlagged);
+      }
       this.loading = false;
     });
   }
 
-  private getPromisesImages(tfs: Transformation[]): Promise<ImageItem>[] {
+  private buildCroppedImagePromises(tfs: Transformation[]): Promise<ImageItem>[] {
     return tfs.map(t => {
       return new Promise<ImageItem>((resolve) => {
         const c = document.createElement('canvas');
@@ -110,15 +111,13 @@ export class ImagesService {
           ctx.drawImage(img, -centerX, -centerY);
           ctx.restore();
 
-          const resultImg: ImageItem = {
+          resolve({
             name: t.image_path,
             url: c.toDataURL('image/jpeg'),
             crop_part: t.crop_part,
             low_confidence: t.low_confidence,
             bad_sides_ratio: t.bad_sides_ratio
-          };
-
-          resolve(resultImg);
+          });
         };
 
         img.onerror = () => { console.error('Failed to load image.') };
@@ -126,91 +125,87 @@ export class ImagesService {
     });
   }
 
+
+  // ---------- MAIN IMAGE LOGIC ----------
   setMainImage(img: ImageItem): void {
     this.editable.set(false);
     this.toggleMainImageOrCanvas();
-    if (this.mode() === 'full') {
-      this.setMainFullImageOrCanvas('image', img);
-      this.setMainFullImageOrCanvas('canvas', img);
-      return;
-    }
-      
-    this.mainImageItem.set(img);
+    this.mode() === 'full'
+      ? this.renderFullImageAndCanvas(img)
+      : this.mainImageItem.set(img);
   }
 
-  isCursorInsideRect(e: MouseEvent): string {
-    const mainImage = document.getElementById(this.editable() ? 'main-canvas' : 'main-image') as HTMLElement;
-    const rect = mainImage.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
-
-    const rectCursorIsInside = this.rects.find(r => {
-      const angle = degreeToRadian(r.angle);
-      const halfW = r.width / 2;
-      const halfH = r.height / 2;
-
-      const dx = x - r.x_center;
-      const dy = y - r.y_center;
-      const cos = Math.cos(-angle);
-      const sin = Math.sin(-angle);
-      const localX = dx * cos - dy * sin;
-      const localY = dx * sin + dy * cos;
-
-      return (
-        localX >= -halfW &&
-        localX <= halfW &&
-        localY >= -halfH &&
-        localY <= halfH
-      );
-    });
-    
-    return rectCursorIsInside?.id ?? '';
+  private renderFullImageAndCanvas(img: ImageItem): void {
+    ['image', 'canvas'].forEach((type) =>
+      this.setMainFullImageOrCanvas(type as 'image' | 'canvas', img)
+    );
   }
 
   toggleMainImageOrCanvas(): void {
     const mainImage = document.getElementById('main-image') as HTMLElement;
     const mainCanvas = document.getElementById('main-canvas') as HTMLElement;
 
-    if (this.editable() || this.selectedRect) {
-      if (mainImage) mainImage.style.zIndex = '5';
-      if (mainCanvas) mainCanvas.style.zIndex = '10';
-      return;
-    }
-
-    if (mainImage) mainImage.style.zIndex = '10';
-    if (mainCanvas) mainCanvas.style.zIndex = '5';
+    const showCanvas = this.editable() || !!this.selectedRect;
+    if (mainImage) mainImage.style.zIndex = showCanvas ? '5' : '10';
+    if (mainCanvas) mainCanvas.style.zIndex = showCanvas ? '10' : '5';
   }
 
-  hoveringRect(hoveredRectId: string) {
+
+  // ---------- RECTANGLE LOGIC ----------
+  rectIdCursorInside(e: MouseEvent): string {
+    const mainElement = document.getElementById(this.editable() ? 'main-canvas' : 'main-image') as HTMLElement;
+    if (!mainElement) return '';
+
+    const rect = mainElement.getBoundingClientRect();
+    const [x, y] = [e.clientX - rect.left, e.clientY - rect.top];
+
+    const hit = this.rects.find((r) => this.isPointInRotatedRect(x, y, r));
+    return hit?.id ?? '';
+  }
+
+  private isPointInRotatedRect(x: number, y: number, r: Rect): boolean {
+    const angle = degreeToRadian(r.angle);
+    const [halfW, halfH] = [r.width / 2, r.height / 2];
+    const dx = x - r.x_center;
+    const dy = y - r.y_center;
+    const cos = Math.cos(-angle);
+    const sin = Math.sin(-angle);
+    const localX = dx * cos - dy * sin;
+    const localY = dx * sin + dy * cos;
+    return localX >= -halfW && localX <= halfW && localY >= -halfH && localY <= halfH;
+  }
+
+  hoveringRect(hoveredRectId: string): void {
     const c = document.getElementById('main-canvas') as HTMLCanvasElement;
-    const ctx = c.getContext('2d');
+    const ctx = c?.getContext('2d');
     if (!ctx) return;
 
     ctx.clearRect(0, 0, c.width, c.height);
+    if (this.mainImage) ctx.drawImage(this.mainImage, 0, 0, c.width, c.height);
 
-    const img = this.mainImage;
-    if (img) ctx.drawImage(img, 0, 0, c.width, c.height);
-
-    this.rects.forEach(r => {
-      ctx.save();
-      ctx.translate(r.x_center, r.y_center);
-      ctx.rotate(degreeToRadian(r.angle));
-
-      ctx.fillStyle = (r.crop_part === 1 ? this.leftColor : this.rightColor) + '10';
-      ctx.beginPath();
-      ctx.rect(-r.width / 2, -r.height / 2, r.width, r.height);
-      ctx.fill();
-
-      if (r.id === hoveredRectId || this.selectedRect?.id === r.id) {
-        ctx.strokeStyle = r.crop_part === 1 ? this.leftColor : this.rightColor;
-        ctx.lineWidth = 2;
-        ctx.stroke();
-      }
-
-      ctx.restore();
-    });
+    this.rects.forEach((r) => this.drawRect(ctx, r, hoveredRectId));
   }
 
+  private drawRect(ctx: CanvasRenderingContext2D, r: Rect, hoveredId: string): void {
+    ctx.save();
+    ctx.translate(r.x_center, r.y_center);
+    ctx.rotate(degreeToRadian(r.angle));
+
+    const color = r.crop_part === 1 ? this.leftColor : this.rightColor;
+    ctx.fillStyle = color + '10';
+    ctx.fillRect(-r.width / 2, -r.height / 2, r.width, r.height);
+
+    if (r.id === hoveredId || this.selectedRect?.id === r.id) {
+      ctx.strokeStyle = color;
+      ctx.lineWidth = 2;
+      ctx.strokeRect(-r.width / 2, -r.height / 2, r.width, r.height);
+    }
+
+    ctx.restore();
+  }
+
+
+  // ---------- FULL IMAGE DRAWING ----------
   private setMainFullImageOrCanvas(type: 'image' | 'canvas', imgItem: ImageItem): void {
     const c = document.getElementById('main-canvas') as HTMLCanvasElement;
     const ctx = c.getContext('2d');
@@ -221,58 +216,77 @@ export class ImagesService {
     img.src = imgItem.url ?? '';
     this.mainImage = img;
 
-    img.onload = () => {
-      const appMain = (document.querySelector('app-main') as HTMLElement);
-      const appRect = appMain.getBoundingClientRect();
-      const appMainStyle = getComputedStyle(appMain);
-
-      if (img.width / img.height > appRect.width / appRect.height) {
-        c.width = appRect.width - parseFloat(appMainStyle.paddingLeft) - parseFloat(appMainStyle.paddingRight) - parseFloat(appMainStyle.borderLeftWidth) - parseFloat(appMainStyle.borderRightWidth);
-        c.height = (img.height / img.width) * c.width;  
-      } else {
-        c.height = appRect.height - parseFloat(appMainStyle.paddingTop) - parseFloat(appMainStyle.paddingBottom) - parseFloat(appMainStyle.borderTopWidth) - parseFloat(appMainStyle.borderBottomWidth);
-        c.width = (img.width / img.height) * c.height;
-      }
-      
-      ctx.drawImage(img, 0, 0, c.width, c.height);
-      this.rects = [];
-      this.transformations().filter(t => t.image_path === imgItem.name).map(t => {
-        this.rects = [...this.rects, {
-          id: t.image_path + String(t.confidence),
-          x_center: t.x_center * c.width,
-          y_center: t.y_center * c.height,
-          width: t.width * c.width,
-          height: t.height * c.height,
-          realTop: (appMain.getBoundingClientRect().height - c.height) / 2,
-          angle: t.angle,
-          crop_part: t.crop_part
-        }]
-        this.drawRectangle(ctx, c.width, c.height, t);
-      });
-
-      if (type === 'image') this.mainImageItem.set({ ...imgItem, url: c.toDataURL('image/jpeg') });
-    };
+    img.onload = () => this.fitAndDrawImage(c, ctx, img, imgItem, type);
 
     img.onerror = () => { console.error('Failed to load image.') };
   }
 
+  private fitAndDrawImage(
+    c: HTMLCanvasElement,
+    ctx: CanvasRenderingContext2D,
+    img: HTMLImageElement,
+    imgItem: ImageItem,
+    type: 'image' | 'canvas'
+  ): void {
+    const appMain = document.querySelector('app-main') as HTMLElement;
+    const appStyle = getComputedStyle(appMain);
+    const appRect = appMain.getBoundingClientRect();
+
+    const widthAvail =
+      appRect.width -
+      (parseFloat(appStyle.paddingLeft) +
+        parseFloat(appStyle.paddingRight) +
+        parseFloat(appStyle.borderLeftWidth) +
+        parseFloat(appStyle.borderRightWidth));
+
+    const heightAvail =
+      appRect.height -
+      (parseFloat(appStyle.paddingTop) +
+        parseFloat(appStyle.paddingBottom) +
+        parseFloat(appStyle.borderTopWidth) +
+        parseFloat(appStyle.borderBottomWidth));
+
+    if (img.width / img.height > appRect.width / appRect.height) {
+      c.width = widthAvail;
+      c.height = (img.height / img.width) * widthAvail;
+    } else {
+      c.height = heightAvail;
+      c.width = (img.width / img.height) * heightAvail;
+    }
+
+    ctx.drawImage(img, 0, 0, c.width, c.height);
+    this.rects = [];
+
+    this.transformations()
+      .filter((t) => t.image_path === imgItem.name)
+      .forEach((t) => {
+        this.rects.push({
+          id: `${t.image_path}${t.confidence}`,
+          x_center: t.x_center * c.width,
+          y_center: t.y_center * c.height,
+          width: t.width * c.width,
+          height: t.height * c.height,
+          realTop: (appRect.height - c.height) / 2,
+          angle: t.angle,
+          crop_part: t.crop_part,
+        });
+        this.drawRectangle(ctx, c.width, c.height, t);
+      });
+
+    if (type === 'image') this.mainImageItem.set({ ...imgItem, url: c.toDataURL('image/jpeg') });
+  }
+
   private drawRectangle(ctx: CanvasRenderingContext2D, cWidth: number, cHeight: number, t: Transformation): void {
-    const centerX = cWidth * t.x_center;
-    const centerY = cHeight * t.y_center;
+    const [centerX, centerY] = [cWidth * t.x_center, cHeight * t.y_center];
+    const [width, height] = [cWidth * t.width, cHeight * t.height];
     const angle = degreeToRadian(t.angle);
-    const width = cWidth * t.width;
-    const height = cHeight * t.height;
     
     ctx.save();
-
     ctx.translate(centerX, centerY);
     ctx.rotate(angle);
 
     ctx.fillStyle = (t.crop_part === 1 ? this.leftColor : this.rightColor) + '10';
-    ctx.beginPath();
-    ctx.rect(-width / 2, -height / 2, width, height);
-    ctx.fill();
-
+    ctx.fillRect(-width / 2, -height / 2, width, height);
     ctx.restore();
   }
 }
