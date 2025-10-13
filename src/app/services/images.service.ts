@@ -39,6 +39,7 @@ export class ImagesService {
   confidenceThreshold: number = .9;
   sideRatioThreshold: number = .02;
   avgSideRatio: number = 0;
+  maxRects: number = 2;
   toggledMore: boolean = false;
 
 
@@ -128,6 +129,7 @@ export class ImagesService {
 
   // ---------- MAIN IMAGE LOGIC ----------
   setMainImage(img: ImageItem): void {
+    this.selectedRect = null;
     this.editable.set(false);
     this.toggleMainImageOrCanvas();
     this.mode() === 'full'
@@ -261,7 +263,7 @@ export class ImagesService {
       .filter((t) => t.image_path === imgItem.name)
       .forEach((t) => {
         this.rects.push({
-          id: `${t.image_path}${t.confidence}`,
+          id: `${t.image_path}-${t.crop_part}`,
           x_center: t.x_center * c.width,
           y_center: t.y_center * c.height,
           width: t.width * c.width,

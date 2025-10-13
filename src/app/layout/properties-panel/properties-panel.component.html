@@ -1,0 +1,49 @@
+<div class="add-remove-rects">
+  <button class="add-rect" [disabled]="imagesService.rects.length >= imagesService.maxRects">+Add rect</button>
+  @if (!!imagesService.selectedRect) { <button class="remove-rect">-Remove rect</button> }
+</div>
+
+@if (!!imagesService.selectedRect) {
+  <div class="property position">
+    Position
+    <div class="inputs-wrapper">
+      <div class="left-input-wrapper">
+        <label>
+          X <input class="left-input" type="number" />
+        </label>
+      </div>
+      <div class="right-input-wrapper">
+        <label>
+          Y <input class="right-input" type="number" />
+        </label>
+      </div>
+    </div>
+  </div>
+
+  <div class="property dimentions">
+    Dimensions
+    <div class="inputs-wrapper">
+      <div class="left-input-wrapper">
+        <label>
+          W <input class="left-input" type="number" />
+        </label>
+      </div>
+      <div class="right-input-wrapper">
+        <label>
+          H <input class="right-input" type="number" />
+        </label>
+      </div>
+    </div>
+  </div>
+
+  <div class="property rotation">
+    Rotation
+    <div class="inputs-wrapper">
+      <div class="left-input-wrapper">
+        <label>
+          R <input class="left-input" type="number" />
+        </label>
+      </div>
+    </div>
+  </div>
+}
