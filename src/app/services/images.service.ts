@@ -161,11 +161,13 @@ export class ImagesService {
     const rect = mainElement.getBoundingClientRect();
     const [x, y] = [e.clientX - rect.left, e.clientY - rect.top];
 
-    const hit = this.rects.find((r) => this.isPointInRotatedRect(x, y, r));
+    const hit = this.selectedRect && this.rects.filter((r) => this.isPointInRect(x, y, r)).includes(this.selectedRect)
+      ? this.selectedRect
+      : this.rects.find((r) => this.isPointInRect(x, y, r));
     return hit?.id ?? '';
   }
 
-  private isPointInRotatedRect(x: number, y: number, r: Rect): boolean {
+  private isPointInRect(x: number, y: number, r: Rect): boolean {
     const angle = degreeToRadian(r.angle);
     const [halfW, halfH] = [r.width / 2, r.height / 2];
     const dx = x - r.x_center;
