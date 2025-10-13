@@ -18,6 +18,7 @@ export class MainComponent {
       if (firstFlagged) this.imagesService.setMainImage(firstFlagged);
     }
 
+    this.attachImageEvents('main-container');
     this.attachImageEvents('main-image');
     this.attachImageEvents('main-canvas');
   }
