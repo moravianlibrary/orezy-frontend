@@ -23,11 +23,13 @@ export class ImagesService {
   images = signal<ImageItem[]>([]);
   croppedImages = signal<ImageItem[]>([]);
   transformations = signal<Transformation[]>([]);
+  originalImages = signal<ImageItem[]>([]);
+  originalTransformations = signal<Transformation[]>([]);
 
   mainImageItem = signal<ImageItem>({ url: 'https://media.tenor.com/WX_LDjYUrMsAAAAi/loading.gif' });
 
   mainImage: HTMLImageElement | null = null;
-  rects: Rect[] = [];
+  currentRects: Rect[] = [];
   selectedRect: Rect | null = null;
   lastRectCursorIsInside: boolean = false;
   lastBook: string = '';
@@ -56,8 +58,6 @@ export class ImagesService {
     return this.http.get<Transformation[]>(`${serverBaseUrl}/${this.book()}/transformations.json`);
   }
 
-
-  // ---------- CROPPED IMAGES ----------
   setCroppedImgs(tfs: Transformation[]): void {
     this.loading = true;
     Promise.all(this.buildCroppedImagePromises(tfs)).then((imgs: ImageItem[]) => { 
@@ -144,9 +144,10 @@ export class ImagesService {
     const rect = mainElement.getBoundingClientRect();
     const [x, y] = [e.clientX - rect.left, e.clientY - rect.top];
 
-    const hit = this.selectedRect && this.rects.filter(r => this.isPointInRect(x, y, r)).includes(this.selectedRect)
+    const hit = this.selectedRect && this.currentRects.filter(r => this.isPointInRect(x, y, r)).includes(this.selectedRect)
       ? this.selectedRect
-      : this.rects.find(r => this.isPointInRect(x, y, r));
+      : this.currentRects.find(r => this.isPointInRect(x, y, r));
+
     return hit?.id ?? '';
   }
 
@@ -170,7 +171,7 @@ export class ImagesService {
     ctx.clearRect(0, 0, c.width, c.height);
     if (this.mainImage) ctx.drawImage(this.mainImage, 0, 0, c.width, c.height);
 
-    this.rects.forEach(r => this.drawRect(ctx, r, hoveredRectId));
+    this.currentRects.forEach(r => this.drawRect(ctx, r, hoveredRectId));
   }
 
   private drawRect(ctx: CanvasRenderingContext2D, r: Rect, hoveredId?: string): void {
@@ -199,8 +200,7 @@ export class ImagesService {
   }
 
   removeRect(): void {
-    this.rects = this.rects.filter(r => r !== this.selectedRect);
-    this.selectedRect = null;
+    this.currentRects = this.currentRects.filter(r => r !== this.selectedRect);
     
     // main-canvas
     const c = document.getElementById('main-canvas') as HTMLCanvasElement;
@@ -210,10 +210,21 @@ export class ImagesService {
     ctx.clearRect(0, 0, c.width, c.height);
     if (this.mainImage) ctx.drawImage(this.mainImage, 0, 0, c.width, c.height);
 
-    this.rects.forEach(r => this.drawRect(ctx, r));
+    this.currentRects.forEach(r => this.drawRect(ctx, r));
 
-    // main-image
+    // main-image, images and transformations
     this.mainImageItem.set({ ...this.mainImageItem(), url: c.toDataURL('image/jpeg') });
+    
+    this.images.update(prev =>
+      prev.map(img => img.name === this.mainImageItem().name
+        ? { ...img, rects: this.currentRects }
+        : img
+      )
+    );
+
+    this.transformations.update(prev => prev.filter(t => `${t.image_path}-${t.crop_part}` !== this.selectedRect?.id));
+
+    this.selectedRect = null;
   }
 
 
@@ -229,7 +240,6 @@ export class ImagesService {
     this.mainImage = img;
 
     img.onload = () => this.fitAndDrawImage(c, ctx, img, imgItem, type);
-
     img.onerror = () => { console.error('Failed to load image.') };
   }
 
@@ -267,12 +277,20 @@ export class ImagesService {
     }
 
     ctx.drawImage(img, 0, 0, c.width, c.height);
-    this.rects = [];
+    this.currentRects = [];
+
+    // this.images()
+    //   .find(img => img.name === imgItem.name)
+    //   ?.rects
+    //   ?.forEach(r => {
+    //     this.currentRects.push(r);
+    //     this.drawRectangle(ctx, c.width, c.height, r);
+    //   });
 
     this.transformations()
       .filter(t => t.image_path === imgItem.name)
       .forEach(t => {
-        this.rects.push({
+        this.currentRects.push({
           id: `${t.image_path}-${t.crop_part}`,
           x_center: t.x_center * c.width,
           y_center: t.y_center * c.height,
@@ -288,16 +306,16 @@ export class ImagesService {
     if (type === 'image') this.mainImageItem.set({ ...imgItem, url: c.toDataURL('image/jpeg') });
   }
 
-  private drawRectangle(ctx: CanvasRenderingContext2D, cWidth: number, cHeight: number, t: Transformation): void {
-    const [centerX, centerY] = [cWidth * t.x_center, cHeight * t.y_center];
-    const [width, height] = [cWidth * t.width, cHeight * t.height];
-    const angle = degreeToRadian(t.angle);
+  private drawRectangle(ctx: CanvasRenderingContext2D, cWidth: number, cHeight: number, r: Transformation): void {
+    const [centerX, centerY] = [cWidth * r.x_center, cHeight * r.y_center];
+    const [width, height] = [cWidth * r.width, cHeight * r.height];
+    const angle = degreeToRadian(r.angle);
     
     ctx.save();
     ctx.translate(centerX, centerY);
     ctx.rotate(angle);
 
-    ctx.fillStyle = t.color + '10';
+    ctx.fillStyle = r.color + '10';
     ctx.fillRect(-width / 2, -height / 2, width, height);
     ctx.restore();
   }

@@ -13,6 +13,22 @@ export class MainComponent {
   imagesService = inject(ImagesService);
 
   ngAfterViewInit(): void {
+    // Update values after getting main-canvas
+    const c = document.getElementById('main-canvas') as HTMLCanvasElement;
+    this.imagesService.images.update(prev =>
+      prev.map(img => ({
+        ...img,
+        rects: img.rects?.map(r => ({
+          ...r,
+          x_center: r.x_center * c.width,
+          y_center: r.y_center * c.height,
+          width: r.width * c.width,
+          height: r.height * c.height
+        }))
+      }))
+    );
+    
+    // Attach event handlers
     if (this.imagesService.mode() === 'full') {
       const [firstFlagged] = this.imagesService.flaggedImages();
       if (firstFlagged) this.imagesService.setMainImage(firstFlagged);
@@ -38,7 +54,7 @@ export class MainComponent {
     const sameState = lastRectCursorIsInside === insideRect && (isClick ? selectedRect?.id === rectId : false);
     if (sameState) return;
 
-    if (isClick) this.imagesService.selectedRect = this.imagesService.rects.find(r => r.id === rectId) || null;
+    if (isClick) this.imagesService.selectedRect = this.imagesService.currentRects.find(r => r.id === rectId) || null;
 
     this.imagesService.lastRectCursorIsInside = insideRect;
     this.imagesService.editable.set(insideRect);

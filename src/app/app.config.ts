@@ -51,7 +51,22 @@ export const appConfig: ApplicationConfig = {
           const resultImages: ImageItem[] = [];
           for (const img of imgs) {
             const f = flagsByName.get(img.name ?? '');
-            resultImages.push({ ...img, ...f });
+            resultImages.push({
+              ...img,
+              ...f,
+              rects: tfs
+                .filter(t => t.image_path === img.name)
+                .map(t => ({
+                  id: `${t.image_path}-${t.crop_part}`,
+                  x_center: t.x_center,
+                  y_center: t.y_center,
+                  width: t.width,
+                  height: t.height,
+                  angle: t.angle,
+                  crop_part: t.crop_part,
+                  color: t.color
+                }))
+              });
           }
           
           // Get mode
@@ -61,6 +76,8 @@ export const appConfig: ApplicationConfig = {
           // Preset everything
           imagesService.images.set(resultImages);
           imagesService.transformations.set(tfs);
+          imagesService.originalImages.set(resultImages);
+          imagesService.originalTransformations.set(tfs);
           imagesService.setCroppedImgs(tfs);
         })
       );

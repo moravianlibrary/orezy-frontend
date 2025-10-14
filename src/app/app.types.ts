@@ -4,6 +4,7 @@ export interface ImageItem {
   crop_part?: number;
   low_confidence?: boolean;
   bad_sides_ratio?: boolean;
+  rects?: Rect[];
 }
 
 export interface ImageFlags {

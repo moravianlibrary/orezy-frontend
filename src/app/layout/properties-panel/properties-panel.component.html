@@ -2,7 +2,7 @@
   <div class="add-remove-rects">
     <button
       class="add-rect"
-      [disabled]="imagesService.rects.length >= imagesService.maxRects"
+      [disabled]="imagesService.currentRects.length >= imagesService.maxRects"
       (click)="imagesService.addRect()"
     >+Add rect</button>
     @if (!!imagesService.selectedRect) {
