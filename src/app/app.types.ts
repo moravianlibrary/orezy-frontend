@@ -20,6 +20,7 @@ export interface Transformation {
   confidence: number;
   angle: number;
   crop_part: number;
+  color: string;
   low_confidence: boolean;
   bad_sides_ratio: boolean;
 }
@@ -30,7 +31,7 @@ export interface Rect {
   y_center: number;
   width: number;
   height: number;
-  realTop: number;
   angle: number;
   crop_part: number;
+  color: string;
 }

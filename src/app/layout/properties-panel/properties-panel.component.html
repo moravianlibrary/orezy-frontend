@@ -1,7 +1,16 @@
 @if (imagesService.mode() === 'full') {
   <div class="add-remove-rects">
-    <button class="add-rect" [disabled]="imagesService.rects.length >= imagesService.maxRects">+Add rect</button>
-    @if (!!imagesService.selectedRect) { <button class="remove-rect">-Remove rect</button> }
+    <button
+      class="add-rect"
+      [disabled]="imagesService.rects.length >= imagesService.maxRects"
+      (click)="imagesService.addRect()"
+    >+Add rect</button>
+    @if (!!imagesService.selectedRect) {
+      <button
+        class="remove-rect"
+        (click)="imagesService.removeRect()"
+      >-Remove rect</button>
+    }
   </div>
 
   @if (!!imagesService.selectedRect) {

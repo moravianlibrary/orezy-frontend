@@ -42,8 +42,9 @@ export const appConfig: ApplicationConfig = {
             flags.bad_sides_ratio = flags.bad_sides_ratio ? flags.bad_sides_ratio : t.bad_sides_ratio;
             flagsByName.set(t.image_path, flags);
             
-            // ...by crop_part
+            // ...by crop_part and color
             t.crop_part = t.x_center > 0.6 ? 2 : 1;
+            t.color = t.crop_part === 1 ? imagesService.leftColor : imagesService.rightColor;
           }
 
           // Enrich images

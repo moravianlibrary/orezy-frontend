@@ -20,11 +20,11 @@ export class ImagesService {
   mode = signal<string>(this.modes[1]);
   editable = signal<boolean>(false);
 
-  mainImageItem = signal<ImageItem>({ url: 'https://media.tenor.com/WX_LDjYUrMsAAAAi/loading.gif' });
-  
   images = signal<ImageItem[]>([]);
   croppedImages = signal<ImageItem[]>([]);
   transformations = signal<Transformation[]>([]);
+
+  mainImageItem = signal<ImageItem>({ url: 'https://media.tenor.com/WX_LDjYUrMsAAAAi/loading.gif' });
 
   mainImage: HTMLImageElement | null = null;
   rects: Rect[] = [];
@@ -72,7 +72,7 @@ export class ImagesService {
 
   private buildCroppedImagePromises(tfs: Transformation[]): Promise<ImageItem>[] {
     return tfs.map(t => {
-      return new Promise<ImageItem>((resolve) => {
+      return new Promise<ImageItem>(resolve => {
         const c = document.createElement('canvas');
         const ctx = c.getContext('2d');
         if (!ctx) return resolve({});
@@ -121,7 +121,7 @@ export class ImagesService {
   }
 
   private renderFullImageAndCanvas(img: ImageItem): void {
-    ['image', 'canvas'].forEach((type) =>
+    ['image', 'canvas'].forEach(type =>
       this.setMainFullImageOrCanvas(type as 'image' | 'canvas', img)
     );
   }
@@ -144,9 +144,9 @@ export class ImagesService {
     const rect = mainElement.getBoundingClientRect();
     const [x, y] = [e.clientX - rect.left, e.clientY - rect.top];
 
-    const hit = this.selectedRect && this.rects.filter((r) => this.isPointInRect(x, y, r)).includes(this.selectedRect)
+    const hit = this.selectedRect && this.rects.filter(r => this.isPointInRect(x, y, r)).includes(this.selectedRect)
       ? this.selectedRect
-      : this.rects.find((r) => this.isPointInRect(x, y, r));
+      : this.rects.find(r => this.isPointInRect(x, y, r));
     return hit?.id ?? '';
   }
 
@@ -170,25 +170,50 @@ export class ImagesService {
     ctx.clearRect(0, 0, c.width, c.height);
     if (this.mainImage) ctx.drawImage(this.mainImage, 0, 0, c.width, c.height);
 
-    this.rects.forEach((r) => this.drawRect(ctx, r, hoveredRectId));
+    this.rects.forEach(r => this.drawRect(ctx, r, hoveredRectId));
   }
 
-  private drawRect(ctx: CanvasRenderingContext2D, r: Rect, hoveredId: string): void {
+  private drawRect(ctx: CanvasRenderingContext2D, r: Rect, hoveredId?: string): void {
     ctx.save();
     ctx.translate(r.x_center, r.y_center);
     ctx.rotate(degreeToRadian(r.angle));
 
-    const color = r.crop_part === 1 ? this.leftColor : this.rightColor;
-    ctx.fillStyle = color + '10';
+    ctx.fillStyle = r.color + '10';
     ctx.fillRect(-r.width / 2, -r.height / 2, r.width, r.height);
 
     if (r.id === hoveredId || this.selectedRect?.id === r.id) {
-      ctx.strokeStyle = color;
+      ctx.strokeStyle = r.color;
       ctx.lineWidth = 2;
       ctx.strokeRect(-r.width / 2, -r.height / 2, r.width, r.height);
     }
 
     ctx.restore();
+  }
+
+  addRect(): void {
+    const c = document.getElementById('main-canvas') as HTMLCanvasElement;
+    const ctx = c?.getContext('2d');
+    if (!ctx) return;
+
+
+  }
+
+  removeRect(): void {
+    this.rects = this.rects.filter(r => r !== this.selectedRect);
+    this.selectedRect = null;
+    
+    // main-canvas
+    const c = document.getElementById('main-canvas') as HTMLCanvasElement;
+    const ctx = c?.getContext('2d');
+    if (!ctx) return;
+
+    ctx.clearRect(0, 0, c.width, c.height);
+    if (this.mainImage) ctx.drawImage(this.mainImage, 0, 0, c.width, c.height);
+
+    this.rects.forEach(r => this.drawRect(ctx, r));
+
+    // main-image
+    this.mainImageItem.set({ ...this.mainImageItem(), url: c.toDataURL('image/jpeg') });
   }
 
 
@@ -245,17 +270,17 @@ export class ImagesService {
     this.rects = [];
 
     this.transformations()
-      .filter((t) => t.image_path === imgItem.name)
-      .forEach((t) => {
+      .filter(t => t.image_path === imgItem.name)
+      .forEach(t => {
         this.rects.push({
           id: `${t.image_path}-${t.crop_part}`,
           x_center: t.x_center * c.width,
           y_center: t.y_center * c.height,
           width: t.width * c.width,
           height: t.height * c.height,
-          realTop: (appRect.height - c.height) / 2,
           angle: t.angle,
           crop_part: t.crop_part,
+          color: t.color
         });
         this.drawRectangle(ctx, c.width, c.height, t);
       });
@@ -272,7 +297,7 @@ export class ImagesService {
     ctx.translate(centerX, centerY);
     ctx.rotate(angle);
 
-    ctx.fillStyle = (t.crop_part === 1 ? this.leftColor : this.rightColor) + '10';
+    ctx.fillStyle = t.color + '10';
     ctx.fillRect(-width / 2, -height / 2, width, height);
     ctx.restore();
   }

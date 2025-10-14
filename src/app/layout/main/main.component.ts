@@ -38,7 +38,7 @@ export class MainComponent {
     const sameState = lastRectCursorIsInside === insideRect && (isClick ? selectedRect?.id === rectId : false);
     if (sameState) return;
 
-    if (isClick) this.imagesService.selectedRect = this.imagesService.rects.find((r) => r.id === rectId) || null;
+    if (isClick) this.imagesService.selectedRect = this.imagesService.rects.find(r => r.id === rectId) || null;
 
     this.imagesService.lastRectCursorIsInside = insideRect;
     this.imagesService.editable.set(insideRect);
