@@ -3,7 +3,7 @@ import { provideRouter } from '@angular/router';
 import { routes } from './app.routes';
 import { provideHttpClient } from '@angular/common/http';
 import { ImagesService } from './services/images.service';
-import { forkJoin, tap } from 'rxjs';
+import { forkJoin, of, tap } from 'rxjs';
 import { ImageFlags, ImageItem } from './app.types';
 
 export const serverBaseUrl: string = 'https://ai-orezy-data.test.api.trinera.cloud/Y6QBR1bLTTYxGBszk0rnhopOF';
@@ -18,11 +18,14 @@ export const appConfig: ApplicationConfig = {
       const imagesService = inject(ImagesService);
       const book = localStorage.getItem('book');
       if (book) imagesService.book.set(book);
-      return forkJoin({
-        imgs: imagesService.fetchImages(),
-        tfs: imagesService.fetchTransformations()
-      }).pipe(
-        tap(({ imgs, tfs }) => {
+      return imagesService.fetchTransformations().pipe(
+        tap(tfs => {
+          const imgs = Array.from(
+            new Map(tfs.map(t => [t.image_path, t])).values()
+          ).map(t => ({
+            name: t.image_path,
+            url: `${serverBaseUrl}/${t.image_path}`,
+          }));
           imagesService.avgSideRatio = tfs.length ? tfs.reduce((sum, t) => sum + t.width / t.height, 0) / tfs.length : 0;
           const flagsByName = new Map<string, ImageFlags>();
 

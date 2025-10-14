@@ -52,25 +52,8 @@ export class ImagesService {
 
 
   // ---------- FETCHING ----------
-  fetchImages(): Observable<ImageItem[]> {
-    return this.http.get(`${serverBaseUrl}/${this.book()}/`, { responseType: 'text' })
-      .pipe(map((html) => this.parseImageList(html)));
-  }
-
   fetchTransformations(): Observable<Transformation[]> {
     return this.http.get<Transformation[]>(`${serverBaseUrl}/${this.book()}/transformations.json`);
-  }
-
-  private parseImageList(html: string): ImageItem[] {
-    const doc = new DOMParser().parseFromString(html, 'text/html');
-    return Array.from(doc.querySelectorAll('a[href]'))
-      .map((a) => a.getAttribute('href'))
-      .filter((href): href is string => !!href && href !== '../')
-      .filter((f) => f.toLowerCase().endsWith('.jpg'))
-      .map((f) => ({
-        name: `${this.book()}/${f}`,
-        url: `${serverBaseUrl}/${this.book()}/${f}`,
-      }));
   }
 
 
