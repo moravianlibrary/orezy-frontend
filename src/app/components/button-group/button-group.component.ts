@@ -47,7 +47,7 @@ export class ButtonGroupComponent {
   }
 
   private updateMainImage(): void {
-    const { mode, mainImageItem, images, croppedImages } = this.imagesService;
+    const { mode, mainImageItem, images, croppedImages, flaggedImages, flaggedCroppedImages } = this.imagesService;
     const currentMode = mode();
     const currentName = mainImageItem().name;
 
@@ -55,7 +55,8 @@ export class ButtonGroupComponent {
     if (mainCanvas) mainCanvas.style.opacity = currentMode === 'full' ? '1' : '0';
 
     const imageSource = currentMode === 'full' ? images() : croppedImages();
-    const newImage = imageSource.find(img => img.name === currentName) || imageSource[0];
+    const backupImageSource = currentMode === 'full' ? flaggedImages() : flaggedCroppedImages();
+    const newImage = imageSource.find(img => img.name === currentName) || backupImageSource[0];
 
     if (newImage) this.imagesService.setMainImage(newImage);
   }

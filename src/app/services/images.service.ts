@@ -314,7 +314,7 @@ export class ImagesService {
   }
 
 
-  // Keyboard shortcuts
+  // ---------- KEYBOARD SHORTCUTS ----------
   onKeyDown(event: KeyboardEvent): void {
     const key = event.key;
     if (!this.isHandledKey(key)) return;
