@@ -218,17 +218,18 @@ export class ImagesService {
 
     this.currentRects.forEach(r => this.drawRect(c, ctx, r));
 
-    // main-image, images and transformations
+    // main-image
     this.mainImageItem.set({ ...this.mainImageItem(), url: c.toDataURL('image/jpeg') });
     
+    // All the arrays
     this.images.update(prev =>
       prev.map(img => img.name === this.mainImageItem().name
         ? { ...img, rects: this.currentRects }
         : img
       )
     );
-
     this.transformations.update(prev => prev.filter(t => `${t.image_path}-${t.crop_part}` !== this.selectedRect?.id));
+    this.croppedImages.update(prev => prev.filter(img => `${img.name}-${img.crop_part}` !== this.selectedRect?.id));
 
     this.selectedRect = null;
   }

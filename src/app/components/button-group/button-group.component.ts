@@ -55,7 +55,7 @@ export class ButtonGroupComponent {
     if (mainCanvas) mainCanvas.style.opacity = currentMode === 'full' ? '1' : '0';
 
     const imageSource = currentMode === 'full' ? images() : croppedImages();
-    const newImage = imageSource.find(img => img.name === currentName);
+    const newImage = imageSource.find(img => img.name === currentName) || imageSource[0];
 
     if (newImage) this.imagesService.setMainImage(newImage);
   }
