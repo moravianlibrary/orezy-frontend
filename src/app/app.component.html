@@ -1,3 +1,9 @@
-<app-preview-panel />
-<app-main id="app-main" />
-<app-properties-panel />
+<div 
+  class="main-wrapper"
+  (keydown)="imagesService.onKeyDown($event)"
+  tabindex="0"
+>
+  <app-preview-panel></app-preview-panel>
+  <app-main id="app-main"></app-main>
+  <app-properties-panel></app-properties-panel>
+</div>

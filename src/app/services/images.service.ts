@@ -139,6 +139,85 @@ export class ImagesService {
   }
 
 
+  // ---------- FULL IMAGE DRAWING ----------
+  private setMainFullImageOrCanvas(type: 'image' | 'canvas', imgItem: ImageItem): void {
+    const img = new Image();
+    img.crossOrigin = 'anonymous';
+    img.src = imgItem.url ?? '';
+    this.mainImage = img;
+
+    img.onload = () => this.fitAndDrawImage(img, imgItem, type);
+    img.onerror = () => { console.error('Failed to load image.') };
+  }
+
+  private fitAndDrawImage(
+    img: HTMLImageElement,
+    imgItem: ImageItem,
+    type: 'image' | 'canvas'
+  ): void {
+    const { c, ctx } = this;
+    if (!ctx) return;
+    
+    const appMain = document.querySelector('app-main') as HTMLElement;
+    const appStyle = getComputedStyle(appMain);
+    const appRect = appMain.getBoundingClientRect();
+
+    const widthAvail =
+      appRect.width -
+      (parseFloat(appStyle.paddingLeft) +
+        parseFloat(appStyle.paddingRight) +
+        parseFloat(appStyle.borderLeftWidth) +
+        parseFloat(appStyle.borderRightWidth));
+
+    const heightAvail =
+      appRect.height -
+      (parseFloat(appStyle.paddingTop) +
+        parseFloat(appStyle.paddingBottom) +
+        parseFloat(appStyle.borderTopWidth) +
+        parseFloat(appStyle.borderBottomWidth));
+
+    const imgRatio = img.width / img.height;
+    const appRectRatio = appRect.width / appRect.height;
+
+    c.width = widthAvail;
+    c.height = heightAvail;
+
+    imgRatio > appRectRatio
+      ? c.height = (img.height / img.width) * c.width
+      : c.width = imgRatio * c.height;
+
+    ctx.drawImage(img, 0, 0, c.width, c.height);
+    this.currentRects = [];
+
+    this.images()
+      .find(img => img.name === imgItem.name)
+      ?.rects
+      ?.forEach(r => {
+        this.currentRects.push(r);
+        this.drawRectangle(r);
+      });
+    
+    if (type === 'image') this.mainImageItem.set({ ...imgItem, url: c.toDataURL('image/jpeg') });
+  }
+
+  private drawRectangle(r: Rect): void {
+    const { c, ctx } = this;
+    if (!ctx) return;
+    
+    const [centerX, centerY] = [c.width * r.x_center, c.height * r.y_center];
+    const [width, height] = [c.width * r.width, c.height * r.height];
+    const angle = degreeToRadian(r.angle);
+    
+    ctx.save();
+    ctx.translate(centerX, centerY);
+    ctx.rotate(angle);
+
+    ctx.fillStyle = r.color + '10';
+    ctx.fillRect(-width / 2, -height / 2, width, height);
+    ctx.restore();
+  }
+
+
   // ---------- RECTANGLE LOGIC ----------
   rectIdCursorInside(e: MouseEvent): string {
     const mainElement = document.getElementById(this.editable() ? 'main-canvas' : 'main-image') as HTMLElement;
@@ -235,81 +314,28 @@ export class ImagesService {
   }
 
 
-  // ---------- FULL IMAGE DRAWING ----------
-  private setMainFullImageOrCanvas(type: 'image' | 'canvas', imgItem: ImageItem): void {
-    const img = new Image();
-    img.crossOrigin = 'anonymous';
-    img.src = imgItem.url ?? '';
-    this.mainImage = img;
+  // Keyboard shortcuts
+  onKeyDown(event: KeyboardEvent): void {
+    const key = event.key;
+    if (!this.isHandledKey(key)) return;
 
-    img.onload = () => this.fitAndDrawImage(img, imgItem, type);
-    img.onerror = () => { console.error('Failed to load image.') };
+    switch (key) {
+      case 'Backspace':
+        if (this.selectedRect) this.removeRect();
+        break;
+      case 'Delete':
+        if (this.selectedRect) this.removeRect();
+        break;
+      case 'r':
+        this.addRect();
+        break;
+    }
   }
 
-  private fitAndDrawImage(
-    img: HTMLImageElement,
-    imgItem: ImageItem,
-    type: 'image' | 'canvas'
-  ): void {
-    const { c, ctx } = this;
-    if (!ctx) return;
-    
-    const appMain = document.querySelector('app-main') as HTMLElement;
-    const appStyle = getComputedStyle(appMain);
-    const appRect = appMain.getBoundingClientRect();
-
-    const widthAvail =
-      appRect.width -
-      (parseFloat(appStyle.paddingLeft) +
-        parseFloat(appStyle.paddingRight) +
-        parseFloat(appStyle.borderLeftWidth) +
-        parseFloat(appStyle.borderRightWidth));
-
-    const heightAvail =
-      appRect.height -
-      (parseFloat(appStyle.paddingTop) +
-        parseFloat(appStyle.paddingBottom) +
-        parseFloat(appStyle.borderTopWidth) +
-        parseFloat(appStyle.borderBottomWidth));
-
-    const imgRatio = img.width / img.height;
-    const appRectRatio = appRect.width / appRect.height;
-
-    c.width = widthAvail;
-    c.height = heightAvail;
-
-    imgRatio > appRectRatio
-      ? c.height = (img.height / img.width) * c.width
-      : c.width = imgRatio * c.height;
-
-    ctx.drawImage(img, 0, 0, c.width, c.height);
-    this.currentRects = [];
-
-    this.images()
-      .find(img => img.name === imgItem.name)
-      ?.rects
-      ?.forEach(r => {
-        this.currentRects.push(r);
-        this.drawRectangle(r);
-      });
-    
-    if (type === 'image') this.mainImageItem.set({ ...imgItem, url: c.toDataURL('image/jpeg') });
-  }
-
-  private drawRectangle(r: Rect): void {
-    const { c, ctx } = this;
-    if (!ctx) return;
-    
-    const [centerX, centerY] = [c.width * r.x_center, c.height * r.y_center];
-    const [width, height] = [c.width * r.width, c.height * r.height];
-    const angle = degreeToRadian(r.angle);
-    
-    ctx.save();
-    ctx.translate(centerX, centerY);
-    ctx.rotate(angle);
-
-    ctx.fillStyle = r.color + '10';
-    ctx.fillRect(-width / 2, -height / 2, width, height);
-    ctx.restore();
+  private isHandledKey(key: string): boolean {
+    return [
+      'Backspace', 'Delete',
+      'r'
+    ].includes(key);
   }
 }
