@@ -13,27 +13,17 @@ export class MainComponent {
   imagesService = inject(ImagesService);
 
   ngAfterViewInit(): void {
-    // Update values after getting main-canvas
-    const c = document.getElementById('main-canvas') as HTMLCanvasElement;
-    this.imagesService.images.update(prev =>
-      prev.map(img => ({
-        ...img,
-        rects: img.rects?.map(r => ({
-          ...r,
-          x_center: r.x_center * c.width,
-          y_center: r.y_center * c.height,
-          width: r.width * c.width,
-          height: r.height * c.height
-        }))
-      }))
-    );
+    // Set canvas
+    this.imagesService.c = document.getElementById('main-canvas') as HTMLCanvasElement;
+    this.imagesService.ctx = this.imagesService.c.getContext('2d')!;
     
-    // Attach event handlers
+    // Set main image for full mode
     if (this.imagesService.mode() === 'full') {
       const [firstFlagged] = this.imagesService.flaggedImages();
       if (firstFlagged) this.imagesService.setMainImage(firstFlagged);
     }
 
+    // Attach event handlers
     this.attachImageEvents('main-container');
     this.attachImageEvents('main-image');
     this.attachImageEvents('main-canvas');

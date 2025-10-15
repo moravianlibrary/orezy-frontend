@@ -1,7 +1,7 @@
 import { HttpClient } from '@angular/common/http';
 import { computed, inject, Injectable, signal } from '@angular/core';
 import { ImageItem, Rect, Transformation } from '../app.types';
-import { map, Observable } from 'rxjs';
+import { Observable } from 'rxjs';
 import { books, serverBaseUrl } from '../app.config';
 import { degreeToRadian, getImageUrl } from '../utils/utils';
 
@@ -27,6 +27,9 @@ export class ImagesService {
   originalTransformations = signal<Transformation[]>([]);
 
   mainImageItem = signal<ImageItem>({ url: 'https://media.tenor.com/WX_LDjYUrMsAAAAi/loading.gif' });
+
+  c!: HTMLCanvasElement;
+  ctx!: CanvasRenderingContext2D;
 
   mainImage: HTMLImageElement | null = null;
   currentRects: Rect[] = [];
@@ -128,7 +131,7 @@ export class ImagesService {
 
   toggleMainImageOrCanvas(): void {
     const mainImage = document.getElementById('main-image') as HTMLElement;
-    const mainCanvas = document.getElementById('main-canvas') as HTMLElement;
+    const mainCanvas = this.c;
 
     const showCanvas = this.editable() || !!this.selectedRect;
     if (mainImage) mainImage.style.zIndex = showCanvas ? '5' : '10';
@@ -147,15 +150,18 @@ export class ImagesService {
     const hit = this.selectedRect && this.currentRects.filter(r => this.isPointInRect(x, y, r)).includes(this.selectedRect)
       ? this.selectedRect
       : this.currentRects.find(r => this.isPointInRect(x, y, r));
-
+    
     return hit?.id ?? '';
   }
 
   private isPointInRect(x: number, y: number, r: Rect): boolean {
+    const c = this.c;
+    const [centerX, centerY] = [c.width * r.x_center, c.height * r.y_center];
+    const [width, height] = [c.width * r.width, c.height * r.height];
     const angle = degreeToRadian(r.angle);
-    const [halfW, halfH] = [r.width / 2, r.height / 2];
-    const dx = x - r.x_center;
-    const dy = y - r.y_center;
+    const [halfW, halfH] = [width / 2, height / 2];
+    const dx = x - centerX;
+    const dy = y - centerY;
     const cos = Math.cos(-angle);
     const sin = Math.sin(-angle);
     const localX = dx * cos - dy * sin;
@@ -164,36 +170,37 @@ export class ImagesService {
   }
 
   hoveringRect(hoveredRectId: string): void {
-    const c = document.getElementById('main-canvas') as HTMLCanvasElement;
-    const ctx = c?.getContext('2d');
+    const { c, ctx } = this;
     if (!ctx) return;
 
     ctx.clearRect(0, 0, c.width, c.height);
     if (this.mainImage) ctx.drawImage(this.mainImage, 0, 0, c.width, c.height);
 
-    this.currentRects.forEach(r => this.drawRect(ctx, r, hoveredRectId));
+    this.currentRects.forEach(r => this.drawRect(c, ctx, r, hoveredRectId));
   }
 
-  private drawRect(ctx: CanvasRenderingContext2D, r: Rect, hoveredId?: string): void {
+  private drawRect(c: HTMLCanvasElement, ctx: CanvasRenderingContext2D, r: Rect, hoveredId?: string): void {
+    const [centerX, centerY] = [c.width * r.x_center, c.height * r.y_center];
+    const [width, height] = [c.width * r.width, c.height * r.height];
+    
     ctx.save();
-    ctx.translate(r.x_center, r.y_center);
+    ctx.translate(centerX, centerY);
     ctx.rotate(degreeToRadian(r.angle));
 
     ctx.fillStyle = r.color + '10';
-    ctx.fillRect(-r.width / 2, -r.height / 2, r.width, r.height);
+    ctx.fillRect(-width / 2, -height / 2, width, height);
 
     if (r.id === hoveredId || this.selectedRect?.id === r.id) {
       ctx.strokeStyle = r.color;
       ctx.lineWidth = 2;
-      ctx.strokeRect(-r.width / 2, -r.height / 2, r.width, r.height);
+      ctx.strokeRect(-width / 2, -height / 2, width, height);
     }
 
     ctx.restore();
   }
 
   addRect(): void {
-    const c = document.getElementById('main-canvas') as HTMLCanvasElement;
-    const ctx = c?.getContext('2d');
+    const { c, ctx } = this;
     if (!ctx) return;
 
 
@@ -203,14 +210,13 @@ export class ImagesService {
     this.currentRects = this.currentRects.filter(r => r !== this.selectedRect);
     
     // main-canvas
-    const c = document.getElementById('main-canvas') as HTMLCanvasElement;
-    const ctx = c?.getContext('2d');
+    const { c, ctx } = this;
     if (!ctx) return;
 
     ctx.clearRect(0, 0, c.width, c.height);
     if (this.mainImage) ctx.drawImage(this.mainImage, 0, 0, c.width, c.height);
 
-    this.currentRects.forEach(r => this.drawRect(ctx, r));
+    this.currentRects.forEach(r => this.drawRect(c, ctx, r));
 
     // main-image, images and transformations
     this.mainImageItem.set({ ...this.mainImageItem(), url: c.toDataURL('image/jpeg') });
@@ -230,26 +236,23 @@ export class ImagesService {
 
   // ---------- FULL IMAGE DRAWING ----------
   private setMainFullImageOrCanvas(type: 'image' | 'canvas', imgItem: ImageItem): void {
-    const c = document.getElementById('main-canvas') as HTMLCanvasElement;
-    const ctx = c.getContext('2d');
-    if (!ctx) return;
-
     const img = new Image();
     img.crossOrigin = 'anonymous';
     img.src = imgItem.url ?? '';
     this.mainImage = img;
 
-    img.onload = () => this.fitAndDrawImage(c, ctx, img, imgItem, type);
+    img.onload = () => this.fitAndDrawImage(img, imgItem, type);
     img.onerror = () => { console.error('Failed to load image.') };
   }
 
   private fitAndDrawImage(
-    c: HTMLCanvasElement,
-    ctx: CanvasRenderingContext2D,
     img: HTMLImageElement,
     imgItem: ImageItem,
     type: 'image' | 'canvas'
   ): void {
+    const { c, ctx } = this;
+    if (!ctx) return;
+    
     const appMain = document.querySelector('app-main') as HTMLElement;
     const appStyle = getComputedStyle(appMain);
     const appRect = appMain.getBoundingClientRect();
@@ -268,47 +271,36 @@ export class ImagesService {
         parseFloat(appStyle.borderTopWidth) +
         parseFloat(appStyle.borderBottomWidth));
 
-    if (img.width / img.height > appRect.width / appRect.height) {
-      c.width = widthAvail;
-      c.height = (img.height / img.width) * widthAvail;
-    } else {
-      c.height = heightAvail;
-      c.width = (img.width / img.height) * heightAvail;
-    }
+    const imgRatio = img.width / img.height;
+    const appRectRatio = appRect.width / appRect.height;
+
+    c.width = widthAvail;
+    c.height = heightAvail;
+
+    imgRatio > appRectRatio
+      ? c.height = (img.height / img.width) * c.width
+      : c.width = imgRatio * c.height;
 
     ctx.drawImage(img, 0, 0, c.width, c.height);
     this.currentRects = [];
 
-    // this.images()
-    //   .find(img => img.name === imgItem.name)
-    //   ?.rects
-    //   ?.forEach(r => {
-    //     this.currentRects.push(r);
-    //     this.drawRectangle(ctx, c.width, c.height, r);
-    //   });
-
-    this.transformations()
-      .filter(t => t.image_path === imgItem.name)
-      .forEach(t => {
-        this.currentRects.push({
-          id: `${t.image_path}-${t.crop_part}`,
-          x_center: t.x_center * c.width,
-          y_center: t.y_center * c.height,
-          width: t.width * c.width,
-          height: t.height * c.height,
-          angle: t.angle,
-          crop_part: t.crop_part,
-          color: t.color
-        });
-        this.drawRectangle(ctx, c.width, c.height, t);
+    this.images()
+      .find(img => img.name === imgItem.name)
+      ?.rects
+      ?.forEach(r => {
+        this.currentRects.push(r);
+        this.drawRectangle(r);
       });
-
+    
     if (type === 'image') this.mainImageItem.set({ ...imgItem, url: c.toDataURL('image/jpeg') });
   }
 
-  private drawRectangle(ctx: CanvasRenderingContext2D, cWidth: number, cHeight: number, r: Transformation): void {
-    const [centerX, centerY] = [cWidth * r.x_center, cHeight * r.y_center];
-    const [width, height] = [cWidth * r.width, cHeight * r.height];
+  private drawRectangle(r: Rect): void {
+    const { c, ctx } = this;
+    if (!ctx) return;
+    
+    const [centerX, centerY] = [c.width * r.x_center, c.height * r.y_center];
+    const [width, height] = [c.width * r.width, c.height * r.height];
     const angle = degreeToRadian(r.angle);
     
     ctx.save();
