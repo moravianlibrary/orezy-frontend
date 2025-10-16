@@ -26,11 +26,17 @@ export const appConfig: ApplicationConfig = {
             name: t.image_path,
             url: `${serverBaseUrl}/${t.image_path}`,
           }));
-          imagesService.avgSideRatio = tfs.length ? tfs.reduce((sum, t) => sum + t.width / t.height, 0) / tfs.length : 0;
           const flagsByName = new Map<string, ImageFlags>();
+          imagesService.avgSideRatio = tfs.length ? tfs.reduce((sum, t) => sum + t.width / t.height, 0) / tfs.length : 0;
+          let cropPartCount = 0;
+          let cropPartSum = 0;
+          let widthSum = 0;
+          let heightSum = 0;
 
           // Enrich transformations...
-          for (const t of tfs) {
+          for (let i = 0; i < tfs.length; i++) {
+            const prevT = i > 0 ? tfs[i - 1] : null;
+            const t = tfs[i];
             
             // ...by low_confidence and bad_sides_ratio
             const ratioDiff = Math.abs(t.width/t.height - imagesService.avgSideRatio);
@@ -43,8 +49,15 @@ export const appConfig: ApplicationConfig = {
             flagsByName.set(t.image_path, flags);
             
             // ...by crop_part and color
-            t.crop_part = t.x_center > 0.6 ? 2 : 1;
+            t.crop_part = t.image_path === prevT?.image_path ? prevT.crop_part + 1 : 1;
             t.color = t.crop_part === 1 ? imagesService.leftColor : imagesService.rightColor;
+
+            // Calc stuff
+            if (t.image_path === prevT?.image_path) cropPartSum -= 1;
+            cropPartCount += 1;
+            cropPartSum += 1;
+            widthSum += t.width;
+            heightSum += t.height;
           }
 
           // Enrich images
@@ -75,10 +88,11 @@ export const appConfig: ApplicationConfig = {
 
           // Preset everything
           imagesService.images.set(resultImages);
-          imagesService.transformations.set(tfs);
           imagesService.originalImages.set(resultImages);
           imagesService.originalTransformations.set(tfs);
           imagesService.setCroppedImgs(tfs);
+          imagesService.maxRects = Math.round(cropPartCount / cropPartSum);
+          imagesService.avgRect = { width: widthSum / tfs.length, height: heightSum / tfs.length };
         })
       );
     })

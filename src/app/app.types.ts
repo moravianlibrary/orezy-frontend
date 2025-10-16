@@ -4,6 +4,7 @@ export interface ImageItem {
   crop_part?: number;
   low_confidence?: boolean;
   bad_sides_ratio?: boolean;
+  custom?: boolean;
   rects?: Rect[];
 }
 
@@ -35,4 +36,9 @@ export interface Rect {
   angle: number;
   crop_part: number;
   color: string;
+}
+
+export interface AvgRect {
+  width: number;
+  height: number;
 }

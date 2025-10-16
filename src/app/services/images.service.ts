@@ -1,9 +1,9 @@
 import { HttpClient } from '@angular/common/http';
 import { computed, inject, Injectable, signal } from '@angular/core';
-import { ImageItem, Rect, Transformation } from '../app.types';
+import { AvgRect, ImageItem, Rect, Transformation } from '../app.types';
 import { Observable } from 'rxjs';
 import { books, serverBaseUrl } from '../app.config';
-import { degreeToRadian, getImageUrl } from '../utils/utils';
+import { degreeToRadian, findFirstMissing, getImageUrl } from '../utils/utils';
 
 @Injectable({
   providedIn: 'root'
@@ -22,7 +22,6 @@ export class ImagesService {
 
   images = signal<ImageItem[]>([]);
   croppedImages = signal<ImageItem[]>([]);
-  transformations = signal<Transformation[]>([]);
   originalImages = signal<ImageItem[]>([]);
   originalTransformations = signal<Transformation[]>([]);
 
@@ -45,6 +44,7 @@ export class ImagesService {
   sideRatioThreshold: number = .02;
   avgSideRatio: number = 0;
   maxRects: number = 2;
+  avgRect!: AvgRect;
   toggledMore: boolean = false;
 
 
@@ -53,10 +53,10 @@ export class ImagesService {
   notFlaggedImages = computed<ImageItem[]>(() => this.images().filter(img => !img.low_confidence && !img.bad_sides_ratio));
   flaggedCroppedImages = computed<ImageItem[]>(() => this.croppedImages().filter(img => img.low_confidence || img.bad_sides_ratio));
   notFlaggedCroppedImages = computed<ImageItem[]>(() => this.croppedImages().filter(img => !img.low_confidence && !img.bad_sides_ratio));
-  notFlaggedTransformations = computed<Transformation[]>(() => this.transformations().filter(t => !t.low_confidence && !t.bad_sides_ratio));
+  customCroppedImages = computed<ImageItem[]>(() => this.croppedImages().filter(img => img.custom));
 
 
-  // ---------- FETCHING ----------
+  // ---------- INITIAL FETCHING ----------
   fetchTransformations(): Observable<Transformation[]> {
     return this.http.get<Transformation[]>(`${serverBaseUrl}/${this.book()}/transformations.json`);
   }
@@ -103,7 +103,8 @@ export class ImagesService {
             url: c.toDataURL('image/jpeg'),
             crop_part: t.crop_part,
             low_confidence: t.low_confidence,
-            bad_sides_ratio: t.bad_sides_ratio
+            bad_sides_ratio: t.bad_sides_ratio,
+            custom: false
           });
         };
 
@@ -279,38 +280,93 @@ export class ImagesService {
   }
 
   addRect(): void {
-    const { c, ctx } = this;
-    if (!ctx) return;
+    const cropPart = findFirstMissing(this.currentRects.map(r => r.crop_part));
+    const addedRect = {
+      id: `${this.mainImageItem().name}-${cropPart}`,
+      x_center: .5,
+      // x_center: (cropPart * 2 - 1) / (2 * this.maxRects),
+      y_center: .5,
+      width: this.avgRect.width,
+      height: this.avgRect.height,
+      angle: 0,
+      crop_part: cropPart,
+      color: cropPart === 1 ? this.leftColor : this.rightColor
+    };
+    this.currentRects.push(addedRect);
+    
+    this.redrawImage();
+    this.updateMainImageItemAndImages();
+    const mainImageItem = this.mainImageItem();
+    
+    const promise = new Promise<string>(resolve => {
+      const c = document.createElement('canvas');
+      const ctx = c.getContext('2d');
+      if (!ctx) return;
 
+      const img = new Image();
+      img.crossOrigin = 'anonymous';
+      img.src = getImageUrl(mainImageItem.name ?? '');
+      console.log(img.src);
 
+      img.onload = () => {
+        const centerX = addedRect.x_center * img.width;
+        const centerY = addedRect.y_center * img.height;
+        const angle = degreeToRadian(addedRect.angle);
+
+        c.width = addedRect.width * img.width;
+        c.height = addedRect.height * img.height;
+
+        ctx.save();
+        ctx.translate(c.width / 2, c.height / 2);
+        ctx.rotate(-angle);
+        ctx.drawImage(img, -centerX, -centerY);
+        ctx.restore();
+
+        resolve(c.toDataURL('image/jpeg'))
+      };
+
+      img.onerror = () => { console.error('Failed to load image.') };
+    });
+    
+    promise.then(url => {
+      this.croppedImages.update(prev => [
+        ...prev,
+        {
+          name: mainImageItem.name,
+          url: url,
+          crop_part: cropPart,
+          custom: true
+        }
+      ])});
+    this.selectedRect = this.currentRects[this.currentRects.length - 1];
+    this.redrawImage();
   }
 
   removeRect(): void {
     this.currentRects = this.currentRects.filter(r => r !== this.selectedRect);
-    
-    // main-canvas
-    const { c, ctx } = this;
-    if (!ctx) return;
+    this.redrawImage();
+    this.updateMainImageItemAndImages();
+    this.croppedImages.update(prev => prev.filter(img => `${img.name}-${img.crop_part}` !== this.selectedRect?.id));
+    this.selectedRect = null;
+  }
 
+  private redrawImage(): void {
+    const { c, ctx } = this;
+    
     ctx.clearRect(0, 0, c.width, c.height);
     if (this.mainImage) ctx.drawImage(this.mainImage, 0, 0, c.width, c.height);
 
     this.currentRects.forEach(r => this.drawRect(c, ctx, r));
+  }
 
-    // main-image
-    this.mainImageItem.set({ ...this.mainImageItem(), url: c.toDataURL('image/jpeg') });
-    
-    // All the arrays
+  private updateMainImageItemAndImages(): void {
+    this.mainImageItem.set({ ...this.mainImageItem(), url: this.c.toDataURL('image/jpeg') });
     this.images.update(prev =>
       prev.map(img => img.name === this.mainImageItem().name
         ? { ...img, rects: this.currentRects }
         : img
       )
     );
-    this.transformations.update(prev => prev.filter(t => `${t.image_path}-${t.crop_part}` !== this.selectedRect?.id));
-    this.croppedImages.update(prev => prev.filter(img => `${img.name}-${img.crop_part}` !== this.selectedRect?.id));
-
-    this.selectedRect = null;
   }
 
 

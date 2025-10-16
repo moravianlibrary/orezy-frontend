@@ -4,12 +4,12 @@
       class="add-rect"
       [disabled]="imagesService.currentRects.length >= imagesService.maxRects"
       (click)="imagesService.addRect()"
-    >+Add rect</button>
+    >+ Add rect</button>
     @if (!!imagesService.selectedRect) {
       <button
         class="remove-rect"
         (click)="imagesService.removeRect()"
-      >-Remove rect</button>
+      >- Remove rect</button>
     }
   </div>
 

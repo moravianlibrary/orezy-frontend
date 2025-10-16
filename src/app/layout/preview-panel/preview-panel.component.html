@@ -1,7 +1,28 @@
+@let mode = imagesService.mode();
+@let isSingle = mode === 'single';
+
+<!-- CUSTOM CROPPED IMAGES -->
+@let customCropped = imagesService.customCroppedImages();
+@if (isSingle && customCropped.length) {
+  <div class="thumbnails-customCropped-wrapper">
+    <p>Vlastní přidané ořezy - obdélníky ({{ customCropped.length }}):</p>
+    @for (image of customCropped; track $index) {
+      <div class="thumbnail-wrapper">
+        <img
+          [src]="image.url"
+          [class.selected]="
+            imagesService.mainImageItem().name === image.name &&
+            imagesService.mainImageItem().crop_part === image.crop_part
+          "
+          (click)="imagesService.setMainImage(image)"
+        />
+      </div>
+    }
+  </div>
+ }
+
 <!-- FLAGGED IMAGES -->
 <div class="thumbnails-flagged-wrapper">
-  @let mode = imagesService.mode();
-  @let isSingle = mode === 'single';
   @let flaggedImages = isSingle
     ? imagesService.flaggedCroppedImages()
     : imagesService.flaggedImages();
