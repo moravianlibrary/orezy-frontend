@@ -17,7 +17,7 @@ export class ImagesService {
   modes: string[] = ['single', 'full'];
 
   book = signal<string>(books[2]);
-  mode = signal<string>(this.modes[1]);
+  mode = signal<string>(this.modes[0]);
   editable = signal<boolean>(false);
 
   images = signal<ImageItem[]>([]);
@@ -306,7 +306,6 @@ export class ImagesService {
       const img = new Image();
       img.crossOrigin = 'anonymous';
       img.src = getImageUrl(mainImageItem.name ?? '');
-      console.log(img.src);
 
       img.onload = () => {
         const centerX = addedRect.x_center * img.width;

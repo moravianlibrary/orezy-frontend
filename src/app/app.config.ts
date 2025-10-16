@@ -81,10 +81,6 @@ export const appConfig: ApplicationConfig = {
                 }))
               });
           }
-          
-          // Get mode
-          const mode = localStorage.getItem('mode');
-          if (mode) imagesService.mode.set(mode);
 
           // Preset everything
           imagesService.images.set(resultImages);
@@ -93,6 +89,15 @@ export const appConfig: ApplicationConfig = {
           imagesService.setCroppedImgs(tfs);
           imagesService.maxRects = Math.round(cropPartCount / cropPartSum);
           imagesService.avgRect = { width: widthSum / tfs.length, height: heightSum / tfs.length };
+          
+          // Mode
+          if (imagesService.maxRects === 1) {
+            imagesService.modes = ['single'];
+            imagesService.mode.set('single');
+            return;
+          }
+          const localMode = localStorage.getItem('mode');
+          if (localMode) imagesService.mode.set(localMode);
         })
       );
     })
