@@ -383,7 +383,7 @@ export class ImagesService {
         if (this.selectedRect) this.removeRect();
         break;
       case 'r':
-        this.addRect();
+        if (this.currentRects.length < this.maxRects) this.addRect();
         break;
     }
   }
