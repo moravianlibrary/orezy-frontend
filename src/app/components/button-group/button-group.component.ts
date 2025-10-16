@@ -58,6 +58,6 @@ export class ButtonGroupComponent {
     const backupImageSource = currentMode === 'full' ? flaggedImages() : flaggedCroppedImages();
     const newImage = imageSource.find(img => img.name === currentName) || backupImageSource[0];
 
-    if (newImage) this.imagesService.setMainImage(newImage);
+    this.imagesService.setMainImage(newImage ?? '');
   }
 }

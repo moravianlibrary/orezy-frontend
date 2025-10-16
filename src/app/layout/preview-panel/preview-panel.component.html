@@ -1,8 +1,14 @@
 @let mode = imagesService.mode();
 @let isSingle = mode === 'single';
+@let customCropped = imagesService.customCroppedImages();
+@let flaggedImages = isSingle
+  ? imagesService.flaggedCroppedImages()
+  : imagesService.flaggedImages();
+@let notFlaggedImages = isSingle
+  ? imagesService.notFlaggedCroppedImages()
+  : imagesService.notFlaggedImages();
 
 <!-- CUSTOM CROPPED IMAGES -->
-@let customCropped = imagesService.customCroppedImages();
 @if (isSingle && customCropped.length) {
   <div class="thumbnails-customCropped-wrapper">
     <p>Vlastní přidané ořezy - obdélníky ({{ customCropped.length }}):</p>
@@ -23,13 +29,6 @@
 
 <!-- FLAGGED IMAGES -->
 <div class="thumbnails-flagged-wrapper">
-  @let flaggedImages = isSingle
-    ? imagesService.flaggedCroppedImages()
-    : imagesService.flaggedImages();
-  @let notFlaggedImages = isSingle
-    ? imagesService.notFlaggedCroppedImages()
-    : imagesService.notFlaggedImages();
-
   @if (flaggedImages.length) {
     <p>Skeny v nepořádku ({{ flaggedImages.length }}):</p>
 
@@ -50,13 +49,8 @@
       </div>
     }
   } @else {
-    <p>
-      {{
-        imagesService.loading
-          ? 'Skeny se načítají...'
-          : 'Všechny skeny jsou v pořádku.'
-      }}
-    </p>
+    @if (imagesService.loading) { <p>Skeny se načítají...</p> }
+    @else if (!customCropped.length) { <p>Nejsou žádné skeny, co by nebyly v pořádku.</p> }
   }
 </div>
 
@@ -65,7 +59,7 @@
 @if (notFlaggedImages.length) {
   <button (click)="toggleMorePreview()">
     {{ imagesService.toggledMore ? 'Skrýt' : 'Zobrazit' }}
-    zbytek, co je cajkoš ({{ notFlaggedImages.length }})
+    skeny, co jsou cajkoš ({{ notFlaggedImages.length }})
   </button>
 }
 
