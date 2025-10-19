@@ -11,7 +11,7 @@
 <!-- CUSTOM CROPPED IMAGES -->
 @if (isSingle && customCropped.length) {
   <div class="thumbnails-customCropped-wrapper">
-    <p>Vlastní přidané ořezy - obdélníky ({{ customCropped.length }}):</p>
+    <p>Upravené ořezy ({{ customCropped.length }}):</p>
     @for (image of customCropped; track $index) {
       <div class="thumbnail-wrapper">
         <img

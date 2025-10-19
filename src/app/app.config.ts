@@ -77,7 +77,8 @@ export const appConfig: ApplicationConfig = {
                   height: t.height,
                   angle: t.angle,
                   crop_part: t.crop_part,
-                  color: t.color
+                  color: t.color,
+                  edited: false
                 }))
               });
           }

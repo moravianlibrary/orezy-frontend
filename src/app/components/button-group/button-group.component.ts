@@ -15,6 +15,10 @@ export class ButtonGroupComponent {
   currentItem = input<string>('');
 
   select(item: string): void {
+    if (this.imagesService.shouldUpdateCroppedImages) {
+      this.imagesService.updateCroppedImages(this.imagesService.mainImageItem());
+    }
+    
     const items = this.items();
     
     switch (items) {

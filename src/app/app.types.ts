@@ -36,6 +36,7 @@ export interface Rect {
   angle: number;
   crop_part: number;
   color: string;
+  edited: boolean;
 }
 
 export interface AvgRect {

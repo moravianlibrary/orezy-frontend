@@ -31,12 +31,18 @@ export class ImagesService {
   ctx!: CanvasRenderingContext2D;
 
   mainImage: HTMLImageElement | null = null;
-  currentRects: Rect[] = [];
-  selectedRect: Rect | null = null;
-  lastRectCursorIsInside: boolean = false;
   lastBook: string = '';
   lastMode: string = '';
   loading: boolean = false;
+
+  currentRects: Rect[] = [];
+  shouldUpdateCroppedImages: boolean = false;
+  selectedRect: Rect | null = null;
+  lastSelectedRect: Rect | null = null;
+  lastRectCursorIsInside: boolean = false;
+  isDragging: boolean = false;
+  mouseDownCurPos: { x: number, y: number } = { x: -1, y: -1 };
+  startRectPos: { x: number, y: number } = { x: -1, y: -1 };
 
   leftColor: string = '#00BFFF';
   rightColor: string = '#FF10F0';
@@ -116,6 +122,10 @@ export class ImagesService {
 
   // ---------- MAIN IMAGE LOGIC ----------
   setMainImage(img: ImageItem): void {
+    if (this.shouldUpdateCroppedImages) {
+      this.updateCroppedImages(this.mainImageItem());
+    }
+    
     this.selectedRect = null;
     this.editable.set(false);
     this.toggleMainImageOrCanvas();
@@ -250,13 +260,8 @@ export class ImagesService {
   }
 
   hoveringRect(hoveredRectId: string): void {
-    const { c, ctx } = this;
-    if (!ctx) return;
-
-    ctx.clearRect(0, 0, c.width, c.height);
-    if (this.mainImage) ctx.drawImage(this.mainImage, 0, 0, c.width, c.height);
-
-    this.currentRects.forEach(r => this.drawRect(c, ctx, r, hoveredRectId));
+    this.redrawImage();
+    this.currentRects.forEach(r => this.drawRect(this.c, this.ctx, r, hoveredRectId));
   }
 
   private drawRect(c: HTMLCanvasElement, ctx: CanvasRenderingContext2D, r: Rect, hoveredId?: string): void {
@@ -290,75 +295,78 @@ export class ImagesService {
       height: this.avgRect.height,
       angle: 0,
       crop_part: cropPart,
-      color: cropPart === 1 ? this.leftColor : this.rightColor
+      color: cropPart === 1 ? this.leftColor : this.rightColor,
+      edited: true
     };
     this.currentRects.push(addedRect);
     
     this.redrawImage();
+    this.currentRects.forEach(r => this.drawRect(this.c, this.ctx, r));
     this.updateMainImageItemAndImages();
-    const mainImageItem = this.mainImageItem();
-    
-    const promise = new Promise<string>(resolve => {
-      const c = document.createElement('canvas');
-      const ctx = c.getContext('2d');
-      if (!ctx) return;
-
-      const img = new Image();
-      img.crossOrigin = 'anonymous';
-      img.src = getImageUrl(mainImageItem.name ?? '');
-
-      img.onload = () => {
-        const centerX = addedRect.x_center * img.width;
-        const centerY = addedRect.y_center * img.height;
-        const angle = degreeToRadian(addedRect.angle);
-
-        c.width = addedRect.width * img.width;
-        c.height = addedRect.height * img.height;
-
-        ctx.save();
-        ctx.translate(c.width / 2, c.height / 2);
-        ctx.rotate(-angle);
-        ctx.drawImage(img, -centerX, -centerY);
-        ctx.restore();
-
-        resolve(c.toDataURL('image/jpeg'))
-      };
-
-      img.onerror = () => { console.error('Failed to load image.') };
-    });
-    
-    promise.then(url => {
-      this.croppedImages.update(prev => [
-        ...prev,
-        {
-          name: mainImageItem.name,
-          url: url,
-          crop_part: cropPart,
-          custom: true
-        }
-      ])});
     this.selectedRect = this.currentRects[this.currentRects.length - 1];
     this.redrawImage();
+    this.currentRects.forEach(r => this.drawRect(this.c, this.ctx, r));
+    this.shouldUpdateCroppedImages = true;
   }
 
   removeRect(): void {
     this.currentRects = this.currentRects.filter(r => r !== this.selectedRect);
     this.redrawImage();
+    this.currentRects.forEach(r => this.drawRect(this.c, this.ctx, r));
     this.updateMainImageItemAndImages();
     this.croppedImages.update(prev => prev.filter(img => `${img.name}-${img.crop_part}` !== this.selectedRect?.id));
     this.selectedRect = null;
   }
 
-  private redrawImage(): void {
-    const { c, ctx } = this;
-    
-    ctx.clearRect(0, 0, c.width, c.height);
-    if (this.mainImage) ctx.drawImage(this.mainImage, 0, 0, c.width, c.height);
+  dragRect(e: MouseEvent): void {
+    if (!this.selectedRect) return;
 
-    this.currentRects.forEach(r => this.drawRect(c, ctx, r));
+    const { width, height } = this.c;
+
+    this.shouldUpdateCroppedImages = true;
+
+    // Calculate normalized deltas
+    const dx = (e.clientX - this.mouseDownCurPos.x) / width;
+    const dy = (e.clientY - this.mouseDownCurPos.y) / height;
+
+    // Compute proposed new position
+    let newX = this.startRectPos.x + dx;
+    let newY = this.startRectPos.y + dy;
+
+    // Clamp position so the rectangle stays within img
+    const halfW = this.selectedRect.width / 2;
+    const halfH = this.selectedRect.height / 2;
+
+    newX = Math.min(Math.max(newX, halfW), 1 - halfW);
+    newY = Math.min(Math.max(newY, halfH), 1 - halfH);
+
+    // Create updated rect
+    const updatedRect = {
+      ...this.selectedRect,
+      x_center: newX,
+      y_center: newY,
+      edited: true
+    };
+
+    // Update state
+    this.selectedRect = updatedRect;
+    this.lastSelectedRect = updatedRect;
+    this.currentRects = this.currentRects.map(r =>
+      r.id === updatedRect.id ? updatedRect : r
+    );
+
+    // Redraw
+    this.redrawImage();
+    this.currentRects.forEach(r => this.drawRect(this.c, this.ctx, r));
   }
 
-  private updateMainImageItemAndImages(): void {
+  private redrawImage(): void {
+    const { c, ctx } = this;
+    ctx.clearRect(0, 0, c.width, c.height);
+    if (this.mainImage) ctx.drawImage(this.mainImage, 0, 0, c.width, c.height);
+  }
+
+  updateMainImageItemAndImages(): void {
     this.mainImageItem.set({ ...this.mainImageItem(), url: this.c.toDataURL('image/jpeg') });
     this.images.update(prev =>
       prev.map(img => img.name === this.mainImageItem().name
@@ -366,6 +374,55 @@ export class ImagesService {
         : img
       )
     );
+  }
+
+  updateCroppedImages(mainImageItem: ImageItem): void {
+    let cropPart = 0;
+    const promises = this.currentRects
+      .filter(r => r.edited)
+      .map(r => {
+        cropPart = r.crop_part;
+        return new Promise<ImageItem>(resolve => {
+          const c = document.createElement('canvas');
+          const ctx = c.getContext('2d');
+          if (!ctx) return resolve({});
+
+          const img = new Image();
+          img.crossOrigin = 'anonymous';
+          img.src = getImageUrl(mainImageItem.name ?? '');
+
+          img.onload = () => {
+            const centerX = r.x_center * img.width;
+            const centerY = r.y_center * img.height;
+            const angle = degreeToRadian(r.angle);
+
+            c.width = r.width * img.width;
+            c.height = r.height * img.height;
+
+            ctx.save();
+            ctx.translate(c.width / 2, c.height / 2);
+            ctx.rotate(-angle);
+            ctx.drawImage(img, -centerX, -centerY);
+            ctx.restore();
+
+            resolve({
+              name: mainImageItem.name,
+              url: c.toDataURL('image/jpeg'),
+              crop_part: r.crop_part,
+              custom: true
+            });
+          };
+
+          img.onerror = () => { console.error('Failed to load image.') };
+        });
+    });
+    
+    this.croppedImages.update(prev => prev
+      .filter(img => img.name !== mainImageItem.name || img.crop_part !== cropPart));
+
+    Promise.all(promises).then(imgArr => imgArr.forEach(img => this.croppedImages.update(prev => [...prev, img])));
+
+    this.shouldUpdateCroppedImages = false;
   }
 
 

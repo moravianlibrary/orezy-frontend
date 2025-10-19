@@ -30,25 +30,68 @@ export class MainComponent {
   }
 
   private attachImageEvents(elementId: string): void {
-    const element = document.getElementById(elementId);
-    if (!element) return;
+    const el = document.getElementById(elementId);
+    if (!el) return;
 
-    element.onclick = (e) => this.handleInteraction(e, true);
-    element.onmousemove = (e) => this.handleInteraction(e, false);
+    el.onclick = (ev) => this.handleInteraction(ev, el);
+    el.onmousedown = (ev) => this.handleInteraction(ev, el);
+    el.onmousemove = (ev) => this.handleInteraction(ev, el);
+    el.onmouseup = (ev) => this.handleInteraction(ev, el);
   }
 
-  private handleInteraction(e: MouseEvent, isClick: boolean): void {
-    const rectId = this.imagesService.rectIdCursorInside(e);
+  private handleInteraction(ev: MouseEvent, el: HTMLElement): void {
+    const rectId = this.imagesService.rectIdCursorInside(ev);
     const insideRect = Boolean(rectId);
-    const { lastRectCursorIsInside, selectedRect } = this.imagesService;
-    const sameState = lastRectCursorIsInside === insideRect && (isClick ? selectedRect?.id === rectId : false);
-    if (sameState) return;
 
-    if (isClick) this.imagesService.selectedRect = this.imagesService.currentRects.find(r => r.id === rectId) || null;
+    if (ev.type === 'mousemove' || ev.type === 'click') {
+      const { lastRectCursorIsInside, selectedRect } = this.imagesService;
+      const sameState = lastRectCursorIsInside === insideRect && (ev.type === 'click' ? selectedRect?.id === rectId : false);
+      if (sameState) return;
+    }
+
+    if (ev.type === 'mousedown') {
+      this.imagesService.selectedRect = this.imagesService.currentRects.find(r => r.id === rectId) || null;
+
+      if (!this.imagesService.selectedRect && this.imagesService.startRectPos.x === -1) {
+        this.imagesService.updateMainImageItemAndImages();
+      }
+    }
 
     this.imagesService.lastRectCursorIsInside = insideRect;
     this.imagesService.editable.set(insideRect);
     this.imagesService.toggleMainImageOrCanvas();
     this.imagesService.hoveringRect(rectId);
+
+    if (el.tagName !== 'CANVAS') return;
+    el.style.cursor = insideRect ? 'move' : 'initial';
+
+    // Drag rect
+    if (insideRect) {
+      if (ev.type === 'mousedown') {
+        const rect = this.imagesService.selectedRect;
+        if (!rect) return;
+
+        this.imagesService.isDragging = true;
+        this.imagesService.mouseDownCurPos = { x: ev.clientX, y: ev.clientY };
+        this.imagesService.startRectPos = { x: rect?.x_center, y: rect?.y_center };
+      }
+
+      if (ev.type === 'mousemove') {
+        if (!this.imagesService.isDragging) return;
+        this.imagesService.dragRect(ev);
+      }
+
+      if (ev.type === 'mouseup') {
+        this.imagesService.isDragging = false;
+        this.imagesService.startRectPos = { x: -1, y: -1 };
+        this.imagesService.updateMainImageItemAndImages();
+      }
+    }
+
+    // Drag edge
+
+    // Drag corner
+
+    // Rotate
   }
 }
