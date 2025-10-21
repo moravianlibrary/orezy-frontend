@@ -19,12 +19,28 @@
       <div class="inputs-wrapper">
         <div class="left-input-wrapper">
           <label>
-            X <input class="left-input" type="number" />
+            X
+            <input
+              class="left-input"
+              type="number"
+              [min]="0"
+              [max]="1 - imagesService.selectedRect.width"
+              [(ngModel)]="imagesService.selectedRect.x"
+              (ngModelChange)="imagesService.onRectInputChange()"
+            />
           </label>
         </div>
         <div class="right-input-wrapper">
           <label>
-            Y <input class="right-input" type="number" />
+            Y
+            <input
+              class="right-input"
+              type="number"
+              [min]="0"
+              [max]="1 - imagesService.selectedRect.height"
+              [(ngModel)]="imagesService.selectedRect.y"
+              (ngModelChange)="imagesService.onRectInputChange()"
+            />
           </label>
         </div>
       </div>
@@ -35,12 +51,22 @@
       <div class="inputs-wrapper">
         <div class="left-input-wrapper">
           <label>
-            W <input class="left-input" type="number" />
+            W
+            <input
+              class="left-input"
+              type="number"
+              [(value)]="imagesService.selectedRect.width"
+            />
           </label>
         </div>
         <div class="right-input-wrapper">
           <label>
-            H <input class="right-input" type="number" />
+            H
+            <input
+              class="right-input"
+              type="number"
+              [(value)]="imagesService.selectedRect.height"
+            />
           </label>
         </div>
       </div>
@@ -51,7 +77,12 @@
       <div class="inputs-wrapper">
         <div class="left-input-wrapper">
           <label>
-            R <input class="left-input" type="number" />
+            R
+            <input
+              class="left-input"
+              type="number"
+              [(value)]="imagesService.selectedRect.angle"
+            />
           </label>
         </div>
       </div>

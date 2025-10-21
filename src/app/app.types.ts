@@ -31,6 +31,8 @@ export interface Rect {
   id: string;
   x_center: number;
   y_center: number;
+  x?: number;
+  y?: number;
   width: number;
   height: number;
   angle: number;

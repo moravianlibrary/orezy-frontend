@@ -24,48 +24,85 @@ export class MainComponent {
     }
 
     // Attach event handlers
-    this.attachImageEvents('main-container');
-    this.attachImageEvents('main-image');
-    this.attachImageEvents('main-canvas');
+    this.attachMainImageEvents();
+    this.attachMainCanvasEvents();
+    ['#main-container', 'app-preview-panel'/* , 'app-properties-panel' */].forEach(el => this.attachEventsRest(document.querySelector(el)));
   }
 
-  private attachImageEvents(elementId: string): void {
-    const el = document.getElementById(elementId);
+  private attachEventsRest(el: HTMLElement | null): void {
     if (!el) return;
 
-    el.onclick = (ev) => this.handleInteraction(ev, el);
-    el.onmousedown = (ev) => this.handleInteraction(ev, el);
-    el.onmousemove = (ev) => this.handleInteraction(ev, el);
-    el.onmouseup = (ev) => this.handleInteraction(ev, el);
+    el.onclick = (ev) => {
+      const tagName = (ev.target as HTMLElement).tagName;
+      if (tagName !== 'APP-PREVIEW-PANEL' && tagName !== 'DIV' && tagName !== 'APP-PROPERTIES-PANEL') return;
+      if (el.tagName === 'DIV' && tagName !== 'DIV') return;
+      if (this.imagesService.mode() === 'single' || !this.imagesService.selectedRect) return;
+      this.imagesService.selectedRect = null;
+      this.imagesService.lastRectCursorIsInside = null;
+      this.imagesService.editable.set(false);
+      this.imagesService.toggleMainImageOrCanvas();
+      this.imagesService.hoveringRect('');
+      this.imagesService.updateMainImageItemAndImages();
+    };
+
+    el.onmousemove = (ev) => {
+      if (el.tagName === 'DIV' && (ev.target as HTMLElement).tagName !== 'DIV') return;
+      const rectId = this.imagesService.rectIdCursorInside(ev);
+      const insideRect = Boolean(rectId);
+      this.imagesService.editable.set(insideRect);
+      this.imagesService.toggleMainImageOrCanvas();
+    };
   }
 
-  private handleInteraction(ev: MouseEvent, el: HTMLElement): void {
+  private attachMainImageEvents(): void {
+    const el = document.getElementById('main-image');
+    if (!el) return;
+
+    el.onmousemove = (ev) => {
+      if ((ev.target as HTMLElement).tagName !== 'IMG') return;
+      const rectId = this.imagesService.rectIdCursorInside(ev);
+      const insideRect = Boolean(rectId);
+      this.imagesService.editable.set(insideRect);
+      this.imagesService.toggleMainImageOrCanvas();
+    };
+  }
+
+  private attachMainCanvasEvents(): void {
+    const el = document.getElementById('main-canvas');
+    if (!el) return;
+
+    ['mousedown', 'mousemove', 'mouseup'].forEach(eventType => {
+      el.addEventListener(eventType, (ev) => this.handleCanvasInteraction(ev as MouseEvent, el));
+    });
+  }
+
+  private handleCanvasInteraction(ev: MouseEvent, el: HTMLElement): void {
+    if ((ev.target as HTMLElement).tagName !== 'CANVAS') return;
+    
     const rectId = this.imagesService.rectIdCursorInside(ev);
     const insideRect = Boolean(rectId);
 
-    if (ev.type === 'mousemove' || ev.type === 'click') {
-      const { lastRectCursorIsInside, selectedRect } = this.imagesService;
-      const sameState = lastRectCursorIsInside === insideRect && (ev.type === 'click' ? selectedRect?.id === rectId : false);
-      if (sameState) return;
-    }
-
     if (ev.type === 'mousedown') {
       this.imagesService.selectedRect = this.imagesService.currentRects.find(r => r.id === rectId) || null;
+      this.imagesService.lastRectCursorIsInside = this.imagesService.currentRects.find(r => r.id === rectId) ?? null;
+      this.imagesService.editable.set(insideRect);
+      this.imagesService.toggleMainImageOrCanvas();
+      this.imagesService.hoveringRect(rectId);
+      this.imagesService.updateMainImageItemAndImages();
+    }
 
-      if (!this.imagesService.selectedRect && this.imagesService.startRectPos.x === -1) {
-        this.imagesService.updateMainImageItemAndImages();
+    if (ev.type === 'mousemove') {
+      if (this.imagesService.lastRectCursorIsInside?.id === rectId && !this.imagesService.selectedRect) return;
+      if (!this.imagesService.isDragging) {
+        this.imagesService.lastRectCursorIsInside = this.imagesService.currentRects.find(r => r.id === rectId) ?? null;
+        this.imagesService.editable.set(insideRect);
+        this.imagesService.toggleMainImageOrCanvas();
+        this.imagesService.hoveringRect(rectId);
       }
     }
 
-    this.imagesService.lastRectCursorIsInside = insideRect;
-    this.imagesService.editable.set(insideRect);
-    this.imagesService.toggleMainImageOrCanvas();
-    this.imagesService.hoveringRect(rectId);
-
-    if (el.tagName !== 'CANVAS') return;
-    el.style.cursor = insideRect ? 'move' : 'initial';
-
     // Drag rect
+    el.style.cursor = insideRect ? 'move' : 'initial';
     if (insideRect) {
       if (ev.type === 'mousedown') {
         const rect = this.imagesService.selectedRect;
@@ -82,8 +119,11 @@ export class MainComponent {
       }
 
       if (ev.type === 'mouseup') {
+        if (!this.imagesService.isDragging) return;
         this.imagesService.isDragging = false;
         this.imagesService.startRectPos = { x: -1, y: -1 };
+        
+        if (!this.imagesService.currentRects.find(r => r.edited)) return;
         this.imagesService.updateMainImageItemAndImages();
       }
     }

@@ -73,6 +73,8 @@ export const appConfig: ApplicationConfig = {
                   id: `${t.image_path}-${t.crop_part}`,
                   x_center: t.x_center,
                   y_center: t.y_center,
+                  x: t.x_center - (t.width / 2),
+                  y: t.y_center - (t.height / 2),
                   width: t.width,
                   height: t.height,
                   angle: t.angle,

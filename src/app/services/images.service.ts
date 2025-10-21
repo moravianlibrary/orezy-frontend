@@ -39,7 +39,7 @@ export class ImagesService {
   shouldUpdateCroppedImages: boolean = false;
   selectedRect: Rect | null = null;
   lastSelectedRect: Rect | null = null;
-  lastRectCursorIsInside: boolean = false;
+  lastRectCursorIsInside: Rect | null = null;
   isDragging: boolean = false;
   mouseDownCurPos: { x: number, y: number } = { x: -1, y: -1 };
   startRectPos: { x: number, y: number } = { x: -1, y: -1 };
@@ -129,9 +129,11 @@ export class ImagesService {
     this.selectedRect = null;
     this.editable.set(false);
     this.toggleMainImageOrCanvas();
-    this.mode() === 'full'
-      ? this.renderFullImageAndCanvas(img)
-      : this.mainImageItem.set(img);
+    if (this.mode() === 'full') {
+      this.renderFullImageAndCanvas(img)
+    } else {
+      this.mainImageItem.set(img);
+    }
   }
 
   private renderFullImageAndCanvas(img: ImageItem): void {
@@ -291,6 +293,8 @@ export class ImagesService {
       x_center: .5,
       // x_center: (cropPart * 2 - 1) / (2 * this.maxRects),
       y_center: .5,
+      x: .5 - this.avgRect.width / 2,
+      y: .5 - this.avgRect.height / 2,
       width: this.avgRect.width,
       height: this.avgRect.height,
       angle: 0,
@@ -318,35 +322,79 @@ export class ImagesService {
     this.selectedRect = null;
   }
 
-  dragRect(e: MouseEvent): void {
+  dragRect(e: MouseEvent): void {    
     if (!this.selectedRect) return;
 
     const { width, height } = this.c;
-
     this.shouldUpdateCroppedImages = true;
 
-    // Calculate normalized deltas
+    // Normalized deltas
     const dx = (e.clientX - this.mouseDownCurPos.x) / width;
     const dy = (e.clientY - this.mouseDownCurPos.y) / height;
 
+    const start = this.startRectPos;
+    const rect = this.selectedRect;
+    const angle = degreeToRadian(-rect.angle);
+
     // Compute proposed new position
-    let newX = this.startRectPos.x + dx;
-    let newY = this.startRectPos.y + dy;
+    let newCx = start.x + dx;
+    let newCy = start.y + dy;
 
     // Clamp position so the rectangle stays within img
-    const halfW = this.selectedRect.width / 2;
-    const halfH = this.selectedRect.height / 2;
+    const hw = rect.width / 2;
+    const hh = rect.height / 2;
+    const cos = Math.cos(angle);
+    const sin = Math.sin(angle);
 
-    newX = Math.min(Math.max(newX, halfW), 1 - halfW);
-    newY = Math.min(Math.max(newY, halfH), 1 - halfH);
+    // Corners relative to center
+    const rel = [
+      { x: -hw, y: -hh },
+      { x:  hw, y: -hh },
+      { x:  hw, y:  hh },
+      { x: -hw, y:  hh },
+    ];
 
-    // Create updated rect
+    // Compute rotated corner positions
+    const corners = rel.map(p => ({
+      x: newCx + p.x * cos - p.y * sin,
+      y: newCy + p.x * sin + p.y * cos
+    }));
+
+    // Find overflows
+    const minX = Math.min(...corners.map(p => p.x));
+    const maxX = Math.max(...corners.map(p => p.x));
+    const minY = Math.min(...corners.map(p => p.y));
+    const maxY = Math.max(...corners.map(p => p.y));
+
+    // Adjust so all corners stay within [0,1]
+    if (minX < 0) newCx += -minX;
+    if (maxX > 1) newCx -= maxX - 1;
+    if (minY < 0) newCy += -minY;
+    if (maxY > 1) newCy -= maxY - 1;
+    // -----------------------------------
+
+    // Build updated rect
     const updatedRect = {
-      ...this.selectedRect,
-      x_center: newX,
-      y_center: newY,
+      ...rect,
+      x_center: newCx,
+      y_center: newCy,
+      x: newCx - rect.width / 2,
+      y: newCy - rect.height / 2,
       edited: true
     };
+
+    // newCx = Math.min(Math.max(newCx, hw), 1 - hw);
+    // newCy = Math.min(Math.max(newCy, hh), 1 - hh);
+
+    // // Create updated rect
+    // const updatedRect = {
+    //   ...this.selectedRect,
+    //   x_center: newCx,
+    //   y_center: newCy,
+    //   x: newCx - this.selectedRect.width / 2,
+    //   y: newCy - this.selectedRect.height / 2,
+    //   edited: true
+    // };
 
     // Update state
     this.selectedRect = updatedRect;
@@ -356,6 +404,39 @@ export class ImagesService {
     );
 
     // Redraw
+    this.redrawImage();
+    this.currentRects.forEach(r => this.drawRect(this.c, this.ctx, r));
+  }
+
+  onRectInputChange(): void {
+    let rect = this.selectedRect;
+    if (!rect || !this.selectedRect || rect.x === undefined || rect.y === undefined) return;
+    if (rect.x < 0) this.selectedRect.x = 0;
+    if (rect.y < 0) this.selectedRect.y = 0;
+    if (rect.x > 1 - rect.width) {
+      console.log('huh');
+      this.selectedRect.x = 1 - rect.width;
+    }
+    if (rect.y > 1 - rect.height) this.selectedRect.y = 1 - rect.height;
+
+    rect = this.selectedRect;
+    if (!rect || !this.selectedRect || rect.x === undefined || rect.y === undefined) return;
+    console.log(rect.x);
+    console.log(rect.y);
+
+    // Recompute center based on x and y
+    rect.x_center = rect.x + rect.width / 2;
+    rect.y_center = rect.y + rect.height / 2;
+    rect.edited = true;
+
+    // Update state (optional depending on your setup)
+    this.selectedRect = rect;
+    this.lastSelectedRect = rect;
+    this.currentRects = this.currentRects.map(r =>
+      r.id === rect.id ? rect : r
+    );
+
+    // Redraw the canvas
     this.redrawImage();
     this.currentRects.forEach(r => this.drawRect(this.c, this.ctx, r));
   }
@@ -429,7 +510,7 @@ export class ImagesService {
   // ---------- KEYBOARD SHORTCUTS ----------
   onKeyDown(event: KeyboardEvent): void {
     const key = event.key;
-    if (!this.isHandledKey(key)) return;
+    if (!this.isHandledKey(key) || (event.target as HTMLElement).tagName === 'INPUT') return;
 
     switch (key) {
       case 'Backspace':
