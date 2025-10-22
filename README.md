@@ -19,6 +19,8 @@ First define configuration in environment variables
 
 ```shell
 export APP_DEV_MODE=false
+export APP_ENV_NAME="local npm run build"
+export APP_ENV_CODE="l-nrb"
 export APP_DATA_SERVER_URL="https://ai-orezy-data.test.api.trinera.cloud/SECRET"
 ```
 
