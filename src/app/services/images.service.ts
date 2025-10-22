@@ -12,8 +12,11 @@ import { EnvironmentService } from './environment.service';
 export class ImagesService {
   private http = inject(HttpClient);
   private envService = inject(EnvironmentService);
-  private serverBaseUrl: string = this.envService.get('serverBaseUrl');
-
+  
+  private get serverBaseUrl(): string {
+    // because envService might not be initialized at construction time
+    return this.envService.get('serverBaseUrl') as string;
+  }
 
   // ---------- STATE ----------
   books: string[] = books;
