@@ -1,4 +1,4 @@
-import { APP_INITIALIZER, ApplicationConfig, inject, provideAppInitializer, provideZoneChangeDetection } from '@angular/core';
+import { ApplicationConfig, inject, provideAppInitializer, provideZoneChangeDetection } from '@angular/core';
 import { provideRouter } from '@angular/router';
 import { routes } from './app.routes';
 import { provideHttpClient } from '@angular/common/http';
@@ -14,16 +14,15 @@ export const appConfig: ApplicationConfig = {
     provideZoneChangeDetection({ eventCoalescing: true }),
     provideHttpClient(),
     provideRouter(routes),
-    {
-      provide: APP_INITIALIZER,
-      useFactory: initApp,
-      deps: [EnvironmentService],
-      multi: true
-    },
-    provideAppInitializer(() => {
-      const imagesService = inject(ImagesService);
+    provideAppInitializer(async () => {
+      //init env service and wait for it to load
       const envService = inject(EnvironmentService);
+      await envService.load();
       const serverBaseUrl = envService.get('serverBaseUrl') as string;
+      console.log('Using serverBaseUrl:', serverBaseUrl);
+      //init images service
+      const imagesService = inject(ImagesService);
+
       const book = localStorage.getItem('book');
       if (book) imagesService.book.set(book);
       return imagesService.fetchTransformations().pipe(
@@ -114,7 +113,3 @@ export const appConfig: ApplicationConfig = {
     })
   ]
 };
-
-export function initApp(envService: EnvironmentService) {
-  return () => envService.load();
-}
