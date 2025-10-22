@@ -2,14 +2,17 @@ import { HttpClient } from '@angular/common/http';
 import { computed, inject, Injectable, signal } from '@angular/core';
 import { AvgRect, ImageItem, Rect, Transformation } from '../app.types';
 import { Observable } from 'rxjs';
-import { books, serverBaseUrl } from '../app.config';
+import { books } from '../app.config';
 import { degreeToRadian, findFirstMissing, getImageUrl } from '../utils/utils';
+import { EnvironmentService } from './environment.service';
 
 @Injectable({
   providedIn: 'root'
 })
 export class ImagesService {
   private http = inject(HttpClient);
+  private envService = inject(EnvironmentService);
+  private serverBaseUrl: string = this.envService.get('serverBaseUrl');
 
 
   // ---------- STATE ----------
@@ -64,7 +67,7 @@ export class ImagesService {
 
   // ---------- INITIAL FETCHING ----------
   fetchTransformations(): Observable<Transformation[]> {
-    return this.http.get<Transformation[]>(`${serverBaseUrl}/${this.book()}/transformations.json`);
+    return this.http.get<Transformation[]>(`${this.serverBaseUrl}/${this.book()}/transformations.json`);
   }
 
   setCroppedImgs(tfs: Transformation[]): void {
@@ -88,7 +91,7 @@ export class ImagesService {
 
         const img = new Image();
         img.crossOrigin = 'anonymous';
-        img.src = getImageUrl(t.image_path);
+        img.src = getImageUrl(this.serverBaseUrl, t.image_path);
 
         img.onload = () => {
           const centerX = t.x_center * img.width;
@@ -470,7 +473,7 @@ export class ImagesService {
 
           const img = new Image();
           img.crossOrigin = 'anonymous';
-          img.src = getImageUrl(mainImageItem.name ?? '');
+          img.src = getImageUrl(this.serverBaseUrl, mainImageItem.name ?? '');
 
           img.onload = () => {
             const centerX = r.x_center * img.width;

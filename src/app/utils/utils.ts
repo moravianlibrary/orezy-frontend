@@ -1,6 +1,5 @@
-import { serverBaseUrl } from '../app.config';
 
-export function getImageUrl(imageName: string): string {
+export function getImageUrl(serverBaseUrl: string, imageName: string): string {
   return serverBaseUrl + '/' + imageName;
 }
 
