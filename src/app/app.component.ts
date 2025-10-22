@@ -34,7 +34,7 @@ export class AppComponent {
     };
     console.log('Dev Info:', devInfo);
     if (devInfo.gitCommitHash) {
-      console.log('https://github.com/trineracz/CPK-search/commit/' + devInfo.gitCommitHash);
+      console.log('https://github.com/trineracz/orezy-frontend/commit/' + devInfo.gitCommitHash);
     }
   }
 
