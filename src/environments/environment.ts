@@ -4,8 +4,8 @@ export const environment = {
 
     // overriden with env.json if useStaticRuntimeConfig is true
     devMode: false, // pro produkci ziskej z promenne APP_DEV_MODE (přes env.json)
-    environmentName: 'deployed (branch dev)', // pro produkci ziskej z promenne APP_ENV_NAME (přes env.json)
-    environmentCode: 'd_d', // pro produkci ziskej z promenne APP_ENV_CODE (přes env.json)
+    environmentName: 'deployed (branch main)', // pro produkci ziskej z promenne APP_ENV_NAME (přes env.json)
+    environmentCode: 'd_m', // pro produkci ziskej z promenne APP_ENV_CODE (přes env.json)
 
     serverBaseUrl: '', // pro produkci ziskej z promenne APP_DATA_SERVER_URL (přes env.json)
         
