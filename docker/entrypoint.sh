@@ -7,8 +7,8 @@ cat <<EOF > /usr/share/nginx/html/assets/env.json
   "devMode": ${APP_DEV_MODE:-false},
   "environmentName": "${APP_ENV_NAME:-docker runtime}",
   "environmentCode": "${APP_ENV_CODE:-docker}",
-  
-  "serverBaseUrl": "${APP_DATA_SERVER_URL}"  
+
+  "serverBaseUrl": "${APP_DATA_SERVER_URL}"
 }
 EOF
 
