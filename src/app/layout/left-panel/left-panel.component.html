@@ -55,8 +55,9 @@
         <img [src]="image.url" />
         <span
           class="status-icon"
-          [class.success]="!image.low_confidence && !image.bad_sides_ratio"
-          [class.warning]="image.low_confidence || image.bad_sides_ratio"
+          [class.success]="!image.custom && (!image.low_confidence && !image.bad_sides_ratio)"
+          [class.warning]="!image.custom && (image.low_confidence || image.bad_sides_ratio)"
+          [class.edited]="image.custom"
           [class.error]="false"
           [attr.data-tooltip]="getStatusIconTooltip(image)"
         ></span>
