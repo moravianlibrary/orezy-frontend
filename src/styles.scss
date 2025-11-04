@@ -1,6 +1,17 @@
 :root {
   --left: #00BFFF;
   --right: #FF10F0;
+  --primary: #0080A8;
+  --bg-base: #FFFFFF;
+  --bg-bright: #EFF2F5;
+  --bg-selected: #EAF6FA;
+  --border-color: #DFE5EC;
+  --border-tertiary-color: #BFCCD9;
+  --text-base: #0A0D10;
+  --text-secondary: #263340;
+  --status-icon-success: #2AA248;
+  --status-icon-warning: #FF9500;
+  --status-icon-error: #FF3A30;
 }
 
 *, *::before, *::after {

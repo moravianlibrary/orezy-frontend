@@ -27,6 +27,7 @@ export class ImagesService {
   editable = signal<boolean>(false);
 
   images = signal<ImageItem[]>([]);
+  displayedImages = signal<ImageItem[]>([]);
   croppedImages = signal<ImageItem[]>([]);
   originalImages = signal<ImageItem[]>([]);
   originalTransformations = signal<Transformation[]>([]);
@@ -63,6 +64,7 @@ export class ImagesService {
   // ---------- DERIVED STATE ----------
   flaggedImages = computed<ImageItem[]>(() => this.images().filter(img => img.low_confidence || img.bad_sides_ratio));
   notFlaggedImages = computed<ImageItem[]>(() => this.images().filter(img => !img.low_confidence && !img.bad_sides_ratio));
+  editedImages = computed<ImageItem[]>(() => this.images().filter(img => img.custom));
   flaggedCroppedImages = computed<ImageItem[]>(() => this.croppedImages().filter(img => img.low_confidence || img.bad_sides_ratio));
   notFlaggedCroppedImages = computed<ImageItem[]>(() => this.croppedImages().filter(img => !img.low_confidence && !img.bad_sides_ratio));
   customCroppedImages = computed<ImageItem[]>(() => this.croppedImages().filter(img => img.custom));
@@ -120,7 +122,7 @@ export class ImagesService {
           });
         };
 
-        img.onerror = () => { console.error('Failed to load image.') };
+        img.onerror = () => console.error('Failed to load image.');
       });
     });
   }
@@ -160,13 +162,25 @@ export class ImagesService {
 
   // ---------- FULL IMAGE DRAWING ----------
   private setMainFullImageOrCanvas(type: 'image' | 'canvas', imgItem: ImageItem): void {
-    const img = new Image();
-    img.crossOrigin = 'anonymous';
-    img.src = imgItem.url ?? '';
-    this.mainImage = img;
+    const mainImage = (document.getElementById('main-image') as HTMLElement).style;
+    const mainCanvas =(document.getElementById('main-canvas') as HTMLElement).style;
+    
+    if (imgItem.url) {
+      const img = new Image();
+      img.crossOrigin = 'anonymous';
+      img.src = imgItem.url;
+      this.mainImage = img;
 
-    img.onload = () => this.fitAndDrawImage(img, imgItem, type);
-    img.onerror = () => { console.error('Failed to load image.') };
+      img.onload = () => this.fitAndDrawImage(img, imgItem, type);
+      img.onerror = () => console.error('Failed to load image.');
+
+      mainImage.visibility = 'visible';
+      mainCanvas.visibility = 'visible';
+      return;
+    }
+
+    mainImage.visibility = 'hidden';
+    mainCanvas.visibility = 'hidden';
   }
 
   private fitAndDrawImage(
@@ -326,6 +340,7 @@ export class ImagesService {
     this.updateMainImageItemAndImages();
     this.croppedImages.update(prev => prev.filter(img => `${img.name}-${img.crop_part}` !== this.selectedRect?.id));
     this.selectedRect = null;
+
   }
 
   dragRect(e: MouseEvent): void {    
@@ -453,11 +468,15 @@ export class ImagesService {
     if (this.mainImage) ctx.drawImage(this.mainImage, 0, 0, c.width, c.height);
   }
 
-  updateMainImageItemAndImages(): void {
+  updateMainImageItemAndImages(isCustom: boolean = true): void {
     this.mainImageItem.set({ ...this.mainImageItem(), url: this.c.toDataURL('image/jpeg') });
     this.images.update(prev =>
       prev.map(img => img.name === this.mainImageItem().name
-        ? { ...img, rects: this.currentRects }
+        ? { 
+            ...img,
+            custom: isCustom,
+            rects: this.currentRects
+          }
         : img
       )
     );
@@ -500,7 +519,7 @@ export class ImagesService {
             });
           };
 
-          img.onerror = () => { console.error('Failed to load image.') };
+          img.onerror = () => console.error('Failed to load image.');
         });
     });
     

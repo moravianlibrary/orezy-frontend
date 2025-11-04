@@ -3,11 +3,11 @@ import { ImagesService } from '../../services/images.service';
 import { FormsModule } from '@angular/forms';
 
 @Component({
-  selector: 'app-properties-panel',
+  selector: 'app-right-panel',
   imports: [FormsModule],
-  templateUrl: './properties-panel.component.html',
-  styleUrl: './properties-panel.component.scss'
+  templateUrl: './right-panel.component.html',
+  styleUrl: './right-panel.component.scss'
 })
-export class PropertiesPanelComponent {
+export class RightPanelComponent {
   imagesService = inject(ImagesService);
 }

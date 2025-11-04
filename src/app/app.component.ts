@@ -1,13 +1,14 @@
 import { Component, inject } from '@angular/core';
 import { MainComponent } from './layout/main/main.component';
-import { PreviewPanelComponent } from './layout/preview-panel/preview-panel.component';
-import { PropertiesPanelComponent } from './layout/properties-panel/properties-panel.component';
+import { LeftPanelComponent } from './layout/left-panel/left-panel.component';
+import { RightPanelComponent } from './layout/right-panel/right-panel.component';
 import { ImagesService } from './services/images.service';
 import { EnvironmentService } from './services/environment.service';
+import { BottomPanelComponent } from './layout/bottom-panel/bottom-panel.component';
 
 @Component({
   selector: 'app-root',
-  imports: [MainComponent, PreviewPanelComponent, PropertiesPanelComponent],
+  imports: [MainComponent, BottomPanelComponent, LeftPanelComponent, RightPanelComponent],
   templateUrl: './app.component.html',
   styleUrl: './app.component.scss'
 })

@@ -1,0 +1,55 @@
+@mixin font($font-weight, $font-size, $line-height) {
+  font-family: 'IBM Plex Sans', sans-serif;
+  letter-spacing: 0%;
+  font-weight: $font-weight;
+  font-size: $font-size;
+  line-height: $line-height;
+}
+
+:host {
+  display: flex;
+  justify-content: space-between;
+  padding: 8px 16px;
+  border-top: 1px solid var(--border-color);
+  height: 56px;
+}
+
+.left-part svg, .middle-part svg {
+  fill: var(--text-secondary);
+}
+
+.right-part svg {
+  fill: var(--bg-base);
+}
+
+.button-group {
+  display: flex;
+  gap: 8px;
+}
+
+.button {
+  @include font(400, 14px, 16px);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  border-radius: 4px;
+  white-space: nowrap;
+
+  &:hover {
+    cursor: pointer;
+  }
+}
+
+.primary {
+  background-color: var(--primary);
+  border: 1px solid var(--primary);
+  color: var(--bg-base);
+}
+
+.secondary {
+  background-color: var(--bg-base);
+  border: 1px solid var(--border-tertiary-color);
+  color: var(--text-secondary);
+}

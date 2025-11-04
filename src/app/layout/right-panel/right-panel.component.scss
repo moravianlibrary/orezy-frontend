@@ -1,9 +1,12 @@
 :host {
-  min-width: 240px;
+  min-width: 250px;
+  flex-basis: 250px;
+  flex: 1;
   padding: 10px;
   display: flex;
   flex-direction: column;
   gap: 20px;
+  border-left: 1px solid var(--border-color);
 }
 
 .add-remove-rects {

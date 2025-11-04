@@ -17,3 +17,10 @@ export function findFirstMissing(arr: number[]) {
   while (set.has(i)) i++;
   return i;
 }
+
+export function scrollToSelectedImage(timeout: number = 100): void {
+  setTimeout(() => {
+    const element = document.querySelector('.thumbnail-wrapper.selected');
+    if (element) (element as HTMLElement).scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  }, timeout);
+}

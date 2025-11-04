@@ -15,12 +15,12 @@ export const appConfig: ApplicationConfig = {
     provideHttpClient(),
     provideRouter(routes),
     provideAppInitializer(() => {
-      // inject services
+      // Inject services
       const envService = inject(EnvironmentService);
       const imagesService = inject(ImagesService);
 
       return (async () => {
-        // wait for environment to load
+        // Wait for environment to load
         await envService.load();
         const serverBaseUrl = envService.get('serverBaseUrl') as string;
         console.log('Using serverBaseUrl:', serverBaseUrl);
@@ -28,10 +28,10 @@ export const appConfig: ApplicationConfig = {
         const book = localStorage.getItem('book');
         if (book) imagesService.book.set(book);
 
-        // load transformations as Promise
+        // Load transformations as Promise
         const tfs = await firstValueFrom(imagesService.fetchTransformations());
 
-        // continue
+        // Continue
         const imgs = Array.from(new Map(tfs.map(t => [t.image_path, t])).values())
           .map(t => ({ name: t.image_path, url: `${serverBaseUrl}/${t.image_path}` }));
 
@@ -104,14 +104,16 @@ export const appConfig: ApplicationConfig = {
         imagesService.avgRect = { width: widthSum / tfs.length, height: heightSum / tfs.length };
 
         // Mode
-        if (imagesService.maxRects === 1) {
-          imagesService.modes = ['single'];
-          imagesService.mode.set('single');
-        } else {
-          const localMode = localStorage.getItem('mode');
-          if (localMode) imagesService.mode.set(localMode);
-        }
-        // nic nevracíme – Promise<void> splněna
+        imagesService.mode.set('full');
+        // if (imagesService.maxRects === 1) {
+        //   imagesService.modes = ['single'];
+        //   imagesService.mode.set('single');
+        // } else {
+        //   const localMode = localStorage.getItem('mode');
+        //   if (localMode) imagesService.mode.set(localMode);
+        // }
+
+        // Nic nevracíme – Promise<void> splněna
       })();
     }),
   ]

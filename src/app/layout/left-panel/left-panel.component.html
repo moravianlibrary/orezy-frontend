@@ -1,4 +1,4 @@
-@let mode = imagesService.mode();
+<!-- @let mode = imagesService.mode();
 @let isSingle = mode === 'single';
 @let customCropped = imagesService.customCroppedImages();
 @let flaggedImages = isSingle
@@ -6,10 +6,70 @@
   : imagesService.flaggedImages();
 @let notFlaggedImages = isSingle
   ? imagesService.notFlaggedCroppedImages()
-  : imagesService.notFlaggedImages();
+  : imagesService.notFlaggedImages(); -->
+
+<div class="header">
+  <div class="title-menu-wrapper">
+    <h1>Skeny k revizi</h1>
+    <div class="menu">⋮</div>
+  </div>
+  <div class="crops">
+    <h2>Ořezy</h2>
+    <div class="crops-types">
+      <span
+        class="filter"
+        [class.selected-filter]="selectedFilter === 'all'"
+        (click)="setDisplayedImages('all')"
+      >Vše ({{ imagesService.images().length }})</span>
+      <span
+        class="filter"
+        [class.selected-filter]="selectedFilter === 'flagged'"
+        (click)="setDisplayedImages('flagged')"
+      >Podezřelé ({{ imagesService.flaggedImages().length }})</span>
+      <span
+        class="filter"
+        [class.selected-filter]="selectedFilter === 'edited'"
+        (click)="setDisplayedImages('edited')"
+      >Upravené ({{ imagesService.editedImages().length }})</span>
+      <span
+        class="filter"
+        [class.selected-filter]="selectedFilter === 'ok'"
+        (click)="setDisplayedImages('ok')"
+      >OK ({{ imagesService.notFlaggedImages().length }})</span>
+    </div>
+  </div>
+</div>
+
+<div class="thumbnails-wrapper">
+  @if (imagesService.displayedImages().length) {
+    @for (image of imagesService.displayedImages(); track $index) {
+      @let mainImageItem = imagesService.mainImageItem();
+      <div
+        class="thumbnail-wrapper"
+        [class.selected]="
+          mainImageItem.name === image.name &&
+          mainImageItem.crop_part === image.crop_part
+        "
+        (click)="imagesService.setMainImage(image)"
+      >
+        <img [src]="image.url" />
+        <span
+          class="status-icon"
+          [class.success]="!image.low_confidence && !image.bad_sides_ratio"
+          [class.warning]="image.low_confidence || image.bad_sides_ratio"
+          [class.error]="false"
+          [attr.data-tooltip]="getStatusIconTooltip(image)"
+        ></span>
+      </div>
+    }
+  } @else {
+    @if (imagesService.loading) { <p>Skeny se načítají...</p> }
+    @else if (imagesService.displayedImages().length) { <p>Nebyly nalezeny žádné skeny.</p> }
+  }
+</div>
 
 <!-- CUSTOM CROPPED IMAGES -->
-@if (isSingle && customCropped.length) {
+<!-- @if (isSingle && customCropped.length) {
   <div class="thumbnails-customCropped-wrapper">
     <p>Upravené ořezy ({{ customCropped.length }}):</p>
     @for (image of customCropped; track $index) {
@@ -25,10 +85,10 @@
       </div>
     }
   </div>
- }
+ } -->
 
 <!-- FLAGGED IMAGES -->
-<div class="thumbnails-flagged-wrapper">
+<!-- <div class="thumbnails-flagged-wrapper">
   @if (flaggedImages.length) {
     <p>Skeny v nepořádku ({{ flaggedImages.length }}):</p>
 
@@ -52,20 +112,20 @@
     @if (imagesService.loading) { <p>Skeny se načítají...</p> }
     @else if (!customCropped.length) { <p>Nejsou žádné skeny, co by nebyly v pořádku.</p> }
   }
-</div>
+</div> -->
 
 
 <!-- TOGGLE MORE -->
-@if (notFlaggedImages.length) {
+<!-- @if (notFlaggedImages.length) {
   <button (click)="toggleMorePreview()">
     {{ imagesService.toggledMore ? 'Skrýt' : 'Zobrazit' }}
     skeny, co jsou cajkoš ({{ notFlaggedImages.length }})
   </button>
-}
+} -->
 
 
 <!-- NOTFLAGGED IMAGES -->
-<div class="thumbnails-notflagged-wrapper">
+<!-- <div class="thumbnails-notflagged-wrapper">
   @if (imagesService.toggledMore) {
     @if (notFlaggedImages.length) {
       @for (image of notFlaggedImages; track $index) {
@@ -84,4 +144,4 @@
       <p>Žádné skeny nejsou v pořádku.</p>
     }
   }
-</div>
+</div> -->
