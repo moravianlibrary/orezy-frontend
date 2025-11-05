@@ -10,4 +10,8 @@ import { FormsModule } from '@angular/forms';
 })
 export class RightPanelComponent {
   imagesService = inject(ImagesService);
+
+  getCurrentIndexImage(): number {
+    return this.imagesService.displayedImages().findIndex(img => img.name === this.imagesService.mainImageItem().name) + 1;
+  }
 }

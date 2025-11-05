@@ -360,7 +360,6 @@ export class ImagesService {
     this.currentRects.forEach(r => this.drawRect(this.c, this.ctx, r));
     this.shouldUpdateCroppedImages = true;
     this.wasEdited = true;
-    console.log('add');
   }
 
   removeRect(): void {
@@ -371,7 +370,6 @@ export class ImagesService {
     this.croppedImages.update(prev => prev.filter(img => `${img.name}-${img.crop_part}` !== this.selectedRect?.id));
     this.selectedRect = null;
     this.wasEdited = true;
-    console.log('remove');
   }
 
   dragRect(e: MouseEvent): void {    

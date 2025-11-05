@@ -1,6 +1,6 @@
-<div class="header">
+<div class="header border-bottom">
   <div class="title-menu-wrapper">
-    <h1>Sken {{ 2 }}/{{ 100 }}</h1>
+    <h1>Sken {{ getCurrentIndexImage() }}/{{ imagesService.displayedImages().length }}</h1>
     <span class="button secondary menu">
       <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
         <path fill-rule="evenodd" clip-rule="evenodd" d="M7.8335 3.33329C7.8335 3.24125 7.90812 3.16663 8.00016 3.16663C8.09221 3.16663 8.16683 3.24125 8.16683 3.33329C8.16683 3.42534 8.09221 3.49996 8.00016 3.49996C7.90812 3.49996 7.8335 3.42534 7.8335 3.33329ZM8.00016 2.16663C7.35583 2.16663 6.8335 2.68896 6.8335 3.33329C6.8335 3.97762 7.35583 4.49996 8.00016 4.49996C8.6445 4.49996 9.16683 3.97762 9.16683 3.33329C9.16683 2.68896 8.6445 2.16663 8.00016 2.16663ZM7.8335 7.99996C7.8335 7.90791 7.90812 7.83329 8.00016 7.83329C8.09221 7.83329 8.16683 7.90791 8.16683 7.99996C8.16683 8.09201 8.09221 8.16663 8.00016 8.16663C7.90812 8.16663 7.8335 8.09201 7.8335 7.99996ZM8.00016 6.83329C7.35583 6.83329 6.8335 7.35563 6.8335 7.99996C6.8335 8.64429 7.35583 9.16663 8.00016 9.16663C8.6445 9.16663 9.16683 8.64429 9.16683 7.99996C9.16683 7.35563 8.6445 6.83329 8.00016 6.83329ZM7.8335 12.6666C7.8335 12.5746 7.90812 12.5 8.00016 12.5C8.09221 12.5 8.16683 12.5746 8.16683 12.6666C8.16683 12.7587 8.09221 12.8333 8.00016 12.8333C7.90812 12.8333 7.8335 12.7587 7.8335 12.6666ZM8.00016 11.5C7.35583 11.5 6.8335 12.0223 6.8335 12.6666C6.8335 13.311 7.35583 13.8333 8.00016 13.8333C8.6445 13.8333 9.16683 13.311 9.16683 12.6666C9.16683 12.0223 8.6445 11.5 8.00016 11.5Z" />
@@ -23,84 +23,84 @@
   </div>
 </div>
 
-@if (imagesService.mode() === 'full') {
-  @if (!!imagesService.selectedRect) {
-    <button
-      class="remove-rect"
-      (click)="imagesService.removeRect()"
-    >- Remove rect</button>
-    <div class="property position">
-      Position
-      <div class="inputs-wrapper">
-        <div class="left-input-wrapper">
-          <label>
-            X
-            <input
-              class="left-input"
-              type="number"
-              [min]="0"
-              [max]="1 - imagesService.selectedRect.width"
-              [(ngModel)]="imagesService.selectedRect.x"
-              (ngModelChange)="imagesService.onRectInputChange()"
-            />
-          </label>
-        </div>
-        <div class="right-input-wrapper">
-          <label>
-            Y
-            <input
-              class="right-input"
-              type="number"
-              [min]="0"
-              [max]="1 - imagesService.selectedRect.height"
-              [(ngModel)]="imagesService.selectedRect.y"
-              (ngModelChange)="imagesService.onRectInputChange()"
-            />
-          </label>
-        </div>
+@if (!!imagesService.selectedRect) {
+  <div class="rectangle">
+    <div class="header">
+      <div class="title-menu-wrapper">
+        <h1>Obdélník (výřez)</h1>
+      </div>
+      <div class="actions">
+        <span
+          class="action"
+          (click)="imagesService.removeRect()"
+        >
+          Smazat
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path fill-rule="evenodd" clip-rule="evenodd" d="M3.31052 3.35614C4.64689 3.22118 5.98341 3.15369 7.32004 3.15369C9.56362 3.15369 11.8134 3.26788 14.0493 3.48946C14.3241 3.51669 14.5248 3.76153 14.4976 4.03633C14.4704 4.31112 14.2255 4.51181 13.9507 4.48458C11.7467 4.26616 9.52979 4.15369 7.32004 4.15369C6.0169 4.15369 4.71367 4.2195 3.41029 4.35116L3.40882 4.3513L2.04882 4.48463C1.774 4.51158 1.52937 4.31063 1.50242 4.03581C1.47548 3.76098 1.67643 3.51635 1.95125 3.48941L3.31052 3.35614Z" />
+            <path fill-rule="evenodd" clip-rule="evenodd" d="M6.30647 2.52308L6.15984 3.39618C6.11411 3.66851 5.85626 3.8522 5.58394 3.80647C5.31161 3.76073 5.12792 3.50289 5.17365 3.23056L5.32032 2.35723C5.32288 2.34202 5.32552 2.32609 5.32819 2.30996C5.37409 2.0327 5.44144 1.62596 5.71257 1.3185C6.02861 0.960119 6.51081 0.833374 7.12675 0.833374H8.87341C9.49684 0.833374 9.97856 0.970307 10.2927 1.33234C10.5642 1.64521 10.6299 2.05341 10.6737 2.32598C10.6759 2.33924 10.6779 2.35218 10.68 2.36478L10.8264 3.22994C10.8725 3.50222 10.6891 3.76029 10.4168 3.80636C10.1446 3.85244 9.8865 3.66907 9.84042 3.3968L9.69325 2.52717C9.63749 2.18515 9.60221 2.06239 9.53744 1.98774C9.5016 1.94644 9.37665 1.83337 8.87341 1.83337H7.12675C6.61601 1.83337 6.49488 1.9433 6.46259 1.97991C6.40118 2.04955 6.36652 2.16655 6.30647 2.52308Z" />
+            <path fill-rule="evenodd" clip-rule="evenodd" d="M12.5985 5.5942C12.8741 5.61198 13.083 5.8498 13.0653 6.12536L12.6317 12.8414L12.6309 12.8541C12.6133 13.1049 12.594 13.3808 12.5423 13.6374C12.4887 13.9035 12.3942 14.1844 12.2028 14.4336C11.802 14.9554 11.12 15.1665 10.1396 15.1665H5.85963C4.87925 15.1665 4.19721 14.9554 3.79643 14.4336C3.60503 14.1844 3.51056 13.9035 3.45697 13.6374C3.40528 13.3808 3.38597 13.1049 3.3684 12.8541L3.36733 12.8387L2.934 6.12536C2.91621 5.8498 3.12518 5.61198 3.40075 5.5942C3.67632 5.57641 3.91413 5.78538 3.93192 6.06095L4.36507 12.7715L4.36517 12.7729C4.38398 13.0414 4.39991 13.2544 4.43729 13.44C4.47369 13.6207 4.52423 13.7395 4.58949 13.8244C4.70204 13.971 4.98 14.1665 5.85963 14.1665H10.1396C11.0193 14.1665 11.2972 13.971 11.4098 13.8244C11.475 13.7395 11.5256 13.6207 11.562 13.44C11.5993 13.2544 11.6153 13.0414 11.6341 12.7729L11.6342 12.7715L12.0673 6.06095C12.0851 5.78538 12.3229 5.57641 12.5985 5.5942Z" />
+            <path fill-rule="evenodd" clip-rule="evenodd" d="M6.38672 11C6.38672 10.7239 6.61058 10.5 6.88672 10.5H9.10672C9.38286 10.5 9.60672 10.7239 9.60672 11C9.60672 11.2762 9.38286 11.5 9.10672 11.5H6.88672C6.61058 11.5 6.38672 11.2762 6.38672 11Z" />
+            <path fill-rule="evenodd" clip-rule="evenodd" d="M5.83333 8.33337C5.83333 8.05723 6.05719 7.83337 6.33333 7.83337H9.66667C9.94281 7.83337 10.1667 8.05723 10.1667 8.33337C10.1667 8.60952 9.94281 8.83337 9.66667 8.83337H6.33333C6.05719 8.83337 5.83333 8.60952 5.83333 8.33337Z" />
+          </svg>
+        </span>
       </div>
     </div>
 
-    <div class="property dimentions">
-      Dimensions
+    <div class="properties">
+      <h2>Pozice</h2>
       <div class="inputs-wrapper">
-        <div class="left-input-wrapper">
-          <label>
-            W
-            <input
-              class="left-input"
-              type="number"
-              [(value)]="imagesService.selectedRect.width"
-            />
-          </label>
-        </div>
-        <div class="right-input-wrapper">
-          <label>
-            H
-            <input
-              class="right-input"
-              type="number"
-              [(value)]="imagesService.selectedRect.height"
-            />
-          </label>
-        </div>
+        <label>
+          Vlevo
+          <input
+            class="left-input"
+            type="number"
+            [(ngModel)]="imagesService.selectedRect.x"
+            (ngModelChange)="imagesService.onRectInputChange()"
+          />
+        </label>
+        <label>
+          Nahoře
+          <input
+            class="right-input"
+            type="number"
+            [(ngModel)]="imagesService.selectedRect.y"
+            (ngModelChange)="imagesService.onRectInputChange()"
+          />
+        </label>
       </div>
     </div>
 
-    <div class="property rotation">
-      Rotation
+    <div class="properties">
+      <h2>Rozměry</h2>
       <div class="inputs-wrapper">
-        <div class="left-input-wrapper">
-          <label>
-            R
-            <input
-              class="left-input"
-              type="number"
-              [(value)]="imagesService.selectedRect.angle"
-            />
-          </label>
-        </div>
+        <label>
+          Šířka
+          <input
+            class="left-input"
+            type="number"
+            [(value)]="imagesService.selectedRect.width"
+          />
+        </label>
+        <label>
+          Výška
+          <input
+            class="right-input"
+            type="number"
+            [(value)]="imagesService.selectedRect.height"
+          />
+        </label>
       </div>
     </div>
-  }
+
+    <div class="properties rotation">
+      <h2>Otáčení</h2>
+      <div class="input-wrapper">
+        <input
+          class="input"
+          type="number"
+          [(value)]="imagesService.selectedRect.angle"
+        />
+      </div>
+    </div>
+  </div>
 }
