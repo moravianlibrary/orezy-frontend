@@ -251,11 +251,13 @@ export class ImagesService {
       });
     
     if (type === 'image') {
-      if (imgItem.name && this.mainImageItem().name && imgItem.name !== this.mainImageItem().name && this.wasEdited) {
-        this.updateImagesByEdited();
-      }
+      const lastMainImageItemName = this.mainImageItem().name;
 
       this.mainImageItem.set({ ...imgItem, url: c.toDataURL('image/jpeg') });
+
+      if (imgItem.name && lastMainImageItemName && imgItem.name !== lastMainImageItemName && this.wasEdited) {
+        this.updateImagesByEdited(lastMainImageItemName);
+      }
     }
   }
 
@@ -510,13 +512,12 @@ export class ImagesService {
     );
   }
 
-  updateImagesByEdited(): void {
+  updateImagesByEdited(imgName: string): void {
     this.images.update(prev =>
-      prev.map(img => img.name === this.mainImageItem().name
+      prev.map(img => img.name === imgName
         ? { 
             ...img,
-            edited: true,
-            rects: this.currentRects
+            edited: true
           }
         : img
       )

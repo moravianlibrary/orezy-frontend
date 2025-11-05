@@ -15,13 +15,14 @@ export class LeftPanelComponent {
   clickFilter(filter: string): void {
     this.imagesService.selectedFilter = filter;
     
+    const mainImageItemName = this.imagesService.mainImageItem().name;
     if (this.imagesService.wasEdited) {
-      this.imagesService.updateImagesByEdited();
+      this.imagesService.updateImagesByEdited(mainImageItemName ?? '');
     }
 
     this.imagesService.setDisplayedImages();
 
-    const newImage = this.imagesService.displayedImages().find(img => img.name === this.imagesService.mainImageItem().name)
+    const newImage = this.imagesService.displayedImages().find(img => img.name === mainImageItemName)
       || this.imagesService.displayedImages()[0]
       || { url: '' };
     this.imagesService.setMainImage(newImage);

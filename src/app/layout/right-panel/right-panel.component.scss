@@ -1,36 +1,87 @@
+@mixin font($font-weight, $font-size, $line-height) {
+  font-family: 'IBM Plex Sans', sans-serif;
+  letter-spacing: 0%;
+  font-weight: $font-weight;
+  font-size: $font-size;
+  line-height: $line-height;
+}
+
 :host {
   min-width: 250px;
   flex-basis: 250px;
   flex: 1;
-  padding: 10px;
   display: flex;
   flex-direction: column;
   gap: var(--spacing-x5);
   border-left: 1px solid var(--border-color);
 }
 
-.add-remove-rects {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 10px;
-}
+.header {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-x3);
+  padding: var(--spacing-x4);
+  padding-bottom: var(--spacing-x6);
+  border-bottom: 1px solid var(--border-color);
+  color: var(--text-base);
+  max-width: 100%;
 
-.property {
-  font-size: var(--font-size-x1);
+  .title-menu-wrapper {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
 
-  .inputs-wrapper {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 10px;
+    h1 {
+      @include font(500, var(--font-size-x3), var(--spacing-x8));
+    }
 
-    label {
+    .menu {
+      padding: var(--spacing-x2);
+
+      svg {
+        fill: var(--icon-dark);
+      }
+    }
+  }
+
+  .actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--spacing-x2);
+    max-width: 100%;
+
+    .action {
+      @include font(500, var(--font-size-x1-5), var(--spacing-x3));
+      color: var(--text-tertiary);
+      padding: var(--spacing-x2) var(--spacing-x3);
+      background-color: var(--bg-base);
+      border: 1px solid var(--border-tertiary-color);
+      border-radius: 4px;
+      white-space: nowrap;
       display: flex;
       align-items: center;
-      gap: 5px;
-      font-family: monospace;
+      justify-content: center;
+      gap: var(--spacing-x2);
 
-      input {
-        max-width: 80px;
+      &:hover {
+        cursor: pointer;
+      }
+
+      svg {
+        fill: var(--icon-dark);
+      }
+    }
+
+    .disabled { 
+      border-color: var(--border-color);
+      color: var(--text-disabled);
+
+      &:hover {
+        cursor: not-allowed;
+      }
+
+      svg {
+        fill: var(--icon-disabled);
       }
     }
   }
