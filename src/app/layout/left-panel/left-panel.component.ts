@@ -12,25 +12,14 @@ import { scrollToSelectedImage } from '../../utils/utils';
 export class LeftPanelComponent {
   imagesService = inject(ImagesService);
 
-  selectedFilter: string = 'flagged';
-
-  setDisplayedImages(filter: string): void {
-    this.selectedFilter = filter;
+  clickFilter(filter: string): void {
+    this.imagesService.selectedFilter = filter;
     
-    switch (filter) {
-      case 'all':
-        this.imagesService.displayedImages.set(this.imagesService.images());
-        break;
-      case 'flagged':
-        this.imagesService.displayedImages.set(this.imagesService.flaggedImages());
-        break;
-      case 'edited':
-        this.imagesService.displayedImages.set(this.imagesService.editedImages());
-        break;
-      case 'ok':
-        this.imagesService.displayedImages.set(this.imagesService.notFlaggedImages());
-        break;
+    if (this.imagesService.wasEdited) {
+      this.imagesService.updateImagesByEdited();
     }
+
+    this.imagesService.setDisplayedImages();
 
     const newImage = this.imagesService.displayedImages().find(img => img.name === this.imagesService.mainImageItem().name)
       || this.imagesService.displayedImages()[0]
@@ -40,6 +29,11 @@ export class LeftPanelComponent {
     scrollToSelectedImage();
   }
 
+  clickThumbnail(image: ImageItem): void {
+    this.imagesService.setMainImage(image);
+    if (this.imagesService.wasEdited) setTimeout(() => this.imagesService.setDisplayedImages(), 100);
+  }
+
   getStatusIconTooltip(image: ImageItem): string {
     let result = '';
     
@@ -47,6 +41,7 @@ export class LeftPanelComponent {
     if (image.low_confidence && image.bad_sides_ratio) result = 'Nízká důvěra a špatný poměr stran';
     if (image.low_confidence && !image.bad_sides_ratio) result = 'Nízká důvěra';
     if (!image.low_confidence && image.bad_sides_ratio) result = 'Špatný poměr stran';
+    if (image.edited) result = 'Upraveno';
 
     return result;
   }

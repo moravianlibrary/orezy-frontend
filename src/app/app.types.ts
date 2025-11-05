@@ -4,7 +4,7 @@ export interface ImageItem {
   crop_part?: number;
   low_confidence?: boolean;
   bad_sides_ratio?: boolean;
-  custom?: boolean;
+  edited?: boolean;
   rects?: Rect[];
 }
 

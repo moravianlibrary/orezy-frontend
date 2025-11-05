@@ -26,7 +26,7 @@ export class MainComponent {
     // Attach event handlers
     this.attachMainImageEvents();
     this.attachMainCanvasEvents();
-    ['#main-container', 'app-left-panel'/* , 'app-right-panel' */].forEach(el => this.attachEventsRest(document.querySelector(el)));
+    ['#main-container', 'app-left-panel' , 'app-bottom-panel', 'app-right-panel'].forEach(el => this.attachEventsRest(document.querySelector(el)));
   }
 
   private attachEventsRest(el: HTMLElement | null): void {
@@ -34,7 +34,8 @@ export class MainComponent {
 
     el.onclick = (ev) => {
       const tagName = (ev.target as HTMLElement).tagName;
-      if (tagName !== 'APP-LEFT-PANEL' && tagName !== 'DIV' && tagName !== 'APP-RIGHT-PANEL') return;
+      if (tagName === 'APP-RIGHT-PANEL') return;
+      if (tagName !== 'APP-LEFT-PANEL' && tagName !== 'DIV' && tagName !== 'APP-RIGHT-PANEL' && tagName !== 'APP-BOTTOM-PANEL') return;
       if (el.tagName === 'DIV' && tagName !== 'DIV') return;
       if (this.imagesService.mode() === 'single' || !this.imagesService.selectedRect) return;
       this.imagesService.selectedRect = null;
@@ -88,7 +89,7 @@ export class MainComponent {
       this.imagesService.editable.set(insideRect);
       this.imagesService.toggleMainImageOrCanvas();
       this.imagesService.hoveringRect(rectId);
-      this.imagesService.updateMainImageItemAndImages(false);
+      this.imagesService.updateMainImageItemAndImages();
     }
 
     if (ev.type === 'mousemove') {
@@ -124,6 +125,7 @@ export class MainComponent {
         this.imagesService.startRectPos = { x: -1, y: -1 };
         
         if (!this.imagesService.currentRects.find(r => r.edited)) return;
+        this.imagesService.wasEdited = true;
         this.imagesService.updateMainImageItemAndImages();
       }
     }

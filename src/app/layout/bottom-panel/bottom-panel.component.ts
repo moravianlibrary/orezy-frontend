@@ -1,4 +1,4 @@
-import { Component, inject } from '@angular/core';
+import { Component, computed, inject } from '@angular/core';
 import { ImagesService } from '../../services/images.service';
 import { scrollToSelectedImage } from '../../utils/utils';
 
@@ -11,21 +11,26 @@ import { scrollToSelectedImage } from '../../utils/utils';
 export class BottomPanelComponent {
   imagesService = inject(ImagesService);
 
+  currentIndex = computed<number>(() => this.imagesService.displayedImages().findIndex(img => img.name === this.imagesService.mainImageItem().name));
+
   showPrevImage(): void {
+    if (this.currentIndex() === 0) return;
     this.showImage(-1);
+    if (this.imagesService.wasEdited) setTimeout(() => this.imagesService.setDisplayedImages(), 100);
   }
 
   showNextImage(): void {
+    if (this.currentIndex() === this.imagesService.displayedImages().length - 1) return;
     this.showImage(1);
+    if (this.imagesService.wasEdited) setTimeout(() => this.imagesService.setDisplayedImages(), 100);
   }
 
   private showImage(offset: number): void {
     const displayedImages = this.imagesService.displayedImages();
-    const currentIndex = displayedImages.findIndex(img => img.name === this.imagesService.mainImageItem().name);
 
     if (displayedImages.length === 0) return;
 
-    const newIndex = (currentIndex + offset + displayedImages.length) % displayedImages.length;
+    const newIndex = (this.currentIndex() + offset + displayedImages.length) % displayedImages.length;
     this.imagesService.setMainImage(displayedImages[newIndex]);
 
     scrollToSelectedImage();

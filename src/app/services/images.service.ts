@@ -14,7 +14,7 @@ export class ImagesService {
   private envService = inject(EnvironmentService);
   
   private get serverBaseUrl(): string {
-    // because envService might not be initialized at construction time
+    // Because envService might not be initialized at construction time
     return this.envService.get('serverBaseUrl') as string;
   }
 
@@ -24,6 +24,7 @@ export class ImagesService {
 
   book = signal<string>(books[2]);
   mode = signal<string>(this.modes[0]);
+  selectedFilter: string = 'flagged';
   editable = signal<boolean>(false);
 
   images = signal<ImageItem[]>([]);
@@ -33,6 +34,7 @@ export class ImagesService {
   originalTransformations = signal<Transformation[]>([]);
 
   mainImageItem = signal<ImageItem>({ url: 'https://media.tenor.com/WX_LDjYUrMsAAAAi/loading.gif' });
+  wasEdited: boolean = false;
 
   c!: HTMLCanvasElement;
   ctx!: CanvasRenderingContext2D;
@@ -61,13 +63,31 @@ export class ImagesService {
   toggledMore: boolean = false;
 
 
+  // ---------- DISPLAYED IMAGES ----------
+  setDisplayedImages(): void {
+    switch (this.selectedFilter) {
+      case 'all':
+        this.displayedImages.set(this.images());
+        break;
+      case 'flagged':
+        this.displayedImages.set(this.flaggedImages());
+        break;
+      case 'edited':
+        this.displayedImages.set(this.editedImages());
+        break;
+      case 'ok':
+        this.displayedImages.set(this.notFlaggedImages());
+        break;
+    }
+  }
+
   // ---------- DERIVED STATE ----------
-  flaggedImages = computed<ImageItem[]>(() => this.images().filter(img => img.low_confidence || img.bad_sides_ratio));
-  notFlaggedImages = computed<ImageItem[]>(() => this.images().filter(img => !img.low_confidence && !img.bad_sides_ratio));
-  editedImages = computed<ImageItem[]>(() => this.images().filter(img => img.custom));
+  flaggedImages = computed<ImageItem[]>(() => this.images().filter(img => !img.edited && (img.low_confidence || img.bad_sides_ratio)));
+  notFlaggedImages = computed<ImageItem[]>(() => this.images().filter(img => !img.edited && (!img.low_confidence && !img.bad_sides_ratio)));
+  editedImages = computed<ImageItem[]>(() => this.images().filter(img => img.edited));
   flaggedCroppedImages = computed<ImageItem[]>(() => this.croppedImages().filter(img => img.low_confidence || img.bad_sides_ratio));
   notFlaggedCroppedImages = computed<ImageItem[]>(() => this.croppedImages().filter(img => !img.low_confidence && !img.bad_sides_ratio));
-  customCroppedImages = computed<ImageItem[]>(() => this.croppedImages().filter(img => img.custom));
+  customCroppedImages = computed<ImageItem[]>(() => this.croppedImages().filter(img => img.edited));
 
 
   // ---------- INITIAL FETCHING ----------
@@ -118,7 +138,7 @@ export class ImagesService {
             crop_part: t.crop_part,
             low_confidence: t.low_confidence,
             bad_sides_ratio: t.bad_sides_ratio,
-            custom: false
+            edited: false
           });
         };
 
@@ -230,7 +250,13 @@ export class ImagesService {
         this.drawRectangle(r);
       });
     
-    if (type === 'image') this.mainImageItem.set({ ...imgItem, url: c.toDataURL('image/jpeg') });
+    if (type === 'image') {
+      if (imgItem.name && this.mainImageItem().name && imgItem.name !== this.mainImageItem().name && this.wasEdited) {
+        this.updateImagesByEdited();
+      }
+
+      this.mainImageItem.set({ ...imgItem, url: c.toDataURL('image/jpeg') });
+    }
   }
 
   private drawRectangle(r: Rect): void {
@@ -331,6 +357,8 @@ export class ImagesService {
     this.redrawImage();
     this.currentRects.forEach(r => this.drawRect(this.c, this.ctx, r));
     this.shouldUpdateCroppedImages = true;
+    this.wasEdited = true;
+    console.log('add');
   }
 
   removeRect(): void {
@@ -340,7 +368,8 @@ export class ImagesService {
     this.updateMainImageItemAndImages();
     this.croppedImages.update(prev => prev.filter(img => `${img.name}-${img.crop_part}` !== this.selectedRect?.id));
     this.selectedRect = null;
-
+    this.wasEdited = true;
+    console.log('remove');
   }
 
   dragRect(e: MouseEvent): void {    
@@ -468,18 +497,31 @@ export class ImagesService {
     if (this.mainImage) ctx.drawImage(this.mainImage, 0, 0, c.width, c.height);
   }
 
-  updateMainImageItemAndImages(isCustom: boolean = true): void {
+  updateMainImageItemAndImages(): void {
     this.mainImageItem.set({ ...this.mainImageItem(), url: this.c.toDataURL('image/jpeg') });
     this.images.update(prev =>
       prev.map(img => img.name === this.mainImageItem().name
         ? { 
             ...img,
-            custom: isCustom,
             rects: this.currentRects
           }
         : img
       )
     );
+  }
+
+  updateImagesByEdited(): void {
+    this.images.update(prev =>
+      prev.map(img => img.name === this.mainImageItem().name
+        ? { 
+            ...img,
+            edited: true,
+            rects: this.currentRects
+          }
+        : img
+      )
+    );
+    this.wasEdited = false;
   }
 
   updateCroppedImages(mainImageItem: ImageItem): void {
@@ -515,7 +557,7 @@ export class ImagesService {
               name: mainImageItem.name,
               url: c.toDataURL('image/jpeg'),
               crop_part: r.crop_part,
-              custom: true
+              edited: true
             });
           };
 

@@ -9,10 +9,28 @@
   --border-tertiary-color: #BFCCD9;
   --text-base: #0A0D10;
   --text-secondary: #263340;
+  --text-light: #4C6580;
+  --text-white: #FFFFFF;
+  --icon-dark: #263340;
+  --icon-white: #FFFFFF;
+  --icon-disabled: #DFE5EC;
   --status-icon-success: #2AA248;
   --status-icon-warning: #FF9500;
   --status-icon-edited: #FFCC00;
   --status-icon-error: #FF3A30;
+  --font-size-x1: 12px;
+  --font-size-x1-5: 14px;
+  --font-size-x2: 16px;
+  --font-size-x2-5: 18px;
+  --font-size-x3: 20px;
+  --spacing-x1: 4px;
+  --spacing-x2: 8px;
+  --spacing-x3: 12px;
+  --spacing-x4: 16px;
+  --spacing-x5: 20px;
+  --spacing-x6: 24px;
+  --spacing-x7: 28px;
+  --spacing-x8: 32px;
 }
 
 *, *::before, *::after {
@@ -20,10 +38,59 @@
   margin: 0;
   box-sizing: border-box;
   font-family: "Roboto", sans-serif;
-  font-size: 16px;
+  font-size: var(--font-size-x2);
 }
 
 html, body {
   margin: 0;
   height: 100%;
+}
+
+// Buttons
+@mixin font($font-weight, $font-size, $line-height) {
+  font-family: 'IBM Plex Sans', sans-serif;
+  letter-spacing: 0%;
+  font-weight: $font-weight;
+  font-size: $font-size;
+  line-height: $line-height;
+}
+
+.button-group {
+  display: flex;
+  gap: var(--spacing-x2);
+}
+
+.button {
+  @include font(400, var(font-size-x1-5), var(--spacing-x4));
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: var(--spacing-x3);
+  padding: var(--spacing-x3);
+  border-radius: 4px;
+  white-space: nowrap;
+
+  &:hover {
+    cursor: pointer;
+  }
+}
+
+.primary {
+  background-color: var(--primary);
+  border: 1px solid var(--primary);
+  color: var(--text-white);
+}
+
+.secondary {
+  background-color: var(--bg-base);
+  border: 1px solid var(--border-tertiary-color);
+  color: var(--text-secondary);
+}
+
+.disabled {
+  border-color: var(--border-color);
+
+  &:hover {
+    cursor: not-allowed;
+  }
 }

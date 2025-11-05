@@ -1,42 +1,38 @@
-<!-- @let mode = imagesService.mode();
-@let isSingle = mode === 'single';
-@let customCropped = imagesService.customCroppedImages();
-@let flaggedImages = isSingle
-  ? imagesService.flaggedCroppedImages()
-  : imagesService.flaggedImages();
-@let notFlaggedImages = isSingle
-  ? imagesService.notFlaggedCroppedImages()
-  : imagesService.notFlaggedImages(); -->
-
 <div class="header">
   <div class="title-menu-wrapper">
     <h1>Skeny k revizi</h1>
-    <div class="menu">⋮</div>
+    <span class="button secondary menu">
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path fill-rule="evenodd" clip-rule="evenodd" d="M1.5 4.66663C1.5 4.39048 1.72386 4.16663 2 4.16663H14C14.2761 4.16663 14.5 4.39048 14.5 4.66663C14.5 4.94277 14.2761 5.16663 14 5.16663H2C1.72386 5.16663 1.5 4.94277 1.5 4.66663Z" />
+        <path fill-rule="evenodd" clip-rule="evenodd" d="M1.5 7.99996C1.5 7.72382 1.72386 7.49996 2 7.49996H14C14.2761 7.49996 14.5 7.72382 14.5 7.99996C14.5 8.2761 14.2761 8.49996 14 8.49996H2C1.72386 8.49996 1.5 8.2761 1.5 7.99996Z" />
+        <path fill-rule="evenodd" clip-rule="evenodd" d="M1.5 11.3333C1.5 11.0571 1.72386 10.8333 2 10.8333H14C14.2761 10.8333 14.5 11.0571 14.5 11.3333C14.5 11.6094 14.2761 11.8333 14 11.8333H2C1.72386 11.8333 1.5 11.6094 1.5 11.3333Z" />
+        <path fill-rule="evenodd" clip-rule="evenodd" d="M1.5 4.66663C1.5 4.39048 1.72386 4.16663 2 4.16663H14C14.2761 4.16663 14.5 4.39048 14.5 4.66663C14.5 4.94277 14.2761 5.16663 14 5.16663H2C1.72386 5.16663 1.5 4.94277 1.5 4.66663Z" />
+        <path fill-rule="evenodd" clip-rule="evenodd" d="M1.5 7.99996C1.5 7.72382 1.72386 7.49996 2 7.49996H14C14.2761 7.49996 14.5 7.72382 14.5 7.99996C14.5 8.2761 14.2761 8.49996 14 8.49996H2C1.72386 8.49996 1.5 8.2761 1.5 7.99996Z" />
+        <path fill-rule="evenodd" clip-rule="evenodd" d="M1.5 11.3333C1.5 11.0571 1.72386 10.8333 2 10.8333H14C14.2761 10.8333 14.5 11.0571 14.5 11.3333C14.5 11.6094 14.2761 11.8333 14 11.8333H2C1.72386 11.8333 1.5 11.6094 1.5 11.3333Z" />
+      </svg>
+    </span>
   </div>
   <div class="crops">
-    <h2>Ořezy</h2>
-    <div class="crops-types">
-      <span
-        class="filter"
-        [class.selected-filter]="selectedFilter === 'all'"
-        (click)="setDisplayedImages('all')"
-      >Vše ({{ imagesService.images().length }})</span>
-      <span
-        class="filter"
-        [class.selected-filter]="selectedFilter === 'flagged'"
-        (click)="setDisplayedImages('flagged')"
-      >Podezřelé ({{ imagesService.flaggedImages().length }})</span>
-      <span
-        class="filter"
-        [class.selected-filter]="selectedFilter === 'edited'"
-        (click)="setDisplayedImages('edited')"
-      >Upravené ({{ imagesService.editedImages().length }})</span>
-      <span
-        class="filter"
-        [class.selected-filter]="selectedFilter === 'ok'"
-        (click)="setDisplayedImages('ok')"
-      >OK ({{ imagesService.notFlaggedImages().length }})</span>
-    </div>
+    <span
+      class="filter"
+      [class.selected-filter]="imagesService.selectedFilter === 'all'"
+      (click)="clickFilter('all')"
+    >Vše <span class="filter-number">({{ imagesService.images().length }})</span></span>
+    <span
+      class="filter"
+      [class.selected-filter]="imagesService.selectedFilter === 'flagged'"
+      (click)="clickFilter('flagged')"
+    >Podezřelé <span class="filter-number">({{ imagesService.flaggedImages().length }})</span></span>
+    <span
+      class="filter"
+      [class.selected-filter]="imagesService.selectedFilter === 'edited'"
+      (click)="clickFilter('edited')"
+    >Upravené <span class="filter-number">({{ imagesService.editedImages().length }})</span></span>
+    <span
+      class="filter"
+      [class.selected-filter]="imagesService.selectedFilter === 'ok'"
+      (click)="clickFilter('ok')"
+    >OK <span class="filter-number">({{ imagesService.notFlaggedImages().length }})</span></span>
   </div>
 </div>
 
@@ -50,14 +46,14 @@
           mainImageItem.name === image.name &&
           mainImageItem.crop_part === image.crop_part
         "
-        (click)="imagesService.setMainImage(image)"
+        (click)="clickThumbnail(image)"
       >
         <img [src]="image.url" />
         <span
           class="status-icon"
-          [class.success]="!image.custom && (!image.low_confidence && !image.bad_sides_ratio)"
-          [class.warning]="!image.custom && (image.low_confidence || image.bad_sides_ratio)"
-          [class.edited]="image.custom"
+          [class.success]="!image.edited && (!image.low_confidence && !image.bad_sides_ratio)"
+          [class.warning]="!image.edited && (image.low_confidence || image.bad_sides_ratio)"
+          [class.edited]="image.edited"
           [class.error]="false"
           [attr.data-tooltip]="getStatusIconTooltip(image)"
         ></span>
@@ -68,81 +64,3 @@
     @else if (imagesService.displayedImages().length) { <p>Nebyly nalezeny žádné skeny.</p> }
   }
 </div>
-
-<!-- CUSTOM CROPPED IMAGES -->
-<!-- @if (isSingle && customCropped.length) {
-  <div class="thumbnails-customCropped-wrapper">
-    <p>Upravené ořezy ({{ customCropped.length }}):</p>
-    @for (image of customCropped; track $index) {
-      <div class="thumbnail-wrapper">
-        <img
-          [src]="image.url"
-          [class.selected]="
-            imagesService.mainImageItem().name === image.name &&
-            imagesService.mainImageItem().crop_part === image.crop_part
-          "
-          (click)="imagesService.setMainImage(image)"
-        />
-      </div>
-    }
-  </div>
- } -->
-
-<!-- FLAGGED IMAGES -->
-<!-- <div class="thumbnails-flagged-wrapper">
-  @if (flaggedImages.length) {
-    <p>Skeny v nepořádku ({{ flaggedImages.length }}):</p>
-
-    @for (image of flaggedImages; track $index) {
-      <div class="thumbnail-wrapper">
-        <img
-          [src]="image.url"
-          [class.selected]="
-            imagesService.mainImageItem().name === image.name &&
-            imagesService.mainImageItem().crop_part === image.crop_part
-          "
-          (click)="imagesService.setMainImage(image)"
-        />
-        <div class="thumbnail-icons">
-          @if (image.low_confidence) { 🫥 }
-          @if (image.bad_sides_ratio) { 📐 }
-        </div>
-      </div>
-    }
-  } @else {
-    @if (imagesService.loading) { <p>Skeny se načítají...</p> }
-    @else if (!customCropped.length) { <p>Nejsou žádné skeny, co by nebyly v pořádku.</p> }
-  }
-</div> -->
-
-
-<!-- TOGGLE MORE -->
-<!-- @if (notFlaggedImages.length) {
-  <button (click)="toggleMorePreview()">
-    {{ imagesService.toggledMore ? 'Skrýt' : 'Zobrazit' }}
-    skeny, co jsou cajkoš ({{ notFlaggedImages.length }})
-  </button>
-} -->
-
-
-<!-- NOTFLAGGED IMAGES -->
-<!-- <div class="thumbnails-notflagged-wrapper">
-  @if (imagesService.toggledMore) {
-    @if (notFlaggedImages.length) {
-      @for (image of notFlaggedImages; track $index) {
-        <div class="thumbnail-wrapper">
-          <img
-            [src]="image.url"
-            [class.selected]="
-              imagesService.mainImageItem().name === image.name &&
-              imagesService.mainImageItem().crop_part === image.crop_part
-            "
-            (click)="imagesService.setMainImage(image)"
-          />
-        </div>
-      }
-    } @else {
-      <p>Žádné skeny nejsou v pořádku.</p>
-    }
-  }
-</div> -->

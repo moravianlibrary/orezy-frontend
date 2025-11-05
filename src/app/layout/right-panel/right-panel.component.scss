@@ -5,7 +5,7 @@
   padding: 10px;
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: var(--spacing-x5);
   border-left: 1px solid var(--border-color);
 }
 
@@ -16,7 +16,7 @@
 }
 
 .property {
-  font-size: 12px;
+  font-size: var(--font-size-x1);
 
   .inputs-wrapper {
     display: grid;
