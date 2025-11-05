@@ -52,19 +52,23 @@
         <label>
           Vlevo
           <input
+            #xInput
             class="left-input"
             type="number"
-            [(ngModel)]="imagesService.selectedRect.x"
-            (ngModelChange)="imagesService.onRectInputChange()"
+            [ngModel]="imagesService.selectedRect.x | number:'1.0-3'"
+            (ngModelChange)="imagesService.onXChange($event)"
+            (blur)="onInputBlur('x', xInput)"
           />
         </label>
         <label>
           Nahoře
           <input
+            #yInput
             class="right-input"
             type="number"
-            [(ngModel)]="imagesService.selectedRect.y"
-            (ngModelChange)="imagesService.onRectInputChange()"
+            [ngModel]="imagesService.selectedRect.y | number:'1.0-3'"
+            (ngModelChange)="imagesService.onYChange($event)"
+            (blur)="onInputBlur('y', yInput)"
           />
         </label>
       </div>
@@ -76,17 +80,23 @@
         <label>
           Šířka
           <input
+            #widthInput
             class="left-input"
             type="number"
-            [(value)]="imagesService.selectedRect.width"
+            [ngModel]="imagesService.selectedRect.width | number:'1.0-3'"
+            (ngModelChange)="imagesService.onWidthChange($event)"
+            (blur)="onInputBlur('width', widthInput)"
           />
         </label>
         <label>
           Výška
           <input
+            #heightInput
             class="right-input"
             type="number"
-            [(value)]="imagesService.selectedRect.height"
+            [ngModel]="imagesService.selectedRect.height | number:'1.0-3'"
+            (ngModelChange)="imagesService.onHeightChange($event)"
+            (blur)="onInputBlur('height', heightInput)"
           />
         </label>
       </div>
@@ -96,9 +106,12 @@
       <h2>Otáčení</h2>
       <div class="input-wrapper">
         <input
-          class="input"
+          #angleInput
+          class="right-input"
           type="number"
-          [(value)]="imagesService.selectedRect.angle"
+          [ngModel]="imagesService.selectedRect.angle | number:'1.0-3'"
+          (ngModelChange)="imagesService.onAngleChange($event)"
+          (blur)="onInputBlur('angle', angleInput)"
         />
       </div>
     </div>

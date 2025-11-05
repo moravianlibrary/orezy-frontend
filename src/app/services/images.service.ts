@@ -29,7 +29,7 @@ export class ImagesService {
 
   images = signal<ImageItem[]>([]);
   displayedImages = signal<ImageItem[]>([]);
-  croppedImages = signal<ImageItem[]>([]);
+  // croppedImages = signal<ImageItem[]>([]);
   originalImages = signal<ImageItem[]>([]);
   originalTransformations = signal<Transformation[]>([]);
 
@@ -45,7 +45,7 @@ export class ImagesService {
   loading: boolean = false;
 
   currentRects: Rect[] = [];
-  shouldUpdateCroppedImages: boolean = false;
+  // shouldUpdateCroppedImages: boolean = false;
   selectedRect: Rect | null = null;
   lastSelectedRect: Rect | null = null;
   lastRectCursorIsInside: Rect | null = null;
@@ -61,6 +61,73 @@ export class ImagesService {
   maxRects: number = 2;
   avgRect!: AvgRect;
   toggledMore: boolean = false;
+
+
+  // ---------- DERIVED STATE ----------
+  flaggedImages = computed<ImageItem[]>(() => this.images().filter(img => !img.edited && (img.low_confidence || img.bad_sides_ratio)));
+  notFlaggedImages = computed<ImageItem[]>(() => this.images().filter(img => !img.edited && (!img.low_confidence && !img.bad_sides_ratio)));
+  editedImages = computed<ImageItem[]>(() => this.images().filter(img => img.edited));
+  // flaggedCroppedImages = computed<ImageItem[]>(() => this.croppedImages().filter(img => img.low_confidence || img.bad_sides_ratio));
+  // notFlaggedCroppedImages = computed<ImageItem[]>(() => this.croppedImages().filter(img => !img.low_confidence && !img.bad_sides_ratio));
+  // customCroppedImages = computed<ImageItem[]>(() => this.croppedImages().filter(img => img.edited));
+
+
+  // ---------- INITIAL FETCHING ----------
+  fetchTransformations(): Observable<Transformation[]> {
+    return this.http.get<Transformation[]>(`${this.serverBaseUrl}/${this.book()}/transformations.json`);
+  }
+
+  // setCroppedImgs(tfs: Transformation[]): void {
+  //   this.loading = true;
+  //   Promise.all(this.buildCroppedImagePromises(tfs)).then((imgs: ImageItem[]) => { 
+  //     this.croppedImages.set(imgs);
+  //     if (this.mode() === 'single') {
+  //       const [firstFlagged] = this.flaggedCroppedImages();
+  //       if (firstFlagged) this.setMainImage(firstFlagged);
+  //     }
+  //     this.loading = false;
+  //   });
+  // }
+
+  // private buildCroppedImagePromises(tfs: Transformation[]): Promise<ImageItem>[] {
+  //   return tfs.map(t => {
+  //     return new Promise<ImageItem>(resolve => {
+  //       const c = document.createElement('canvas');
+  //       const ctx = c.getContext('2d');
+  //       if (!ctx) return resolve({});
+
+  //       const img = new Image();
+  //       img.crossOrigin = 'anonymous';
+  //       img.src = getImageUrl(this.serverBaseUrl, t.image_path);
+
+  //       img.onload = () => {
+  //         const centerX = t.x_center * img.width;
+  //         const centerY = t.y_center * img.height;
+  //         const angle = degreeToRadian(t.angle);
+
+  //         c.width = t.width * img.width;
+  //         c.height = t.height * img.height;
+
+  //         ctx.save();
+  //         ctx.translate(c.width / 2, c.height / 2);
+  //         ctx.rotate(-angle);
+  //         ctx.drawImage(img, -centerX, -centerY);
+  //         ctx.restore();
+
+  //         resolve({
+  //           name: t.image_path,
+  //           url: c.toDataURL('image/jpeg'),
+  //           crop_part: t.crop_part,
+  //           low_confidence: t.low_confidence,
+  //           bad_sides_ratio: t.bad_sides_ratio,
+  //           edited: false
+  //         });
+  //       };
+
+  //       img.onerror = () => console.error('Failed to load image.');
+  //     });
+  //   });
+  // }
 
 
   // ---------- DISPLAYED IMAGES ----------
@@ -81,87 +148,21 @@ export class ImagesService {
     }
   }
 
-  // ---------- DERIVED STATE ----------
-  flaggedImages = computed<ImageItem[]>(() => this.images().filter(img => !img.edited && (img.low_confidence || img.bad_sides_ratio)));
-  notFlaggedImages = computed<ImageItem[]>(() => this.images().filter(img => !img.edited && (!img.low_confidence && !img.bad_sides_ratio)));
-  editedImages = computed<ImageItem[]>(() => this.images().filter(img => img.edited));
-  flaggedCroppedImages = computed<ImageItem[]>(() => this.croppedImages().filter(img => img.low_confidence || img.bad_sides_ratio));
-  notFlaggedCroppedImages = computed<ImageItem[]>(() => this.croppedImages().filter(img => !img.low_confidence && !img.bad_sides_ratio));
-  customCroppedImages = computed<ImageItem[]>(() => this.croppedImages().filter(img => img.edited));
-
-
-  // ---------- INITIAL FETCHING ----------
-  fetchTransformations(): Observable<Transformation[]> {
-    return this.http.get<Transformation[]>(`${this.serverBaseUrl}/${this.book()}/transformations.json`);
-  }
-
-  setCroppedImgs(tfs: Transformation[]): void {
-    this.loading = true;
-    Promise.all(this.buildCroppedImagePromises(tfs)).then((imgs: ImageItem[]) => { 
-      this.croppedImages.set(imgs);
-      if (this.mode() === 'single') {
-        const [firstFlagged] = this.flaggedCroppedImages();
-        if (firstFlagged) this.setMainImage(firstFlagged);
-      }
-      this.loading = false;
-    });
-  }
-
-  private buildCroppedImagePromises(tfs: Transformation[]): Promise<ImageItem>[] {
-    return tfs.map(t => {
-      return new Promise<ImageItem>(resolve => {
-        const c = document.createElement('canvas');
-        const ctx = c.getContext('2d');
-        if (!ctx) return resolve({});
-
-        const img = new Image();
-        img.crossOrigin = 'anonymous';
-        img.src = getImageUrl(this.serverBaseUrl, t.image_path);
-
-        img.onload = () => {
-          const centerX = t.x_center * img.width;
-          const centerY = t.y_center * img.height;
-          const angle = degreeToRadian(t.angle);
-
-          c.width = t.width * img.width;
-          c.height = t.height * img.height;
-
-          ctx.save();
-          ctx.translate(c.width / 2, c.height / 2);
-          ctx.rotate(-angle);
-          ctx.drawImage(img, -centerX, -centerY);
-          ctx.restore();
-
-          resolve({
-            name: t.image_path,
-            url: c.toDataURL('image/jpeg'),
-            crop_part: t.crop_part,
-            low_confidence: t.low_confidence,
-            bad_sides_ratio: t.bad_sides_ratio,
-            edited: false
-          });
-        };
-
-        img.onerror = () => console.error('Failed to load image.');
-      });
-    });
-  }
-
 
   // ---------- MAIN IMAGE LOGIC ----------
   setMainImage(img: ImageItem): void {
-    if (this.shouldUpdateCroppedImages) {
-      this.updateCroppedImages(this.mainImageItem());
-    }
+    // if (this.shouldUpdateCroppedImages) {
+    //   this.updateCroppedImages(this.mainImageItem());
+    // }
     
     this.selectedRect = null;
     this.editable.set(false);
     this.toggleMainImageOrCanvas();
-    if (this.mode() === 'full') {
+    // if (this.mode() === 'full') {
       this.renderFullImageAndCanvas(img)
-    } else {
-      this.mainImageItem.set(img);
-    }
+    // } else {
+    //   this.mainImageItem.set(img);
+    // }
   }
 
   private renderFullImageAndCanvas(img: ImageItem): void {
@@ -279,7 +280,7 @@ export class ImagesService {
   }
 
 
-  // ---------- RECTANGLE LOGIC ----------
+  // ---------- RECTANGLE LOGIC ---------- TO-TO: maybe sometimes move some functions only to main.component.ts, wait for keyboard shortcuts
   rectIdCursorInside(e: MouseEvent): string {
     const mainElement = document.getElementById(this.editable() ? 'main-canvas' : 'main-image') as HTMLElement;
     if (!mainElement) return '';
@@ -358,7 +359,7 @@ export class ImagesService {
     this.selectedRect = this.currentRects[this.currentRects.length - 1];
     this.redrawImage();
     this.currentRects.forEach(r => this.drawRect(this.c, this.ctx, r));
-    this.shouldUpdateCroppedImages = true;
+    // this.shouldUpdateCroppedImages = true;
     this.wasEdited = true;
   }
 
@@ -367,7 +368,7 @@ export class ImagesService {
     this.redrawImage();
     this.currentRects.forEach(r => this.drawRect(this.c, this.ctx, r));
     this.updateMainImageItemAndImages();
-    this.croppedImages.update(prev => prev.filter(img => `${img.name}-${img.crop_part}` !== this.selectedRect?.id));
+    // this.croppedImages.update(prev => prev.filter(img => `${img.name}-${img.crop_part}` !== this.selectedRect?.id));
     this.selectedRect = null;
     this.wasEdited = true;
   }
@@ -376,7 +377,7 @@ export class ImagesService {
     if (!this.selectedRect) return;
 
     const { width, height } = this.c;
-    this.shouldUpdateCroppedImages = true;
+    // this.shouldUpdateCroppedImages = true;
 
     // Normalized deltas
     const dx = (e.clientX - this.mouseDownCurPos.x) / width;
@@ -458,38 +459,141 @@ export class ImagesService {
     this.currentRects.forEach(r => this.drawRect(this.c, this.ctx, r));
   }
 
-  onRectInputChange(): void {
-    let rect = this.selectedRect;
-    if (!rect || !this.selectedRect || rect.x === undefined || rect.y === undefined) return;
-    if (rect.x < 0) this.selectedRect.x = 0;
-    if (rect.y < 0) this.selectedRect.y = 0;
-    if (rect.x > 1 - rect.width) {
-      console.log('huh');
-      this.selectedRect.x = 1 - rect.width;
-    }
-    if (rect.y > 1 - rect.height) this.selectedRect.y = 1 - rect.height;
+  onXChange(event: any): void {
+    if (!this.selectedRect) return;
+    
+    let value = parseFloat(event);
+    if (isNaN(value)) value = 0;
+    value = parseFloat(value.toFixed(3));
 
-    rect = this.selectedRect;
-    if (!rect || !this.selectedRect || rect.x === undefined || rect.y === undefined) return;
-    console.log(rect.x);
-    console.log(rect.y);
-
+    if (value < 0) value = 0;
+    else if (value + this.selectedRect.width > 1) value = 1 - this.selectedRect.width;
+    
     // Recompute center based on x and y
-    rect.x_center = rect.x + rect.width / 2;
-    rect.y_center = rect.y + rect.height / 2;
-    rect.edited = true;
+    this.selectedRect.x = value;
+    this.selectedRect.x_center = this.selectedRect.x + this.selectedRect.width / 2;
+    this.wasEdited = true;
 
     // Update state (optional depending on your setup)
-    this.selectedRect = rect;
-    this.lastSelectedRect = rect;
+    this.lastSelectedRect = this.selectedRect;
     this.currentRects = this.currentRects.map(r =>
-      r.id === rect.id ? rect : r
+      r.id === this.selectedRect?.id ? this.selectedRect : r
     );
 
     // Redraw the canvas
     this.redrawImage();
     this.currentRects.forEach(r => this.drawRect(this.c, this.ctx, r));
   }
+
+  onYChange(event: any): void {
+    if (!this.selectedRect) return;
+    
+    let value = parseFloat(event);
+    if (isNaN(value)) value = 0;
+    value = parseFloat(value.toFixed(3));
+
+    if (value < 0) value = 0;
+    else if (value + this.selectedRect.height > 1) value = 1 - this.selectedRect.height;
+    
+    // Recompute center based on x and y
+    this.selectedRect.y = value;
+    this.selectedRect.y_center = this.selectedRect.y + this.selectedRect.height / 2;
+    this.wasEdited = true;
+
+    // Update state (optional depending on your setup)
+    this.lastSelectedRect = this.selectedRect;
+    this.currentRects = this.currentRects.map(r =>
+      r.id === this.selectedRect?.id ? this.selectedRect : r
+    );
+
+    // Redraw the canvas
+    this.redrawImage();
+    this.currentRects.forEach(r => this.drawRect(this.c, this.ctx, r));
+  }
+
+  onWidthChange(event: any): void {
+    if (!this.selectedRect) return;
+    
+    let value = parseFloat(event);
+    if (isNaN(value)) value = 0;
+    value = parseFloat(value.toFixed(3));
+
+    const x = this.selectedRect.x ?? 0;
+
+    if (value < 0) value = 0;
+    else if (value + x > 1) value = 1 - x;
+    
+    // Recompute center based on x and y
+    this.selectedRect.width = value;
+    this.selectedRect.x_center = x + value / 2;
+    this.wasEdited = true;
+
+    // Update state (optional depending on your setup)
+    this.lastSelectedRect = this.selectedRect;
+    this.currentRects = this.currentRects.map(r =>
+      r.id === this.selectedRect?.id ? this.selectedRect : r
+    );
+
+    // Redraw the canvas
+    this.redrawImage();
+    this.currentRects.forEach(r => this.drawRect(this.c, this.ctx, r));
+  }
+
+  onHeightChange(event: any): void {
+    if (!this.selectedRect) return;
+    
+    let value = parseFloat(event);
+    if (isNaN(value)) value = 0;
+    value = parseFloat(value.toFixed(3));
+
+    const y = this.selectedRect.y ?? 0;
+
+    if (value < 0) value = 0;
+    else if (value + y > 1) value = 1 - y;
+    
+    // Recompute center based on x and y
+    this.selectedRect.height = value;
+    this.selectedRect.y_center = y + value / 2;
+    this.wasEdited = true;
+
+    // Update state (optional depending on your setup)
+    this.lastSelectedRect = this.selectedRect;
+    this.currentRects = this.currentRects.map(r =>
+      r.id === this.selectedRect?.id ? this.selectedRect : r
+    );
+
+    // Redraw the canvas
+    this.redrawImage();
+    this.currentRects.forEach(r => this.drawRect(this.c, this.ctx, r));
+  }
+
+  onAngleChange(event: any): void {
+    if (!this.selectedRect) return;
+    
+    let value = parseFloat(event);
+    if (isNaN(value)) value = 0;
+    value = parseFloat(value.toFixed(3));
+
+    const y = this.selectedRect.angle ?? 0;
+
+    if (value < -179.999) value = 180;
+    else if (value > 180) value = -179.999;
+    
+    // Recompute center based on x and y
+    this.selectedRect.angle = value;
+    this.wasEdited = true;
+
+    // Update state (optional depending on your setup)
+    this.lastSelectedRect = this.selectedRect;
+    this.currentRects = this.currentRects.map(r =>
+      r.id === this.selectedRect?.id ? this.selectedRect : r
+    );
+
+    // Redraw the canvas
+    this.redrawImage();
+    this.currentRects.forEach(r => this.drawRect(this.c, this.ctx, r));
+  }
+
 
   private redrawImage(): void {
     const { c, ctx } = this;
@@ -523,54 +627,54 @@ export class ImagesService {
     this.wasEdited = false;
   }
 
-  updateCroppedImages(mainImageItem: ImageItem): void {
-    let cropPart = 0;
-    const promises = this.currentRects
-      .filter(r => r.edited)
-      .map(r => {
-        cropPart = r.crop_part;
-        return new Promise<ImageItem>(resolve => {
-          const c = document.createElement('canvas');
-          const ctx = c.getContext('2d');
-          if (!ctx) return resolve({});
+  // updateCroppedImages(mainImageItem: ImageItem): void {
+  // //   let cropPart = 0;
+  // //   const promises = this.currentRects
+  // //     .filter(r => r.edited)
+  // //     .map(r => {
+  // //       cropPart = r.crop_part;
+  // //       return new Promise<ImageItem>(resolve => {
+  // //         const c = document.createElement('canvas');
+  // //         const ctx = c.getContext('2d');
+  // //         if (!ctx) return resolve({});
 
-          const img = new Image();
-          img.crossOrigin = 'anonymous';
-          img.src = getImageUrl(this.serverBaseUrl, mainImageItem.name ?? '');
+  // //         const img = new Image();
+  // //         img.crossOrigin = 'anonymous';
+  // //         img.src = getImageUrl(this.serverBaseUrl, mainImageItem.name ?? '');
 
-          img.onload = () => {
-            const centerX = r.x_center * img.width;
-            const centerY = r.y_center * img.height;
-            const angle = degreeToRadian(r.angle);
+  // //         img.onload = () => {
+  // //           const centerX = r.x_center * img.width;
+  // //           const centerY = r.y_center * img.height;
+  // //           const angle = degreeToRadian(r.angle);
 
-            c.width = r.width * img.width;
-            c.height = r.height * img.height;
+  // //           c.width = r.width * img.width;
+  // //           c.height = r.height * img.height;
 
-            ctx.save();
-            ctx.translate(c.width / 2, c.height / 2);
-            ctx.rotate(-angle);
-            ctx.drawImage(img, -centerX, -centerY);
-            ctx.restore();
+  // //           ctx.save();
+  // //           ctx.translate(c.width / 2, c.height / 2);
+  // //           ctx.rotate(-angle);
+  // //           ctx.drawImage(img, -centerX, -centerY);
+  // //           ctx.restore();
 
-            resolve({
-              name: mainImageItem.name,
-              url: c.toDataURL('image/jpeg'),
-              crop_part: r.crop_part,
-              edited: true
-            });
-          };
+  // //           resolve({
+  // //             name: mainImageItem.name,
+  // //             url: c.toDataURL('image/jpeg'),
+  // //             crop_part: r.crop_part,
+  // //             edited: true
+  // //           });
+  // //         };
 
-          img.onerror = () => console.error('Failed to load image.');
-        });
-    });
+  // //         img.onerror = () => console.error('Failed to load image.');
+  // //       });
+  // //   });
     
-    this.croppedImages.update(prev => prev
-      .filter(img => img.name !== mainImageItem.name || img.crop_part !== cropPart));
+  // //   this.croppedImages.update(prev => prev
+  // //     .filter(img => img.name !== mainImageItem.name || img.crop_part !== cropPart));
 
-    Promise.all(promises).then(imgArr => imgArr.forEach(img => this.croppedImages.update(prev => [...prev, img])));
+  // //   Promise.all(promises).then(imgArr => imgArr.forEach(img => this.croppedImages.update(prev => [...prev, img])));
 
-    this.shouldUpdateCroppedImages = false;
-  }
+  // //   this.shouldUpdateCroppedImages = false;
+  // // }
 
 
   // ---------- KEYBOARD SHORTCUTS ----------

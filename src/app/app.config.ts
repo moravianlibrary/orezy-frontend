@@ -99,7 +99,7 @@ export const appConfig: ApplicationConfig = {
         imagesService.images.set(resultImages);
         imagesService.originalImages.set(resultImages);
         imagesService.originalTransformations.set(tfs);
-        imagesService.setCroppedImgs(tfs);
+        // imagesService.setCroppedImgs(tfs);
         imagesService.maxRects = Math.round(cropPartCount / cropPartSum);
         imagesService.avgRect = { width: widthSum / tfs.length, height: heightSum / tfs.length };
 

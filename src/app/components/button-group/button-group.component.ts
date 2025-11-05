@@ -15,9 +15,9 @@ export class ButtonGroupComponent {
   currentItem = input<string>('');
 
   select(item: string): void {
-    if (this.imagesService.shouldUpdateCroppedImages) {
-      this.imagesService.updateCroppedImages(this.imagesService.mainImageItem());
-    }
+    // if (this.imagesService.shouldUpdateCroppedImages) {
+    //   this.imagesService.updateCroppedImages(this.imagesService.mainImageItem());
+    // }
     
     const items = this.items();
     
@@ -25,9 +25,9 @@ export class ButtonGroupComponent {
       case books:
         this.handleBookSelection(item);
         break;
-      case this.imagesService.modes:
-        this.handleModeSelection(item);
-        break;
+      // case this.imagesService.modes:
+      //   this.handleModeSelection(item);
+      //   break;
     }
 
     this.updateMainImage();
@@ -42,24 +42,27 @@ export class ButtonGroupComponent {
     window.location.reload();
   }
 
-  private handleModeSelection(item: string): void {
-    if (this.imagesService.lastMode === item) return;
+  // private handleModeSelection(item: string): void {
+  //   if (this.imagesService.lastMode === item) return;
 
-    this.imagesService.lastMode = item;
-    this.imagesService.mode.set(item);
-    localStorage.setItem('mode', item);
-  }
+  //   this.imagesService.lastMode = item;
+  //   this.imagesService.mode.set(item);
+  //   localStorage.setItem('mode', item);
+  // }
 
   private updateMainImage(): void {
-    const { mode, mainImageItem, images, croppedImages, flaggedImages, flaggedCroppedImages } = this.imagesService;
+    // const { mode, mainImageItem, images, croppedImages, flaggedImages, flaggedCroppedImages } = this.imagesService;
+    const { mode, mainImageItem, images, flaggedImages } = this.imagesService;
     const currentMode = mode();
     const currentName = mainImageItem().name;
 
     const mainCanvas = document.getElementById('main-canvas') as HTMLElement;
     if (mainCanvas) mainCanvas.style.opacity = currentMode === 'full' ? '1' : '0';
 
-    const imageSource = currentMode === 'full' ? images() : croppedImages();
-    const backupImageSource = currentMode === 'full' ? flaggedImages() : flaggedCroppedImages();
+    // const imageSource = currentMode === 'full' ? images() : croppedImages();
+    const imageSource = images();
+    // const backupImageSource = currentMode === 'full' ? flaggedImages() : flaggedCroppedImages();
+    const backupImageSource = flaggedImages();
     const newImage = imageSource.find(img => img.name === currentName) || backupImageSource[0];
 
     this.imagesService.setMainImage(newImage ?? '');

@@ -93,6 +93,6 @@ html, body {
   border-color: var(--border-color);
 
   &:hover {
-    cursor: not-allowed;
+    cursor: default;
   }
 }
