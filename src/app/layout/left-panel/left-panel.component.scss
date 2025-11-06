@@ -113,9 +113,10 @@
     width: 10px;
     height: 10px;
     border-radius: 50%;
+    outline: 2px solid var(--bg-bright);
 
     &:hover {
-      outline: 2px solid var(--icon-white);
+      outline-color: var(--icon-white);
     }
 
     &::before {

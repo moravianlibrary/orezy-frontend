@@ -1,5 +1,5 @@
-<div class="header border-bottom">
-  <div class="title-menu-wrapper">
+<span class="header border-bottom">
+  <span class="title-menu-wrapper">
     <h1>Sken {{ getCurrentIndexImage() }}/{{ imagesService.displayedImages().length }}</h1>
     <span class="button secondary menu">
       <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -7,8 +7,8 @@
         <path fill-rule="evenodd" clip-rule="evenodd" d="M7.8335 3.33329C7.8335 3.24125 7.90812 3.16663 8.00016 3.16663C8.09221 3.16663 8.16683 3.24125 8.16683 3.33329C8.16683 3.42534 8.09221 3.49996 8.00016 3.49996C7.90812 3.49996 7.8335 3.42534 7.8335 3.33329ZM8.00016 2.16663C7.35583 2.16663 6.8335 2.68896 6.8335 3.33329C6.8335 3.97762 7.35583 4.49996 8.00016 4.49996C8.6445 4.49996 9.16683 3.97762 9.16683 3.33329C9.16683 2.68896 8.6445 2.16663 8.00016 2.16663ZM7.8335 7.99996C7.8335 7.90791 7.90812 7.83329 8.00016 7.83329C8.09221 7.83329 8.16683 7.90791 8.16683 7.99996C8.16683 8.09201 8.09221 8.16663 8.00016 8.16663C7.90812 8.16663 7.8335 8.09201 7.8335 7.99996ZM8.00016 6.83329C7.35583 6.83329 6.8335 7.35563 6.8335 7.99996C6.8335 8.64429 7.35583 9.16663 8.00016 9.16663C8.6445 9.16663 9.16683 8.64429 9.16683 7.99996C9.16683 7.35563 8.6445 6.83329 8.00016 6.83329ZM7.8335 12.6666C7.8335 12.5746 7.90812 12.5 8.00016 12.5C8.09221 12.5 8.16683 12.5746 8.16683 12.6666C8.16683 12.7587 8.09221 12.8333 8.00016 12.8333C7.90812 12.8333 7.8335 12.7587 7.8335 12.6666ZM8.00016 11.5C7.35583 11.5 6.8335 12.0223 6.8335 12.6666C6.8335 13.311 7.35583 13.8333 8.00016 13.8333C8.6445 13.8333 9.16683 13.311 9.16683 12.6666C9.16683 12.0223 8.6445 11.5 8.00016 11.5Z" />
       </svg>
     </span>
-  </div>
-  <div class="actions">
+  </span>
+  <span class="actions">
     <span
       class="action"
       [class.disabled]="imagesService.currentRects.length >= imagesService.maxRects"
@@ -20,16 +20,16 @@
         <path fill-rule="evenodd" clip-rule="evenodd" d="M8 3.5C8.27614 3.5 8.5 3.72386 8.5 4V7.5H12C12.2761 7.5 12.5 7.72386 12.5 8C12.5 8.27614 12.2761 8.5 12 8.5H8.5V12C8.5 12.2761 8.27614 12.5 8 12.5C7.72386 12.5 7.5 12.2761 7.5 12V8.5H4C3.72386 8.5 3.5 8.27614 3.5 8C3.5 7.72386 3.72386 7.5 4 7.5H7.5V4C7.5 3.72386 7.72386 3.5 8 3.5Z" />
       </svg>
     </span>
-  </div>
-</div>
+  </span>
+</span>
 
 @if (!!imagesService.selectedRect) {
-  <div class="rectangle">
-    <div class="header">
-      <div class="title-menu-wrapper">
+  <span class="rectangle">
+    <span class="header">
+      <span class="title-menu-wrapper">
         <h1>Obdélník (výřez)</h1>
-      </div>
-      <div class="actions">
+      </span>
+      <span class="actions">
         <span
           class="action"
           (click)="imagesService.removeRect()"
@@ -43,77 +43,87 @@
             <path fill-rule="evenodd" clip-rule="evenodd" d="M5.83333 8.33337C5.83333 8.05723 6.05719 7.83337 6.33333 7.83337H9.66667C9.94281 7.83337 10.1667 8.05723 10.1667 8.33337C10.1667 8.60952 9.94281 8.83337 9.66667 8.83337H6.33333C6.05719 8.83337 5.83333 8.60952 5.83333 8.33337Z" />
           </svg>
         </span>
-      </div>
-    </div>
+      </span>
+    </span>
 
-    <div class="properties">
-      <h2>Pozice</h2>
-      <div class="inputs-wrapper">
-        <label>
-          Vlevo
+    <span class="properties">
+      <h2>Pozice (%)</h2>
+      <span class="inputs-wrapper">
+        <span class="input-wrapper">
           <input
             #xInput
             class="left-input"
             type="number"
-            [ngModel]="imagesService.selectedRect.x | number:'1.0-3'"
-            (ngModelChange)="imagesService.onXChange($event)"
+            [ngModel]="(imagesService.selectedRect.x ?? 0) * 100 | number:'1.0-1'"
+            [ngModelOptions]="{ updateOn: 'blur' }"
+            (ngModelChange)="onXChange($event)"
+            (keydown.enter)="onXChange($event)"
             (blur)="onInputBlur('x', xInput)"
           />
-        </label>
-        <label>
-          Nahoře
+          <label class="">X: </label>
+        </span>
+        <span class="input-wrapper">
           <input
             #yInput
             class="right-input"
             type="number"
-            [ngModel]="imagesService.selectedRect.y | number:'1.0-3'"
-            (ngModelChange)="imagesService.onYChange($event)"
+            [ngModel]="(imagesService.selectedRect.y ?? 0) * 100 | number:'1.0-1'"
+            [ngModelOptions]="{ updateOn: 'blur' }"
+            (ngModelChange)="onYChange($event)"
+            (keydown.enter)="onYChange($event)"
             (blur)="onInputBlur('y', yInput)"
           />
-        </label>
-      </div>
-    </div>
+          <label class="">Y: </label>
+        </span>
+      </span>
+    </span>
 
-    <div class="properties">
-      <h2>Rozměry</h2>
-      <div class="inputs-wrapper">
-        <label>
-          Šířka
+    <span class="properties">
+      <h2>Rozměry (%)</h2>
+      <span class="inputs-wrapper">
+        <span class="input-wrapper">
           <input
             #widthInput
             class="left-input"
             type="number"
-            [ngModel]="imagesService.selectedRect.width | number:'1.0-3'"
-            (ngModelChange)="imagesService.onWidthChange($event)"
+            [ngModel]="imagesService.selectedRect.width * 100 | number:'1.0-1'"
+            [ngModelOptions]="{ updateOn: 'blur' }"
+            (ngModelChange)="onWidthChange($event)"
+            (keydown.enter)="onWidthChange($event)"
             (blur)="onInputBlur('width', widthInput)"
           />
-        </label>
-        <label>
-          Výška
+          <label class="">š: </label>
+        </span>
+        <span class="input-wrapper">
           <input
             #heightInput
             class="right-input"
             type="number"
-            [ngModel]="imagesService.selectedRect.height | number:'1.0-3'"
-            (ngModelChange)="imagesService.onHeightChange($event)"
+            [ngModel]="imagesService.selectedRect.height * 100 | number:'1.0-1'"
+            [ngModelOptions]="{ updateOn: 'blur' }"
+            (ngModelChange)="onHeightChange($event)"
+            (keydown.enter)="onHeightChange($event)"
             (blur)="onInputBlur('height', heightInput)"
           />
-        </label>
-      </div>
-    </div>
+          <label class="">v: </label>
+        </span>
+      </span>
+    </span>
 
-    <div class="properties rotation">
-      <h2>Otáčení</h2>
-      <div class="input-wrapper">
+    <span class="properties">
+      <h2>Otáčení (°)</h2>
+      <span class="input-wrapper angle-wrapper">
         <input
           #angleInput
-          class="right-input"
+          class="left-input angle-input"
           type="number"
-          [ngModel]="imagesService.selectedRect.angle | number:'1.0-3'"
-          (ngModelChange)="imagesService.onAngleChange($event)"
+          [ngModel]="imagesService.selectedRect.angle | number:'1.0-2'"
+          [ngModelOptions]="{ updateOn: 'blur' }"
+          (ngModelChange)="onAngleChange($event)"
+          (keydown.enter)="onAngleChange($event)"
           (blur)="onInputBlur('angle', angleInput)"
         />
-      </div>
-    </div>
-  </div>
+      </span>
+    </span>
+  </span>
 }

@@ -88,7 +88,7 @@
   color: var(--text-disabled);
 
   &:hover {
-    cursor: not-allowed;
+    cursor: default;
   }
 
   svg {
@@ -100,7 +100,7 @@
   padding-inline: var(--spacing-x4);
   display: flex;
   flex-direction: column;
-  gap: var(--spacing-x3);
+  gap: var(--spacing-x2);
 
   h2 {
     @include font(500, var(--font-size-x2), var(--spacing-x6));
@@ -111,40 +111,45 @@
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: var(--spacing-x2);
+  }
+}
 
-    label {
-      @include font(400, var(--font-size-x1-5), var(--spacing-x5));
-      color: var(--text-light);
-      display: flex;
-      flex-direction: column;
-      gap: var(--spacing-x2);
+.input-wrapper {
+  position: relative;
+
+  label {
+    position: absolute;
+    top: 51%;
+    left: var(--spacing-x3);
+    transform: translateY(-52%);
+    color: var(--text-label-bright);
+  }
+
+  input {
+    @include font(400, var(--font-size-x2), var(--spacing-x6));
+    height: 52px;
+    padding: var(--spacing-x2) var(--spacing-x3);
+    padding-left: var(--spacing-x7-5);
+    border: 1px solid var(--border-tertiary-color);
+    border-radius: var(--spacing-x1);
+    width: 100%;
+
+    &:focus {
+      border-color: var(--primary);
+      outline: 1px solid var(--primary);
     }
   }
-}
 
-.rotation {
-  gap: var(--spacing-x2);
-}
+  .left-input, .right-input {
+    max-width: 105px;
+  }
 
-input {
-  @include font(400, var(--font-size-x2), var(--spacing-x6));
-  height: 52px;
-  padding: var(--spacing-x2) var(--spacing-x3);
-  border: 1px solid var(--border-tertiary-color);
-  border-radius: var(--spacing-x1);
-  width: 100%;
-
-  &:focus {
-    border-color: var(--primary);
-    outline: 1px solid var(--primary);
+  .angle-input {
+    padding-left: var(--spacing-x3);
   }
 }
 
-.left-input, .right-input {
-  max-width: 105px;
-}
-
-// Arrows
+// Native arrows hidden
 /* Chrome, Safari, Edge, Opera */
 input::-webkit-outer-spin-button,
 input::-webkit-inner-spin-button {
