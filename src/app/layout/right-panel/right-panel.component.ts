@@ -14,6 +14,9 @@ export class RightPanelComponent {
   imagesService = inject(ImagesService);
   cdr = inject(ChangeDetectorRef);
 
+  increment: number = 0.001;
+  incrementAngle: number = 0.01;
+
   getCurrentIndexImage(): number {
     return this.imagesService.displayedImages().findIndex(img => img.name === this.imagesService.mainImageItem().name) + 1;
   }
@@ -161,5 +164,35 @@ export class RightPanelComponent {
     // Redraw the canvas
     this.imagesService.redrawImage();
     this.imagesService.currentRects.forEach(r => this.imagesService.drawRect(this.imagesService.c, this.imagesService.ctx, r));
+  }
+
+  onKeyDown(type: 'x' | 'y' | 'width' | 'height' | 'angle', event: KeyboardEvent): void {
+    const bannedKeys = ['ArrowUp', 'ArrowDown'];
+    const key = event.key;
+    if (!bannedKeys.includes(key)) return;
+    event.preventDefault();
+
+    setTimeout(() => {
+      if (!this.imagesService.selectedRect) return;
+      console.log(this.imagesService.selectedRect[type]);
+      if (!this.imagesService.selectedRect || this.imagesService.selectedRect[type] === 0) return;
+      
+      const increment = type === 'angle' ? this.incrementAngle : this.increment;
+      const multiplicator = type === 'angle' ? 1 : 100;
+      if (key === 'ArrowUp') {
+        console.log((event.target as HTMLInputElement).value);
+        if (type === 'x') this.onXChange((Number((event.target as HTMLInputElement).value)/100 + increment) * 100);
+        if (type === 'y') this.onYChange((Number((event.target as HTMLInputElement).value)/100 + increment) * 100);
+        if (type === 'width') this.onWidthChange((Number((event.target as HTMLInputElement).value)/100 + increment) * 100);
+        if (type === 'height') this.onHeightChange((Number((event.target as HTMLInputElement).value)/100 + increment) * 100);
+        if (type === 'angle') this.onAngleChange(Number((event.target as HTMLInputElement).value) + increment);
+      } else if (key === 'ArrowDown') {
+        if (type === 'x') this.onXChange((Number((event.target as HTMLInputElement).value)/100 - increment) * 100);
+        if (type === 'y') this.onYChange((Number((event.target as HTMLInputElement).value)/100 - increment) * 100);
+        if (type === 'width') this.onWidthChange((Number((event.target as HTMLInputElement).value)/100 - increment) * 100);
+        if (type === 'height') this.onHeightChange((Number((event.target as HTMLInputElement).value)/100 - increment) * 100);
+        if (type === 'angle') this.onAngleChange(Number((event.target as HTMLInputElement).value) - increment);
+      }
+    }, 0);
   }
 }

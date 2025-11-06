@@ -59,6 +59,7 @@
             (ngModelChange)="onXChange($event)"
             (keydown.enter)="onXChange($event)"
             (blur)="onInputBlur('x', xInput)"
+            (keydown)="onKeyDown('x', $event)"
           />
           <label class="">X: </label>
         </span>
@@ -72,6 +73,7 @@
             (ngModelChange)="onYChange($event)"
             (keydown.enter)="onYChange($event)"
             (blur)="onInputBlur('y', yInput)"
+            (keydown)="onKeyDown('y', $event)"
           />
           <label class="">Y: </label>
         </span>
@@ -91,6 +93,7 @@
             (ngModelChange)="onWidthChange($event)"
             (keydown.enter)="onWidthChange($event)"
             (blur)="onInputBlur('width', widthInput)"
+            (keydown)="onKeyDown('width', $event)"
           />
           <label class="">š: </label>
         </span>
@@ -104,6 +107,7 @@
             (ngModelChange)="onHeightChange($event)"
             (keydown.enter)="onHeightChange($event)"
             (blur)="onInputBlur('height', heightInput)"
+            (keydown)="onKeyDown('height', $event)"
           />
           <label class="">v: </label>
         </span>
@@ -122,6 +126,7 @@
           (ngModelChange)="onAngleChange($event)"
           (keydown.enter)="onAngleChange($event)"
           (blur)="onInputBlur('angle', angleInput)"
+          (keydown)="onKeyDown('angle', $event)"
         />
       </span>
     </span>
