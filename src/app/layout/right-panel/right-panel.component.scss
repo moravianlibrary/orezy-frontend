@@ -157,6 +157,7 @@
 
       &:hover {
         cursor: pointer;
+        fill: var(--primary);
       }
     }
 
@@ -165,6 +166,7 @@
 
       &:hover {
         cursor: default;
+        fill: var(--icon-disabled);
       }
     }
   }

@@ -53,6 +53,7 @@
           <label class="">X: </label>
           <input
             #xInput
+            title="Bod obdélníku nejvíce nalevo (většinou levá strana nebo roh)"
             class="left-input"
             type="number"
             [ngModel]="(imagesService.selectedRect.x ?? 0) * 100 | number:'1.0-2'"
@@ -86,6 +87,7 @@
           <label class="">Y: </label>
           <input
             #yInput
+            title="Bod obdélníku nejvíce napravo (většinou pravá strana nebo roh)"
             class="right-input"
             type="number"
             [ngModel]="(imagesService.selectedRect.y ?? 0) * 100 | number:'1.0-2'"
@@ -125,6 +127,7 @@
           <label class="">š: </label>
           <input
             #widthInput
+            title="Šířka obdélníku"
             class="left-input"
             type="number"
             [ngModel]="imagesService.selectedRect.width * 100 | number:'1.0-2'"
@@ -158,6 +161,7 @@
           <label class="">v: </label>
           <input
             #heightInput
+            title="Výška obdélníku"
             class="right-input"
             type="number"
             [ngModel]="imagesService.selectedRect.height * 100 | number:'1.0-2'"
@@ -195,6 +199,7 @@
       <span class="input-wrapper angle-wrapper">
         <input
           #angleInput
+          title="Kladné stupně otáčí obdélník po směru hodinových ručiček"
           class="left-input angle-input"
           type="number"
           [ngModel]="imagesService.selectedRect.angle | number:'1.0-2'"

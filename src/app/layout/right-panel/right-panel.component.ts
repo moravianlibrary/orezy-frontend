@@ -49,7 +49,7 @@ export class RightPanelComponent {
     const rect = this.imagesService.selectedRect;
     if (!rect) return;
 
-    let raw = this.parseInputValue(event);
+    let raw = this.parseInputValue(type, event);
     let value = type === 'angle' ? raw : raw / 100;
     if (isNaN(value)) value = 0;
 
@@ -137,10 +137,19 @@ export class RightPanelComponent {
     setTimeout(() => input.select());
   }
 
-  private parseInputValue(event: any): number {
+  private parseInputValue(type: InputType, event: any): number {
     if (typeof event === 'number' || typeof event === 'string') return Number(event);
     if (event?.target?.value) return Number(event.target.value);
-    return 0;
+
+    const rect = this.imagesService.selectedRect;
+    if (!rect) return 0;
+    switch (type) {
+      case 'x': return (rect.x ?? 0) * 100;
+      case 'y': return (rect.y ?? 0) * 100;
+      case 'width': return rect.width * 100;
+      case 'height': return rect.height * 100;
+      case 'angle': return rect.angle;
+    }
   }
 
   private clamp(value: number, min: number, max: number): number {
