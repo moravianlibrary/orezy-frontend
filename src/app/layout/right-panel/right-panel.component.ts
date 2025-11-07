@@ -88,7 +88,7 @@ export class RightPanelComponent {
       const rect = this.imagesService.selectedRect;
       if (!rect) return;
 
-      const increment = type === 'angle' ? this.incrementAngle : this.increment;
+      const increment = (type === 'angle' ? this.incrementAngle : this.increment) * (event.shiftKey ? 10 : 1);
       const multiplicator = type === 'angle' ? 1 : 100;
       const currentValue = Number((event.target as HTMLInputElement).value);
       const delta = event.key === 'ArrowUp' ? increment : -increment;
