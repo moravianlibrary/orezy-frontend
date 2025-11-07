@@ -280,7 +280,7 @@ export class ImagesService {
   }
 
 
-  // ---------- RECTANGLE LOGIC ---------- TO-TO: maybe sometimes move some functions only to main.component.ts, wait for keyboard shortcuts
+  // ---------- RECTANGLE LOGIC ----------
   drawRect(c: HTMLCanvasElement, ctx: CanvasRenderingContext2D, r: Rect, hoveredId?: string): void {
     const [centerX, centerY] = [c.width * r.x_center, c.height * r.y_center];
     const [width, height] = [c.width * r.width, c.height * r.height];

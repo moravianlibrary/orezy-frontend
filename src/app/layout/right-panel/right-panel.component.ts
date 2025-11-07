@@ -3,6 +3,7 @@ import { ImagesService } from '../../services/images.service';
 import { FormsModule } from '@angular/forms';
 import { DecimalPipe } from '@angular/common';
 import { ChangeDetectorRef } from '@angular/core';
+import { InputType } from '../../app.types';
 
 @Component({
   selector: 'app-right-panel',
@@ -19,6 +20,7 @@ export class RightPanelComponent {
   private decimals: number = 2;
 
   private firstFocus = { x: true, y: true, width: true, height: true, angle: true };
+  private holdInterval: any;
 
   getCurrentIndexImage(): number {
     const images = this.imagesService.displayedImages();
@@ -26,7 +28,7 @@ export class RightPanelComponent {
     return images.findIndex(img => img.name === current.name) + 1;
   }
 
-  onInputBlur(type: 'x' | 'y' | 'width' | 'height' | 'angle', input: HTMLInputElement): void { 
+  onInputBlur(type: InputType, input: HTMLInputElement): void { 
     const rect = this.imagesService.selectedRect;
     if (!rect) return;
 
@@ -43,7 +45,7 @@ export class RightPanelComponent {
     this.firstFocus[type] = true;
   }
 
-  changeInputValue(type: 'x' | 'y' | 'width' | 'height' | 'angle', event: any): void {
+  changeInputValue(type: InputType, event: any): void {
     const rect = this.imagesService.selectedRect;
     if (!rect) return;
 
@@ -84,30 +86,53 @@ export class RightPanelComponent {
     this.updateAndRedraw(rect);
   }
 
-  onKeyDown(type: 'x' | 'y' | 'width' | 'height' | 'angle', event: KeyboardEvent, input: HTMLInputElement): void {
+  onKeyDown(type: InputType, event: KeyboardEvent, input: HTMLInputElement): void {
     if (!['ArrowUp', 'ArrowDown'].includes(event.key)) return;
     event.preventDefault();
 
-    setTimeout(() => {
-      const rect = this.imagesService.selectedRect;
-      if (!rect) return;
+    const direction = event.key === 'ArrowUp' ? 1 : -1;
+    const multiplier = event.shiftKey ? 10 : 1;
 
-      const increment = (type === 'angle' ? this.incrementAngle : this.increment) * (event.shiftKey ? 10 : 1);
-      const multiplicator = type === 'angle' ? 1 : 100;
-      const currentValue = Number((event.target as HTMLInputElement).value);
-      const delta = event.key === 'ArrowUp' ? increment : -increment;
-      const newValue = (currentValue / multiplicator + delta) * multiplicator;
-
-      this.changeInputValue(type, newValue);
-      this.selectAll(type, input);
-    });
+    setTimeout(() => this.adjustValue(type, input, direction, multiplier));
   }
 
-  onFocus(type: 'x' | 'y' | 'width' | 'height' | 'angle', input: HTMLInputElement): void {
+  onArrowMouseDown(upDown: 'up' | 'down', event: MouseEvent, type: InputType, input: HTMLInputElement): void {
+    event.preventDefault();
+
+    const direction = upDown === 'up' ? 1 : -1;
+
+    setTimeout(() => this.adjustValue(type, input, direction));
+
+    this.holdInterval = setInterval(() => this.adjustValue(type, input, direction), 100);
+
+    const stop = () => {
+      clearInterval(this.holdInterval);
+      document.removeEventListener('mouseup', stop);
+      document.removeEventListener('mouseleave', stop);
+    };
+
+    document.addEventListener('mouseup', stop);
+    document.addEventListener('mouseleave', stop);
+  }
+
+  onFocus(type: InputType, input: HTMLInputElement): void {
     if (this.firstFocus[type]) this.selectAll(type, input);
   }
 
-  private selectAll(type: 'x' | 'y' | 'width' | 'height' | 'angle', input: HTMLInputElement): void {
+  private adjustValue(type: InputType, input: HTMLInputElement, direction: 1 | -1,  multiplier: number = 1): void {
+    const rect = this.imagesService.selectedRect;
+    if (!rect) return;
+
+    const increment = (type === 'angle' ? this.incrementAngle : this.increment) * multiplier;
+    const multiplicator = type === 'angle' ? 1 : 100;
+    const currentValue = Number(input.value);
+    const newValue = (currentValue / multiplicator + direction * increment) * multiplicator;
+
+    this.changeInputValue(type, newValue);
+    this.selectAll(type, input);
+  }
+
+  private selectAll(type: InputType, input: HTMLInputElement): void {
     this.firstFocus[type] = false;
     setTimeout(() => input.select());
   }

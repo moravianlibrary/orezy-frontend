@@ -230,8 +230,10 @@ export class MainComponent {
       ...rect,
       x_center: newCx,
       y_center: newCy,
-      x: newCx - rect.width / 2,
-      y: newCy - rect.height / 2,
+      x: Number((newCx - rect.width / 2).toFixed(4)),
+      y: Number((newCy - rect.height / 2).toFixed(4)),
+      width: Number(rect.width.toFixed(4)),
+      height: Number(rect.height.toFixed(4)),
       edited: true
     };
 

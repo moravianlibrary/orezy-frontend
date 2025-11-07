@@ -121,7 +121,7 @@
   label {
     position: absolute;
     top: 51%;
-    left: var(--spacing-x3);
+    left: var(--spacing-x2-5);
     transform: translateY(-52%);
     color: var(--text-label-bright);
   }
@@ -129,7 +129,7 @@
   input {
     @include font(400, var(--font-size-x2), var(--spacing-x6));
     height: 52px;
-    padding: var(--spacing-x2) var(--spacing-x7-5) var(--spacing-x2) var(--spacing-x7-5);
+    padding: var(--spacing-x2) var(--spacing-x7-5) var(--spacing-x2) var(--spacing-x7);
     border: 1px solid var(--border-tertiary-color);
     border-radius: var(--spacing-x1);
     width: 100%;
@@ -145,8 +145,43 @@
   }
 
   .angle-input {
-    padding-left: var(--spacing-x3);
+    padding-left: var(--spacing-x2-5);
   }
+
+  .arrow {
+    position: absolute;
+    display: inline-flex;
+
+    svg {
+      fill: var(--icon-dark);
+
+      &:hover {
+        cursor: pointer;
+      }
+    }
+
+    .disabled {
+      fill: var(--icon-disabled);
+
+      &:hover {
+        cursor: default;
+      }
+    }
+  }
+
+  .up {
+    top: var(--spacing-x2-5);
+    right: var(--spacing-x2-5);
+  }
+
+  .down {
+    bottom: var(--spacing-x2-5);
+    right: var(--spacing-x2-5);
+  }
+}
+
+.angle-wrapper {
+  width: fit-content;
 }
 
 // Native arrows hidden

@@ -45,3 +45,5 @@ export interface AvgRect {
   width: number;
   height: number;
 }
+
+export type InputType = 'x' | 'y' | 'width' | 'height' | 'angle';
