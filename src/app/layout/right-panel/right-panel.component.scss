@@ -104,7 +104,7 @@
   gap: var(--spacing-x2);
 
   h2 {
-    @include font(500, var(--font-size-x2), var(--spacing-x6));
+    @include font(500, var(--font-size-x1-5), var(--spacing-x4));
     color: var(--text-light);
   }
 
