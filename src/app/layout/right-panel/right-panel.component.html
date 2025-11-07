@@ -59,7 +59,8 @@
             (ngModelChange)="changeInputValue('x', $event)"
             (keydown.enter)="changeInputValue('x', $event)"
             (blur)="onInputBlur('x', xInput)"
-            (keydown)="onKeyDown('x', $event)"
+            (keydown)="onKeyDown('x', $event, xInput)"
+            (focus)="onFocus('x', xInput)"
           />
           <label class="">X: </label>
         </span>
@@ -73,7 +74,8 @@
             (ngModelChange)="changeInputValue('y', $event)"
             (keydown.enter)="changeInputValue('y', $event)"
             (blur)="onInputBlur('y', yInput)"
-            (keydown)="onKeyDown('y', $event)"
+            (keydown)="onKeyDown('y', $event, yInput)"
+            (focus)="onFocus('y', yInput)"
           />
           <label class="">Y: </label>
         </span>
@@ -93,7 +95,8 @@
             (ngModelChange)="changeInputValue('width', $event)"
             (keydown.enter)="changeInputValue('width', $event)"
             (blur)="onInputBlur('width', widthInput)"
-            (keydown)="onKeyDown('width', $event)"
+            (keydown)="onKeyDown('width', $event, widthInput)"
+            (focus)="onFocus('width', widthInput)"
           />
           <label class="">š: </label>
         </span>
@@ -107,7 +110,8 @@
             (ngModelChange)="changeInputValue('height', $event)"
             (keydown.enter)="changeInputValue('height', $event)"
             (blur)="onInputBlur('height', heightInput)"
-            (keydown)="onKeyDown('height', $event)"
+            (keydown)="onKeyDown('height', $event, heightInput)"
+            (focus)="onFocus('height', heightInput)"
           />
           <label class="">v: </label>
         </span>
@@ -126,7 +130,8 @@
           (ngModelChange)="changeInputValue('angle', $event)"
           (keydown.enter)="changeInputValue('angle', $event)"
           (blur)="onInputBlur('angle', angleInput)"
-          (keydown)="onKeyDown('angle', $event)"
+          (keydown)="onKeyDown('angle', $event, angleInput)"
+          (focus)="onFocus('angle', angleInput)"
         />
       </span>
     </span>

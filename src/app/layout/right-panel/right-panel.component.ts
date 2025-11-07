@@ -18,6 +18,8 @@ export class RightPanelComponent {
   private incrementAngle: number = this.increment * 100;
   private decimals: number = 2;
 
+  private firstFocus = { x: true, y: true, width: true, height: true, angle: true };
+
   getCurrentIndexImage(): number {
     const images = this.imagesService.displayedImages();
     const current = this.imagesService.mainImageItem();
@@ -37,6 +39,8 @@ export class RightPanelComponent {
       : '0';
     
     this.cdr.detectChanges();
+
+    this.firstFocus[type] = true;
   }
 
   changeInputValue(type: 'x' | 'y' | 'width' | 'height' | 'angle', event: any): void {
@@ -80,7 +84,7 @@ export class RightPanelComponent {
     this.updateAndRedraw(rect);
   }
 
-  onKeyDown(type: 'x' | 'y' | 'width' | 'height' | 'angle', event: KeyboardEvent): void {
+  onKeyDown(type: 'x' | 'y' | 'width' | 'height' | 'angle', event: KeyboardEvent, input: HTMLInputElement): void {
     if (!['ArrowUp', 'ArrowDown'].includes(event.key)) return;
     event.preventDefault();
 
@@ -95,7 +99,17 @@ export class RightPanelComponent {
       const newValue = (currentValue / multiplicator + delta) * multiplicator;
 
       this.changeInputValue(type, newValue);
+      this.selectAll(type, input);
     });
+  }
+
+  onFocus(type: 'x' | 'y' | 'width' | 'height' | 'angle', input: HTMLInputElement): void {
+    if (this.firstFocus[type]) this.selectAll(type, input);
+  }
+
+  private selectAll(type: 'x' | 'y' | 'width' | 'height' | 'angle', input: HTMLInputElement): void {
+    this.firstFocus[type] = false;
+    setTimeout(() => input.select());
   }
 
   private parseInputValue(event: any): number {
