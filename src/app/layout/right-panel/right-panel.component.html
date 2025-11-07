@@ -54,10 +54,10 @@
             #xInput
             class="left-input"
             type="number"
-            [ngModel]="(imagesService.selectedRect.x ?? 0) * 100 | number:'1.0-1'"
+            [ngModel]="(imagesService.selectedRect.x ?? 0) * 100 | number:'1.0-2'"
             [ngModelOptions]="{ updateOn: 'blur' }"
-            (ngModelChange)="onXChange($event)"
-            (keydown.enter)="onXChange($event)"
+            (ngModelChange)="changeInputValue('x', $event)"
+            (keydown.enter)="changeInputValue('x', $event)"
             (blur)="onInputBlur('x', xInput)"
             (keydown)="onKeyDown('x', $event)"
           />
@@ -68,10 +68,10 @@
             #yInput
             class="right-input"
             type="number"
-            [ngModel]="(imagesService.selectedRect.y ?? 0) * 100 | number:'1.0-1'"
+            [ngModel]="(imagesService.selectedRect.y ?? 0) * 100 | number:'1.0-2'"
             [ngModelOptions]="{ updateOn: 'blur' }"
-            (ngModelChange)="onYChange($event)"
-            (keydown.enter)="onYChange($event)"
+            (ngModelChange)="changeInputValue('y', $event)"
+            (keydown.enter)="changeInputValue('y', $event)"
             (blur)="onInputBlur('y', yInput)"
             (keydown)="onKeyDown('y', $event)"
           />
@@ -88,10 +88,10 @@
             #widthInput
             class="left-input"
             type="number"
-            [ngModel]="imagesService.selectedRect.width * 100 | number:'1.0-1'"
+            [ngModel]="imagesService.selectedRect.width * 100 | number:'1.0-2'"
             [ngModelOptions]="{ updateOn: 'blur' }"
-            (ngModelChange)="onWidthChange($event)"
-            (keydown.enter)="onWidthChange($event)"
+            (ngModelChange)="changeInputValue('width', $event)"
+            (keydown.enter)="changeInputValue('width', $event)"
             (blur)="onInputBlur('width', widthInput)"
             (keydown)="onKeyDown('width', $event)"
           />
@@ -102,10 +102,10 @@
             #heightInput
             class="right-input"
             type="number"
-            [ngModel]="imagesService.selectedRect.height * 100 | number:'1.0-1'"
+            [ngModel]="imagesService.selectedRect.height * 100 | number:'1.0-2'"
             [ngModelOptions]="{ updateOn: 'blur' }"
-            (ngModelChange)="onHeightChange($event)"
-            (keydown.enter)="onHeightChange($event)"
+            (ngModelChange)="changeInputValue('height', $event)"
+            (keydown.enter)="changeInputValue('height', $event)"
             (blur)="onInputBlur('height', heightInput)"
             (keydown)="onKeyDown('height', $event)"
           />
@@ -123,8 +123,8 @@
           type="number"
           [ngModel]="imagesService.selectedRect.angle | number:'1.0-2'"
           [ngModelOptions]="{ updateOn: 'blur' }"
-          (ngModelChange)="onAngleChange($event)"
-          (keydown.enter)="onAngleChange($event)"
+          (ngModelChange)="changeInputValue('angle', $event)"
+          (keydown.enter)="changeInputValue('angle', $event)"
           (blur)="onInputBlur('angle', angleInput)"
           (keydown)="onKeyDown('angle', $event)"
         />

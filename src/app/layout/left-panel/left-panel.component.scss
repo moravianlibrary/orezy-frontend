@@ -78,7 +78,7 @@
   }
 }
 
-.thumbnails-wrapper/* , .thumbnails-customCropped-wrapper, .thumbnails-flagged-wrapper, .thumbnails-notflagged-wrapper */ {
+.thumbnails-wrapper {
   display: flex;
   flex-direction: column;
   gap: var(--spacing-x4);

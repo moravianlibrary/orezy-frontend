@@ -15,11 +15,6 @@
   border-left: 1px solid var(--border-color);
 }
 
-.rectangle {
-  display: flex;
-  flex-direction: column;
-  gap: var(--spacing-x5);
-}
 
 .header {
   display: flex;
@@ -59,6 +54,12 @@
 .border-bottom {
   padding-bottom: var(--spacing-x6);
   border-bottom: 1px solid var(--border-color);
+}
+
+.rectangle {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-x5);
 }
 
 .action {
@@ -128,7 +129,7 @@
   input {
     @include font(400, var(--font-size-x2), var(--spacing-x6));
     height: 52px;
-    padding: var(--spacing-x2) var(--spacing-x8) var(--spacing-x2) var(--spacing-x7-5);
+    padding: var(--spacing-x2) var(--spacing-x7-5) var(--spacing-x2) var(--spacing-x7-5);
     border: 1px solid var(--border-tertiary-color);
     border-radius: var(--spacing-x1);
     width: 100%;
