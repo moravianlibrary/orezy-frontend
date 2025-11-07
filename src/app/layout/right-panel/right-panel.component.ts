@@ -77,9 +77,7 @@ export class RightPanelComponent {
         rect.y_center = (rect.y ?? 0) + rect.height / 2;
         break;
       case 'angle':
-        if (value < -179.99) value = 180;
-        else if (value > 180) value = -179.99;
-        rect.angle = value;
+        rect.angle = ((value + 180) % 360 + 360) % 360 - 180;;
         break;
     }
 
