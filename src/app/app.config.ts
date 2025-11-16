@@ -6,6 +6,7 @@ import { ImagesService } from './services/images.service';
 import { firstValueFrom } from 'rxjs';
 import { ImageFlags, ImageItem } from './app.types';
 import { EnvironmentService } from './services/environment.service';
+import { roundToDecimals } from './utils/utils';
 
 export const books = ['2610078027', '2610267219', '2619387078', '2619611960', '2619711148'];
 
@@ -79,19 +80,23 @@ export const appConfig: ApplicationConfig = {
             ...f,
             rects: tfs
               .filter(t => t.image_path === img.name)
-              .map(t => ({
-                id: `${t.image_path}-${t.crop_part}`,
-                x_center: t.x_center,
-                y_center: t.y_center,
-                x: t.x_center - (t.width / 2),
-                y: t.y_center - (t.height / 2),
-                width: t.width,
-                height: t.height,
-                angle: t.angle,
-                crop_part: t.crop_part,
-                color: t.color,
-                edited: false
-              }))
+              .map(t => {
+                return {
+                  id: `${t.image_path}-${t.crop_part}`,
+                  x_center: roundToDecimals(t.x_center),
+                  y_center: roundToDecimals(t.y_center),
+                  left: 0,
+                  right: 0,
+                  top: 0,
+                  bottom: 0,
+                  width: roundToDecimals(t.width),
+                  height: roundToDecimals(t.height),
+                  angle: roundToDecimals(t.angle, 2),
+                  crop_part: t.crop_part,
+                  color: t.color,
+                  edited: false
+                }
+              })
           });
         }
 
@@ -100,7 +105,7 @@ export const appConfig: ApplicationConfig = {
         imagesService.originalImages.set(resultImages);
         imagesService.originalTransformations.set(tfs);
         // imagesService.setCroppedImgs(tfs);
-        imagesService.maxRects = Math.round(cropPartCount / cropPartSum);
+        // imagesService.maxRects = Math.round(cropPartCount / cropPartSum);
         imagesService.avgRect = { width: widthSum / tfs.length, height: heightSum / tfs.length };
 
         // Mode

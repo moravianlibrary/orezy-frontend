@@ -7,6 +7,14 @@ export function degreeToRadian(angle: number): number {
   return (angle * Math.PI) / 180;
 }
 
+export function radianToDegree(angle: number): number {
+  return (angle * 180) / Math.PI;
+}
+
+export function roundToDecimals(value: number, decimals: number = 4): number {
+  return Number(value.toFixed(decimals));
+}
+
 export function defer(fn: () => void, delay: number = 0) {
   return setTimeout(fn, delay);
 }
@@ -19,7 +27,7 @@ export function findFirstMissing(arr: number[]) {
 }
 
 export function scrollToSelectedImage(timeout: number = 100): void {
-  setTimeout(() => {
+  defer(() => {
     const element = document.querySelector('.thumbnail-wrapper.selected');
     if (element) (element as HTMLElement).scrollIntoView({ behavior: 'smooth', block: 'nearest' });
   }, timeout);

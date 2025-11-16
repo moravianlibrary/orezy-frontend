@@ -3,7 +3,7 @@ import { computed, inject, Injectable, signal } from '@angular/core';
 import { AvgRect, ImageItem, Rect, Transformation } from '../app.types';
 import { Observable } from 'rxjs';
 import { books } from '../app.config';
-import { degreeToRadian, findFirstMissing, getImageUrl } from '../utils/utils';
+import { degreeToRadian, findFirstMissing } from '../utils/utils';
 import { EnvironmentService } from './environment.service';
 
 @Injectable({
@@ -48,10 +48,16 @@ export class ImagesService {
   // shouldUpdateCroppedImages: boolean = false;
   selectedRect: Rect | null = null;
   lastSelectedRect: Rect | null = null;
+  lastLeftInput: number = 0;
+  lastTopInput: number = 0;
+  lastWidthInput: number = 0;
+  lastHeightInput: number = 0;
+  lastAngleInput: number = 0;
   lastRectCursorIsInside: Rect | null = null;
   isDragging: boolean = false;
   mouseDownCurPos: { x: number, y: number } = { x: -1, y: -1 };
-  startRectPos: { x: number, y: number } = { x: -1, y: -1 };
+  startRectPos: { x_center: number; y_center: number;
+    left: number; right: number; top: number; bottom: number; } = { x_center: -1, y_center: -1, left: -1, right: -1, top: -1, bottom: -1 };
 
   leftColor: string = '#00BFFF';
   rightColor: string = '#FF10F0';
@@ -154,12 +160,23 @@ export class ImagesService {
     // if (this.shouldUpdateCroppedImages) {
     //   this.updateCroppedImages(this.mainImageItem());
     // }
-    
+    const rects = img.rects?.map(r => {
+      const bounds = this.computeBounds(r.x_center, r.y_center, r.width, r.height, r.angle);
+      return {
+        ...r,
+        left: bounds.left,
+        right: bounds.right,
+        top: bounds.top,
+        bottom: bounds.bottom
+      }
+    });
+    const finalImg = { ...img, rects: rects };
+
     this.selectedRect = null;
     this.editable.set(false);
     this.toggleMainImageOrCanvas();
     // if (this.mode() === 'full') {
-      this.renderFullImageAndCanvas(img)
+      this.renderFullImageAndCanvas(finalImg)
     // } else {
     //   this.mainImageItem.set(img);
     // }
@@ -211,7 +228,7 @@ export class ImagesService {
   ): void {
     const { c, ctx } = this;
     if (!ctx) return;
-    
+
     const appMain = document.querySelector('app-main') as HTMLElement;
     const appStyle = getComputedStyle(appMain);
     const appRect = appMain.getBoundingClientRect();
@@ -247,8 +264,16 @@ export class ImagesService {
       .find(img => img.name === imgItem.name)
       ?.rects
       ?.forEach(r => {
-        this.currentRects.push(r);
-        this.drawRectangle(r);
+        const bounds = this.computeBounds(r.x_center, r.y_center, r.width, r.height, r.angle);
+        const finalR = {
+          ...r,
+          left: bounds.left,
+          right: bounds.right,
+          top: bounds.top,
+          bottom: bounds.bottom
+        }
+        this.currentRects.push(finalR);
+        this.drawRectangle(finalR);
       });
     
     if (type === 'image') {
@@ -281,6 +306,40 @@ export class ImagesService {
 
 
   // ---------- RECTANGLE LOGIC ----------
+  computeBounds(x_center: number, y_center: number, width: number, height: number, angle: number): { 
+    left: number,
+    right: number,
+    top: number,
+    bottom: number
+  } {
+    const rad = degreeToRadian(angle);
+    const cw = this.c.width;
+    const ch = this.c.height;
+    const hw = (width * cw) / 2;
+    const hh = (height * ch) / 2;
+    const corners = [
+      { x: -hw, y: -hh },
+      { x: hw,  y: -hh },
+      { x: hw,  y: hh  },
+      { x: -hw, y: hh  },
+    ];
+    const sin = Math.sin(rad);
+    const cos = Math.cos(rad);
+    const rotated = corners.map(pt => ({
+      x: x_center * cw + pt.x * cos - pt.y * sin,
+      y: y_center * ch + pt.x * sin + pt.y * cos,
+    }));
+    const xs = rotated.map(p => p.x);
+    const ys = rotated.map(p => p.y);
+
+    return {
+      left: Math.min(...xs) / cw,
+      right: Math.max(...xs) / cw,
+      top: Math.min(...ys) / ch,
+      bottom: Math.max(...ys) / ch
+    }
+  }
+  
   drawRect(c: HTMLCanvasElement, ctx: CanvasRenderingContext2D, r: Rect, hoveredId?: string): void {
     const [centerX, centerY] = [c.width * r.x_center, c.height * r.y_center];
     const [width, height] = [c.width * r.width, c.height * r.height];
@@ -308,10 +367,11 @@ export class ImagesService {
     const addedRect = {
       id: `${this.mainImageItem().name}-${cropPart}`,
       x_center: .5,
-      // x_center: (cropPart * 2 - 1) / (2 * this.maxRects),
       y_center: .5,
-      x: .5 - this.avgRect.width / 2,
-      y: .5 - this.avgRect.height / 2,
+      left: .5 - this.avgRect.width / 2,
+      right: .5 + this.avgRect.width / 2,
+      top: .5 - this.avgRect.height / 2,
+      bottom: .5 + this.avgRect.height / 2,
       width: this.avgRect.width,
       height: this.avgRect.height,
       angle: 0,

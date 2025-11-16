@@ -31,8 +31,10 @@ export interface Rect {
   id: string;
   x_center: number;
   y_center: number;
-  x?: number;
-  y?: number;
+  left: number;
+  right: number;
+  top: number;
+  bottom: number;
   width: number;
   height: number;
   angle: number;
@@ -46,4 +48,4 @@ export interface AvgRect {
   height: number;
 }
 
-export type InputType = 'x' | 'y' | 'width' | 'height' | 'angle';
+export type InputType = 'left' | 'top' | 'width' | 'height' | 'angle';

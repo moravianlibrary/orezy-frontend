@@ -1,7 +1,7 @@
 import { Component, inject, signal } from '@angular/core';
 import { ImagesService } from '../../services/images.service';
 import { ImageItem } from '../../app.types';
-import { scrollToSelectedImage } from '../../utils/utils';
+import { defer, scrollToSelectedImage } from '../../utils/utils';
 
 @Component({
   selector: 'app-left-panel',
@@ -13,26 +13,27 @@ export class LeftPanelComponent {
   imagesService = inject(ImagesService);
 
   clickFilter(filter: string): void {
-    this.imagesService.selectedFilter = filter;
+    const imgSvc = this.imagesService;
+    imgSvc.selectedFilter = filter;
     
-    const mainImageItemName = this.imagesService.mainImageItem().name;
-    if (this.imagesService.wasEdited) {
-      this.imagesService.updateImagesByEdited(mainImageItemName ?? '');
+    const mainImageItemName = imgSvc.mainImageItem().name;
+    if (imgSvc.wasEdited) {
+      imgSvc.updateImagesByEdited(mainImageItemName ?? '');
     }
 
-    this.imagesService.setDisplayedImages();
+    imgSvc.setDisplayedImages();
 
-    const newImage = this.imagesService.displayedImages().find(img => img.name === mainImageItemName)
-      || this.imagesService.displayedImages()[0]
+    const newImage = imgSvc.displayedImages().find(img => img.name === mainImageItemName)
+      || imgSvc.displayedImages()[0]
       || { url: '' };
-    this.imagesService.setMainImage(newImage);
+    imgSvc.setMainImage(newImage);
 
     scrollToSelectedImage();
   }
 
   clickThumbnail(image: ImageItem): void {
     this.imagesService.setMainImage(image);
-    if (this.imagesService.wasEdited) setTimeout(() => this.imagesService.setDisplayedImages(), 100);
+    if (this.imagesService.wasEdited) defer(() => this.imagesService.setDisplayedImages(), 100);
   }
 
   getStatusIconTooltip(image: ImageItem): string {

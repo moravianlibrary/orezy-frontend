@@ -15,14 +15,16 @@ export class MainComponent {
   imagesService = inject(ImagesService);
 
   ngAfterViewInit(): void {
+    const imgSvc = this.imagesService;
+    
     // Set canvas
-    this.imagesService.c = document.getElementById('main-canvas') as HTMLCanvasElement;
-    this.imagesService.ctx = this.imagesService.c.getContext('2d')!;
+    imgSvc.c = document.getElementById('main-canvas') as HTMLCanvasElement;
+    imgSvc.ctx = imgSvc.c.getContext('2d')!;
     
     // Set main image for full mode
-    if (this.imagesService.mode() === 'full') {
-      const [firstFlagged] = this.imagesService.flaggedImages();
-      if (firstFlagged) this.imagesService.setMainImage(firstFlagged);
+    if (imgSvc.mode() === 'full') {
+      const [firstFlagged] = imgSvc.flaggedImages();
+      if (firstFlagged) imgSvc.setMainImage(firstFlagged);
     }
 
     // Attach event handlers
@@ -33,19 +35,20 @@ export class MainComponent {
 
   private attachEventsRest(el: HTMLElement | null): void {
     if (!el) return;
+    const imgSvc = this.imagesService;
 
     el.onclick = (ev) => {
       const tagName = (ev.target as HTMLElement).tagName;
       if (tagName === 'APP-RIGHT-PANEL') return;
       if (tagName !== 'APP-LEFT-PANEL' && tagName !== 'DIV' && tagName !== 'APP-RIGHT-PANEL' && tagName !== 'APP-BOTTOM-PANEL') return;
       if (el.tagName === 'DIV' && tagName !== 'DIV') return;
-      if (this.imagesService.mode() === 'single' || !this.imagesService.selectedRect) return;
-      this.imagesService.selectedRect = null;
-      this.imagesService.lastRectCursorIsInside = null;
-      this.imagesService.editable.set(false);
-      this.imagesService.toggleMainImageOrCanvas();
+      if (imgSvc.mode() === 'single' || !imgSvc.selectedRect) return;
+      imgSvc.selectedRect = null;
+      imgSvc.lastRectCursorIsInside = null;
+      imgSvc.editable.set(false);
+      imgSvc.toggleMainImageOrCanvas();
       this.hoveringRect('');
-      this.imagesService.updateMainImageItemAndImages();
+      imgSvc.updateMainImageItemAndImages();
     };
 
     el.onmousemove = (ev) => {
@@ -81,15 +84,16 @@ export class MainComponent {
 
   // ---------- RECTANGLE LOGIC ----------
   private rectIdCursorInside(e: MouseEvent): string {
-    const mainElement = document.getElementById(this.imagesService.editable() ? 'main-canvas' : 'main-image') as HTMLElement;
+    const imgSvc = this.imagesService;
+    const mainElement = document.getElementById(imgSvc.editable() ? 'main-canvas' : 'main-image') as HTMLElement;
     if (!mainElement) return '';
 
     const rect = mainElement.getBoundingClientRect();
     const [x, y] = [e.clientX - rect.left, e.clientY - rect.top];
 
-    const hit = this.imagesService.selectedRect && this.imagesService.currentRects.filter(r => this.isPointInRect(x, y, r)).includes(this.imagesService.selectedRect)
-      ? this.imagesService.selectedRect
-      : this.imagesService.currentRects.find(r => this.isPointInRect(x, y, r));
+    const hit = imgSvc.selectedRect && imgSvc.currentRects.filter(r => this.isPointInRect(x, y, r)).includes(imgSvc.selectedRect)
+      ? imgSvc.selectedRect
+      : imgSvc.currentRects.find(r => this.isPointInRect(x, y, r));
     
     return hit?.id ?? '';
   }
@@ -110,31 +114,32 @@ export class MainComponent {
   }
 
   private hoveringRect(hoveredRectId: string): void {
-    this.imagesService.redrawImage();
-    this.imagesService.currentRects.forEach(r => this.imagesService.drawRect(this.imagesService.c, this.imagesService.ctx, r, hoveredRectId));
+    const imgSvc = this.imagesService;
+    imgSvc.redrawImage();
+    imgSvc.currentRects.forEach(r => imgSvc.drawRect(imgSvc.c, imgSvc.ctx, r, hoveredRectId));
   }
 
   private handleCanvasInteraction(ev: MouseEvent, el: HTMLElement): void {
     if ((ev.target as HTMLElement).tagName !== 'CANVAS') return;
-    
+    const imgSvc = this.imagesService;
     const rectId = this.rectIdCursorInside(ev);
     const insideRect = Boolean(rectId);
 
     if (ev.type === 'mousedown') {
-      this.imagesService.selectedRect = this.imagesService.currentRects.find(r => r.id === rectId) || null;
-      this.imagesService.lastRectCursorIsInside = this.imagesService.currentRects.find(r => r.id === rectId) ?? null;
-      this.imagesService.editable.set(insideRect);
-      this.imagesService.toggleMainImageOrCanvas();
+      imgSvc.selectedRect = imgSvc.currentRects.find(r => r.id === rectId) || null;
+      imgSvc.lastRectCursorIsInside = imgSvc.currentRects.find(r => r.id === rectId) ?? null;
+      imgSvc.editable.set(insideRect);
+      imgSvc.toggleMainImageOrCanvas();
       this.hoveringRect(rectId);
-      this.imagesService.updateMainImageItemAndImages();
+      imgSvc.updateMainImageItemAndImages();
     }
 
     if (ev.type === 'mousemove') {
-      if (this.imagesService.lastRectCursorIsInside?.id === rectId && !this.imagesService.selectedRect) return;
-      if (!this.imagesService.isDragging) {
-        this.imagesService.lastRectCursorIsInside = this.imagesService.currentRects.find(r => r.id === rectId) ?? null;
-        this.imagesService.editable.set(insideRect);
-        this.imagesService.toggleMainImageOrCanvas();
+      if (imgSvc.lastRectCursorIsInside?.id === rectId && !imgSvc.selectedRect) return;
+      if (!imgSvc.isDragging) {
+        imgSvc.lastRectCursorIsInside = imgSvc.currentRects.find(r => r.id === rectId) ?? null;
+        imgSvc.editable.set(insideRect);
+        imgSvc.toggleMainImageOrCanvas();
         this.hoveringRect(rectId);
       }
     }
@@ -143,27 +148,27 @@ export class MainComponent {
     el.style.cursor = insideRect ? 'move' : 'initial';
     if (insideRect) {
       if (ev.type === 'mousedown') {
-        const rect = this.imagesService.selectedRect;
+        const rect = imgSvc.selectedRect;
         if (!rect) return;
 
-        this.imagesService.isDragging = true;
-        this.imagesService.mouseDownCurPos = { x: ev.clientX, y: ev.clientY };
-        this.imagesService.startRectPos = { x: rect?.x_center, y: rect?.y_center };
+        imgSvc.isDragging = true;
+        imgSvc.mouseDownCurPos = { x: ev.clientX, y: ev.clientY };
+        imgSvc.startRectPos = { x_center: rect.x_center, y_center: rect.y_center, left: rect.left, right: rect.right, top: rect.top, bottom: rect.bottom };
       }
 
       if (ev.type === 'mousemove') {
-        if (!this.imagesService.isDragging) return;
+        if (!imgSvc.isDragging) return;
         this.dragRect(ev);
       }
 
       if (ev.type === 'mouseup') {
-        if (!this.imagesService.isDragging) return;
-        this.imagesService.isDragging = false;
-        this.imagesService.startRectPos = { x: -1, y: -1 };
+        if (!imgSvc.isDragging) return;
+        imgSvc.isDragging = false;
+        imgSvc.startRectPos = { x_center: -1, y_center: -1, left: -1, right: -1, top: -1, bottom: -1 };
         
-        if (!this.imagesService.currentRects.find(r => r.edited)) return;
-        this.imagesService.wasEdited = true;
-        this.imagesService.updateMainImageItemAndImages();
+        if (!imgSvc.currentRects.find(r => r.edited)) return;
+        imgSvc.wasEdited = true;
+        imgSvc.updateMainImageItemAndImages();
       }
     }
 
@@ -175,90 +180,70 @@ export class MainComponent {
   }
 
   private dragRect(e: MouseEvent): void {    
-    if (!this.imagesService.selectedRect) return;
+    const imgSvc = this.imagesService;
+    if (!imgSvc.selectedRect) return;
 
-    const { width, height } = this.imagesService.c;
+    const { width, height } = imgSvc.c;
     // this.shouldUpdateCroppedImages = true;
 
     // Normalized deltas
-    const dx = (e.clientX - this.imagesService.mouseDownCurPos.x) / width;
-    const dy = (e.clientY - this.imagesService.mouseDownCurPos.y) / height;
+    const dx = (e.clientX - imgSvc.mouseDownCurPos.x) / width;
+    const dy = (e.clientY - imgSvc.mouseDownCurPos.y) / height;
 
-    const start = this.imagesService.startRectPos;
-    const rect = this.imagesService.selectedRect;
-    const angle = degreeToRadian(-rect.angle);
+    const start = imgSvc.startRectPos;
+    const rect = imgSvc.selectedRect;
 
     // Compute proposed new position
-    let newCx = start.x + dx;
-    let newCy = start.y + dy;
-
-    // Clamp position so the rectangle stays within img
-    const hw = rect.width / 2;
-    const hh = rect.height / 2;
-    const cos = Math.cos(angle);
-    const sin = Math.sin(angle);
-
-    // Corners relative to center
-    const rel = [
-      { x: -hw, y: -hh },
-      { x:  hw, y: -hh },
-      { x:  hw, y:  hh },
-      { x: -hw, y:  hh },
-    ];
-
-    // Compute rotated corner positions
-    const corners = rel.map(p => ({
-      x: newCx + p.x * cos - p.y * sin,
-      y: newCy + p.x * sin + p.y * cos
-    }));
-
-    // Find overflows
-    const minX = Math.min(...corners.map(p => p.x));
-    const maxX = Math.max(...corners.map(p => p.x));
-    const minY = Math.min(...corners.map(p => p.y));
-    const maxY = Math.max(...corners.map(p => p.y));
+    let newCx = start.x_center + dx;
+    let newCy = start.y_center + dy;
+    let newLeft = start.left + dx;
+    let newRight = start.right + dx;
+    let newTop = start.top + dy;
+    let newBottom = start.bottom + dy;
 
     // Adjust so all corners stay within [0,1]
-    if (minX < 0) newCx += -minX;
-    if (maxX > 1) newCx -= maxX - 1;
-    if (minY < 0) newCy += -minY;
-    if (maxY > 1) newCy -= maxY - 1;
-    // -----------------------------------
+    if (newLeft < 0) {
+      newCx += -newLeft;
+      newLeft = 0;
+      newRight = rect.width;
+    }
+    if (newRight > 1) {
+      newCx -= newRight - 1;
+      newRight = 1;
+      newLeft = 1 - rect.width;
+    }
+    if (newTop < 0) {
+      newCy += -newTop;
+      newTop = 0;
+      newBottom = rect.height;
+    }
+    if (newBottom > 1) {
+      newCy -= newBottom - 1;
+      newBottom = 1;
+      newTop = 1 - rect.height;
+    }
 
     // Build updated rect
-    const updatedRect = {
+    const updatedRect: Rect = {
       ...rect,
       x_center: newCx,
       y_center: newCy,
-      x: Number((newCx - rect.width / 2).toFixed(4)),
-      y: Number((newCy - rect.height / 2).toFixed(4)),
-      width: Number(rect.width.toFixed(4)),
-      height: Number(rect.height.toFixed(4)),
+      left: newLeft,
+      right: newRight,
+      top: newTop,
+      bottom: newBottom,
       edited: true
     };
 
-    // newCx = Math.min(Math.max(newCx, hw), 1 - hw);
-    // newCy = Math.min(Math.max(newCy, hh), 1 - hh);
-
-    // // Create updated rect
-    // const updatedRect = {
-    //   ...this.selectedRect,
-    //   x_center: newCx,
-    //   y_center: newCy,
-    //   x: newCx - this.selectedRect.width / 2,
-    //   y: newCy - this.selectedRect.height / 2,
-    //   edited: true
-    // };
-
     // Update state
-    this.imagesService.selectedRect = updatedRect;
-    this.imagesService.lastSelectedRect = updatedRect;
-    this.imagesService.currentRects = this.imagesService.currentRects.map(r =>
+    imgSvc.selectedRect = updatedRect;
+    imgSvc.lastSelectedRect = updatedRect;
+    imgSvc.currentRects = imgSvc.currentRects.map(r =>
       r.id === updatedRect.id ? updatedRect : r
     );
 
     // Redraw
-    this.imagesService.redrawImage();
-    this.imagesService.currentRects.forEach(r => this.imagesService.drawRect(this.imagesService.c, this.imagesService.ctx, r));
+    imgSvc.redrawImage();
+    imgSvc.currentRects.forEach(r => imgSvc.drawRect(imgSvc.c, imgSvc.ctx, r));
   }
 }
