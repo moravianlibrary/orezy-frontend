@@ -97,12 +97,46 @@ export class LeftPanelComponent {
   }
 
   getStatusIconTooltip(image: ImageItem): string {
-    let result = '';
-    
-    if (!image.flags.length) result = 'OK';
-    if (image.flags.includes('odd_dimensions')) result = 'Podezřelý rozměr';
-    if (image.edited) result = 'Upraveno';
+    if (image.edited) {
+      return 'Upraveno';
+    }
 
-    return result;
+    const flags = image.flags;
+    const flagMessages: Record<string, string> = {
+      low_confidence: 'Nejistota',
+      odd_dimensions: 'Podezřelý rozměr',
+      page_count_mismatch: 'Chybějící strana',
+      prediction_overlap: 'Výřezy se překrývají',
+    };
+
+    let matchedMessages = Object.entries(flagMessages)
+      .filter(([flag]) => flags.includes(flag))
+      .map(([, message]) => message);
+
+    if (matchedMessages.length === 0) {
+      return 'OK';
+    }
+
+    if (matchedMessages.length > 1 && flags.includes('low_confidence')) {
+      matchedMessages = matchedMessages.filter(msg => msg !== flagMessages['low_confidence']);
+    }
+
+    if (matchedMessages.length === 1) {
+      return matchedMessages[0];
+    }
+
+    const messages = [...matchedMessages];
+
+    if (messages.length === 2) {
+      return messages.join(' a ');
+    }
+
+    const last = messages[messages.length - 1];
+    const secondLast = messages[messages.length - 2];
+
+    console.log(matchedMessages);
+    console.log(`${messages.join(', ')}, ${secondLast} a ${last}`);
+
+    return `${messages.join(', ')}, ${secondLast} a ${last}`;
   }
 }
