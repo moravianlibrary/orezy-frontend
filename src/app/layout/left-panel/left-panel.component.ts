@@ -5,10 +5,11 @@ import { scrollToSelectedImage } from '../../utils/utils';
 import { LoaderComponent } from '../../components/loader/loader.component';
 import { forkJoin } from 'rxjs';
 import { NgClass } from '../../../../node_modules/@angular/common';
+import { MenuPrimaryComponent } from "../../components/menu-primary/menu-primary.component";
 
 @Component({
   selector: 'app-left-panel',
-  imports: [LoaderComponent, NgClass],
+  imports: [LoaderComponent, NgClass, MenuPrimaryComponent],
   templateUrl: './left-panel.component.html',
   styleUrl: './left-panel.component.scss'
 })
