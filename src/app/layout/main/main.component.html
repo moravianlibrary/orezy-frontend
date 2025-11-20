@@ -1,23 +1,8 @@
-<!-- @if (imagesService.modes.length > 1) {
-  <app-button-group
-    id="mode-switcher"
-    [items]="imagesService.modes"
-    [currentItem]="imagesService.mode()"
-  />
-} -->
-
 <div id="main-container">
+  @if (imagesService.loadingMain) { <app-loader /> }
   <img
     id="main-image"
     [src]="imagesService.mainImageItem().url"
   />
   <canvas id="main-canvas"></canvas>
 </div>
-
-<app-button-group
-  id="book-switcher"
-  [items]="imagesService.books"
-  [currentItem]="imagesService.book()"
-/>
-
-<router-outlet />

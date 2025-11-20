@@ -42,17 +42,14 @@
       @let mainImageItem = imagesService.mainImageItem();
       <div
         class="thumbnail-wrapper"
-        [class.selected]="
-          mainImageItem.name === image.name &&
-          mainImageItem.crop_part === image.crop_part
-        "
+        [class.selected]="mainImageItem._id === image._id"
         (click)="clickThumbnail(image)"
       >
-        <img [src]="image.url" />
+        <img #lazyImg [attr.data-id]="image._id" />
         <span
           class="status-icon"
-          [class.success]="!image.edited && (!image.low_confidence && !image.bad_sides_ratio)"
-          [class.warning]="!image.edited && (image.low_confidence || image.bad_sides_ratio)"
+          [class.success]="!image.edited && !image.flags.length"
+          [class.warning]="!image.edited && image.flags.length"
           [class.edited]="image.edited"
           [class.error]="false"
           [attr.data-tooltip]="getStatusIconTooltip(image)"
@@ -60,7 +57,7 @@
       </div>
     }
   } @else {
-    @if (imagesService.loading) { <p>Skeny se načítají...</p> }
+    @if (imagesService.loadingLeft) { <app-loader /> }
     @else if (imagesService.displayedImages().length) { <p>Nebyly nalezeny žádné skeny.</p> }
   }
 </div>

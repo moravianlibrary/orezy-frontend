@@ -1,0 +1,38 @@
+import { Component, inject, signal } from '@angular/core';
+import { ImagesService } from '../../services/images.service';
+import { Router } from '@angular/router';
+import { catchError, of, tap } from 'rxjs';
+
+@Component({
+  selector: 'app-examples',
+  imports: [],
+  templateUrl: './examples.component.html',
+  styleUrl: './examples.component.scss'
+})
+export class ExamplesComponent {
+  private router = inject(Router);
+  imageService = inject(ImagesService);
+  
+  examples = signal<string[]>([]);
+  loading = signal<boolean>(true);
+  
+  ngOnInit(): void {
+    this.imageService.fetchAllTitleIds().pipe(
+      tap(() => this.loading.set(true)),
+      catchError(err => {
+        console.error('Fetch error:', err);
+        return of([]);
+      })
+    )
+    .subscribe((r: string[]) => {
+      this.examples.set(r);
+      this.loading.set(false);
+    });
+  }
+
+  onClick(example: string): void {
+    this.router.navigate(['/'], {
+      queryParams: { id: example }
+    });
+  }
+}

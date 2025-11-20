@@ -3,7 +3,7 @@ import { ImagesService } from '../../services/images.service';
 import { FormsModule } from '@angular/forms';
 import { DecimalPipe } from '@angular/common';
 import { ChangeDetectorRef } from '@angular/core';
-import { InputType, Rect } from '../../app.types';
+import { InputType, Page } from '../../app.types';
 import { defer, degreeToRadian } from '../../utils/utils';
 
 @Component({
@@ -27,18 +27,18 @@ export class RightPanelComponent {
   getCurrentIndexImage(): number {
     const images = this.imagesService.displayedImages();
     const current = this.imagesService.mainImageItem();
-    return images.findIndex(img => img.name === current.name) + 1;
+    return images.findIndex(img => img._id === current._id) + 1;
   }
 
   changeInputValue(type: InputType, event: any): void {
     const imgSvc = this.imagesService;
-    const rect = imgSvc.selectedRect;
-    if (!rect) return;
+    const page = imgSvc.selectedPage;
+    if (!page) return;
 
-    imgSvc.lastLeftInput = rect.left;
-    imgSvc.lastTopInput = rect.top;
-    imgSvc.lastWidthInput = rect.width;
-    imgSvc.lastHeightInput = rect.height;
+    imgSvc.lastLeftInput = page.left;
+    imgSvc.lastTopInput = page.top;
+    imgSvc.lastWidthInput = page.width;
+    imgSvc.lastHeightInput = page.height;
 
     let raw = this.parseInputValue(type, event);
     let value = type === 'angle' ? raw : raw / 100;
@@ -53,43 +53,43 @@ export class RightPanelComponent {
 
     switch (type) {
       case 'left':
-        const boundWidth = Math.abs(rect.left - rect.right);
+        const boundWidth = Math.abs(page.left - page.right);
         value = this.clamp(value, 0, 1 - boundWidth);
         const deltaX = -(imgSvc.lastLeftInput - value)
-        rect.x_center = rect.x_center + deltaX;
-        rect.right = rect.right + deltaX;
-        rect.left = value;
+        page.xc = page.xc + deltaX;
+        page.right = page.right + deltaX;
+        page.left = value;
         imgSvc.lastLeftInput = value;
         break;
       case 'top':
-        const boundHeight = Math.abs(rect.top - rect.bottom);
+        const boundHeight = Math.abs(page.top - page.bottom);
         value = this.clamp(value, 0, 1 - boundHeight);
         const deltaY = -(imgSvc.lastTopInput - value)
-        rect.y_center = rect.y_center + deltaY;
-        rect.bottom = rect.bottom + deltaY;
-        rect.top = value;
+        page.yc = page.yc + deltaY;
+        page.bottom = page.bottom + deltaY;
+        page.top = value;
         imgSvc.lastTopInput = value;
         break;
       case 'width':
         const handleAligned = (isHorizontal: boolean, reverse: boolean) => {
           value = this.clamp(value, 0, isHorizontal
-            ? reverse ? rect.right : 1 - rect.left
-            : (reverse ? rect.bottom : (1 - rect.top)) * inverseRatio);
+            ? reverse ? page.right : 1 - page.left
+            : (reverse ? page.bottom : (1 - page.top)) * inverseRatio);
           const delta = (imgSvc.lastWidthInput - value) * (reverse ? 1 : -1);
           
           if (isHorizontal) {
-            rect.x_center += delta / 2;
+            page.xc += delta / 2;
             reverse
-              ? rect.left = this.clamp(rect.left + delta)
-              : rect.right = this.clamp(rect.right + delta);
+              ? page.left = this.clamp(page.left + delta)
+              : page.right = this.clamp(page.right + delta);
           } else {
-            rect.y_center += (delta / 2) * ratio;
+            page.yc += (delta / 2) * ratio;
             reverse
-              ? rect.top = this.clamp(value * ratio >= rect.bottom ? 0 : rect.top + delta * ratio)
-              : rect.bottom = this.clamp(rect.bottom + delta * ratio);
+              ? page.top = this.clamp(value * ratio >= page.bottom ? 0 : page.top + delta * ratio)
+              : page.bottom = this.clamp(page.bottom + delta * ratio);
           }
 
-          rect.width = value;
+          page.width = value;
           imgSvc.lastWidthInput = value;
         };
 
@@ -113,53 +113,53 @@ export class RightPanelComponent {
           const goniom = toRight ? cos : sin;
           const inverseGoniom = toRight ? sin : cos;
 
-          const rectWidthOriginal = rect.width;
-          const rectLeftOriginal = rect.left;
-          const rectRightOriginal = rect.right;
-          const rectTopOriginal = rect.top;
-          const rectBottomOriginal = rect.bottom;
+          const pageWidthOriginal = page.width;
+          const pageLeftOriginal = page.left;
+          const pageRightOriginal = page.right;
+          const pageTopOriginal = page.top;
+          const pageBottomOriginal = page.bottom;
 
           const dW = -(imgSvc.lastWidthInput - value);
           const limitSide = toRight ? 'right' : 'left';
-          let newSide = rect[limitSide] + dW * (toRight ? cos : -sin);
-          rect[limitSide] = newSide;
+          let newSide = page[limitSide] + dW * (toRight ? cos : -sin);
+          page[limitSide] = newSide;
           let dX = (dW / 2) * goniom;
           
-          rect.width = value;
+          page.width = value;
           let adjustedDeltaWidth = dW;
           let adjustedDeltaX = dX;
 
           if (toRight ? newSide > 1 : newSide < 0) {
-            rect.width = rectWidthOriginal + ((toRight ? 1 - rectRightOriginal : rectLeftOriginal) / goniom);
-            rect[limitSide] = toRight ? 1 : 0;
-            adjustedDeltaWidth = rect.width - imgSvc.lastWidthInput;
+            page.width = pageWidthOriginal + ((toRight ? 1 - pageRightOriginal : pageLeftOriginal) / goniom);
+            page[limitSide] = toRight ? 1 : 0;
+            adjustedDeltaWidth = page.width - imgSvc.lastWidthInput;
             adjustedDeltaX = (adjustedDeltaWidth / 2) * goniom;
           }
 
           let deltaY = (adjustedDeltaWidth / 2) * inverseGoniom;
           let adjustedDeltaY = deltaY;
           const secondLimitSide = toBottom ? 'bottom' : 'top';
-          let secondNewSide = rect[secondLimitSide] + adjustedDeltaWidth * inverseGoniom * ratio * o.signY;
-          rect[secondLimitSide] = secondNewSide;
+          let secondNewSide = page[secondLimitSide] + adjustedDeltaWidth * inverseGoniom * ratio * o.signY;
+          page[secondLimitSide] = secondNewSide;
 
           if (toBottom ? secondNewSide > 1 : secondNewSide < 0) {
-            rect.width = rectWidthOriginal + ((toBottom ? (1 - rectBottomOriginal) : rectTopOriginal) / inverseGoniom) * inverseRatio;
-            rect[secondLimitSide] = toBottom ? 1 : 0;
-            adjustedDeltaWidth = rect.width - imgSvc.lastWidthInput;
+            page.width = pageWidthOriginal + ((toBottom ? (1 - pageBottomOriginal) : pageTopOriginal) / inverseGoniom) * inverseRatio;
+            page[secondLimitSide] = toBottom ? 1 : 0;
+            adjustedDeltaWidth = page.width - imgSvc.lastWidthInput;
             adjustedDeltaX = (adjustedDeltaWidth / 2) * goniom;
             adjustedDeltaY = (adjustedDeltaWidth / 2) * inverseGoniom;
             toRight
-              ? rect.right = rectRightOriginal + adjustedDeltaWidth * cos
-              : rect.left = rectLeftOriginal - adjustedDeltaWidth * sin;
+              ? page.right = pageRightOriginal + adjustedDeltaWidth * cos
+              : page.left = pageLeftOriginal - adjustedDeltaWidth * sin;
           }
 
-          rect.x_center = rect.x_center + adjustedDeltaX * o.signX;
-          rect.y_center = rect.y_center + adjustedDeltaY * o.signY * ratio;
+          page.xc = page.xc + adjustedDeltaX * o.signX;
+          page.yc = page.yc + adjustedDeltaY * o.signY * ratio;
           imgSvc.lastWidthInput = value;
         };
 
         // --- Dispatch by angle ---
-        switch (rect.angle) {
+        switch (page.angle) {
           case 0:
             handleAligned(true, false);
             break;
@@ -173,7 +173,7 @@ export class RightPanelComponent {
             handleAligned(false, true);
             break;
           default:
-            handleRotated(rect.angle);
+            handleRotated(page.angle);
             break;
         }
 
@@ -181,23 +181,23 @@ export class RightPanelComponent {
       case 'height':
         const handleAlignedHeight = (isHorizontal: boolean, reverse: boolean) => {
           value = this.clamp(value, 0, isHorizontal
-            ? reverse ? rect.bottom : 1 - rect.top
-            : (reverse ? rect.right : (1 - rect.left)) * ratio);
+            ? reverse ? page.bottom : 1 - page.top
+            : (reverse ? page.right : (1 - page.left)) * ratio);
           const delta = (imgSvc.lastHeightInput - value) * (reverse ? 1 : -1);
           
           if (isHorizontal) {
-            rect.y_center += delta / 2;
+            page.yc += delta / 2;
             reverse
-              ? rect.top = this.clamp(rect.top + delta)
-              : rect.bottom = this.clamp(rect.bottom + delta);
+              ? page.top = this.clamp(page.top + delta)
+              : page.bottom = this.clamp(page.bottom + delta);
           } else {
-            rect.x_center += (delta / 2) * inverseRatio;
+            page.xc += (delta / 2) * inverseRatio;
             reverse
-              ? rect.left = this.clamp(value * inverseRatio >= rect.right ? 0 : rect.left + delta * inverseRatio)
-              : rect.right = this.clamp(rect.right + delta * inverseRatio);
+              ? page.left = this.clamp(value * inverseRatio >= page.right ? 0 : page.left + delta * inverseRatio)
+              : page.right = this.clamp(page.right + delta * inverseRatio);
           }
 
-          rect.height = value;
+          page.height = value;
           imgSvc.lastHeightInput = value;
         };
 
@@ -221,53 +221,53 @@ export class RightPanelComponent {
           const goniom = toRight ? cos : sin;
           const inverseGoniom = toRight ? sin : cos;
 
-          const rectHeightOriginal = rect.height;
-          const rectLeftOriginal = rect.left;
-          const rectRightOriginal = rect.right;
-          const rectTopOriginal = rect.top;
-          const rectBottomOriginal = rect.bottom;
+          const pageHeightOriginal = page.height;
+          const pageLeftOriginal = page.left;
+          const pageRightOriginal = page.right;
+          const pageTopOriginal = page.top;
+          const pageBottomOriginal = page.bottom;
 
           const dH = -(imgSvc.lastHeightInput - value);
           const limitSide = toBottom ? 'bottom' : 'top';
-          let newSide = rect[limitSide] + dH * goniom * o.signY;
-          rect[limitSide] = newSide;
+          let newSide = page[limitSide] + dH * goniom * o.signY;
+          page[limitSide] = newSide;
           let dY = (dH / 2) * goniom;
           
-          rect.height = value;
+          page.height = value;
           let adjustedDeltaHeight = dH;
           let adjustedDeltaY = dY;
 
           if (toBottom ? newSide > 1 : newSide < 0) {
-            rect.height = rectHeightOriginal + ((toBottom ? 1 - rectBottomOriginal : rectTopOriginal) / goniom);
-            rect[limitSide] = toBottom ? 1 : 0;
-            adjustedDeltaHeight = rect.height - imgSvc.lastHeightInput;
+            page.height = pageHeightOriginal + ((toBottom ? 1 - pageBottomOriginal : pageTopOriginal) / goniom);
+            page[limitSide] = toBottom ? 1 : 0;
+            adjustedDeltaHeight = page.height - imgSvc.lastHeightInput;
             adjustedDeltaY = (adjustedDeltaHeight / 2) * goniom;
           }
 
           let deltaX = (adjustedDeltaHeight / 2) * inverseGoniom;
           let adjustedDeltaX = deltaX;
           const secondLimitSide = toRight ? 'right' : 'left';
-          let secondNewSide = rect[secondLimitSide] + adjustedDeltaHeight * inverseGoniom * inverseRatio * o.signX;
-          rect[secondLimitSide] = secondNewSide;
+          let secondNewSide = page[secondLimitSide] + adjustedDeltaHeight * inverseGoniom * inverseRatio * o.signX;
+          page[secondLimitSide] = secondNewSide;
 
           if (toRight ? secondNewSide > 1 : secondNewSide < 0) {
-            rect.height = rectHeightOriginal + ((toRight ? (1 - rectRightOriginal) : rectLeftOriginal) / inverseGoniom) * ratio;
-            rect[secondLimitSide] = toRight ? 1 : 0;
-            adjustedDeltaHeight = rect.height - imgSvc.lastHeightInput;
+            page.height = pageHeightOriginal + ((toRight ? (1 - pageRightOriginal) : pageLeftOriginal) / inverseGoniom) * ratio;
+            page[secondLimitSide] = toRight ? 1 : 0;
+            adjustedDeltaHeight = page.height - imgSvc.lastHeightInput;
             adjustedDeltaY = (adjustedDeltaHeight / 2) * goniom;
             adjustedDeltaX = (adjustedDeltaHeight / 2) * inverseGoniom;
             toBottom
-              ? rect.bottom = rectBottomOriginal + adjustedDeltaHeight * cos
-              : rect.top = rectTopOriginal - adjustedDeltaHeight * sin;
+              ? page.bottom = pageBottomOriginal + adjustedDeltaHeight * cos
+              : page.top = pageTopOriginal - adjustedDeltaHeight * sin;
           }
 
-          rect.y_center = rect.y_center + adjustedDeltaY * o.signY;
-          rect.x_center = rect.x_center + adjustedDeltaX * o.signX * inverseRatio;
+          page.yc = page.yc + adjustedDeltaY * o.signY;
+          page.xc = page.xc + adjustedDeltaX * o.signX * inverseRatio;
           imgSvc.lastHeightInput = value;
         };
 
         // --- Dispatch by angle ---
-        switch (rect.angle) {
+        switch (page.angle) {
           case 0:
             handleAlignedHeight(true, false);
             break;
@@ -281,7 +281,7 @@ export class RightPanelComponent {
             handleAlignedHeight(false, false);
             break;
           default:
-            handleRotatedHeight(rect.angle);
+            handleRotatedHeight(page.angle);
             break;
         }
 
@@ -289,8 +289,8 @@ export class RightPanelComponent {
       case 'angle':
         const newAngle = ((value + 180) % 360 + 360) % 360 - 180;
 
-        const canRotateRect = (rect: Rect, newAngle: number): boolean => {
-          const bounds = imgSvc.computeBounds(rect.x_center, rect.y_center, rect.width, rect.height, newAngle);
+        const canRotatePage = (page: Page, newAngle: number): boolean => {
+          const bounds = imgSvc.computeBounds(page.xc, page.yc, page.width, page.height, newAngle);
           return (
             bounds.left >= 0 &&
             bounds.right <= 1 &&
@@ -299,29 +299,30 @@ export class RightPanelComponent {
           );
         }
 
-        if (canRotateRect(rect, newAngle)) {
-          rect.angle = newAngle;
+        if (canRotatePage(page, newAngle)) {
+          page.angle = newAngle;
         } else {
-          this.rotationDirection = Math.sign(newAngle - rect.angle);
+          this.rotationDirection = Math.sign(newAngle - page.angle);
           const step = this.rotationDirection * (0.1 ** this.decimals);
-          let tempAngle = rect.angle;
-          while (canRotateRect(rect, tempAngle + step)) {
+          let tempAngle = page.angle;
+          while (canRotatePage(page, tempAngle + step)) {
             tempAngle += step;
           }
-          rect.angle = tempAngle;
+          page.angle = tempAngle;
         }
 
-        const bounds = imgSvc.computeBounds(rect.x_center, rect.y_center, rect.width, rect.height, rect.angle);
+        const bounds = imgSvc.computeBounds(page.xc, page.yc, page.width, page.height, page.angle);
 
-        rect.left = bounds.left;
-        rect.right = bounds.right;
-        rect.top = bounds.top;
-        rect.bottom = bounds.bottom;
+        page.left = bounds.left;
+        page.right = bounds.right;
+        page.top = bounds.top;
+        page.bottom = bounds.bottom;
 
         break;
     }
 
-    this.updateAndRedraw(rect);
+    imgSvc.pageWasEdited = true;
+    this.updateAndRedraw(page);
   }
 
   onKeyDown(type: InputType, event: KeyboardEvent, input: HTMLInputElement): void {
@@ -358,15 +359,15 @@ export class RightPanelComponent {
   }
 
   onInputBlur(type: InputType, input: HTMLInputElement): void { 
-    const rect = this.imagesService.selectedRect;
-    if (!rect) return;
+    const page = this.imagesService.selectedPage;
+    if (!page) return;
 
     const factor = type === 'angle' ? 1 : 100;
 
-    input.value = rect[type]
-      ? ((rect[type] * factor).toFixed(this.decimals))
-          .replace(/([.,]\d*?[1-9])0+$/, '$1') // remove unnecessary trailing zeros, but keep the decimal if needed
-          .replace(/([.,]0+)$/, '') // remove trailing decimal if it becomes redundant (e.g., "10." → "10")
+    input.value = page[type]
+      ? ((page[type] * factor).toFixed(this.decimals))
+          .replace(/([.,]\d*?[1-9])0+$/, '$1') // Remove unnecessary trailing zeros, but keep the decimal if needed
+          .replace(/([.,]0+)$/, '') // Remove trailing decimal if it becomes redundant (e.g., "10." → "10")
       : '0';
     
     this.cdr.detectChanges();
@@ -374,31 +375,9 @@ export class RightPanelComponent {
     this.firstFocus[type] = true;
   }
 
-  // computeMaxDimension(dimension: 'width' | 'height'): number {
-  //   const rect = this.imagesService.selectedRect;
-  //   if (!rect) return 0;
-
-  //   const { x_center, y_center, width, height, angle } = rect;
-  //   let size = 1;
-
-  //   while (size > 0) {
-  //     const testWidth = dimension === 'width' ? size : width;
-  //     const testHeight = dimension === 'height' ? size : height;
-  //     const bounds = this.imagesService.computeBounds(x_center, y_center, testWidth, testHeight, degreeToRadian(-angle));
-
-  //     if (bounds.left >= 0 && bounds.right <= 1 && bounds.top >= 0 && bounds.bottom <= 1) {
-  //       return size;
-  //     }
-
-  //     size -= this.increment;
-  //   }
-
-  //   return 0;
-  // }
-
   private adjustValue(type: InputType, input: HTMLInputElement, direction: 1 | -1,  multiplier: number = 1): void {
-    const rect = this.imagesService.selectedRect;
-    if (!rect) return;
+    const page = this.imagesService.selectedPage;
+    if (!page) return;
 
     const increment = (type === 'angle' ? this.incrementAngle : this.increment) * multiplier;
     const multiplicator = type === 'angle' ? 1 : 100;
@@ -418,14 +397,14 @@ export class RightPanelComponent {
     if (typeof event === 'number' || typeof event === 'string') return Number(event);
     if (event?.target?.value) return Number(event.target.value);
 
-    const rect = this.imagesService.selectedRect;
-    if (!rect) return 0;
+    const page = this.imagesService.selectedPage;
+    if (!page) return 0;
     switch (type) {
-      case 'left': return rect.left * 100;
-      case 'top': return rect.top * 100;
-      case 'width': return rect.width * 100;
-      case 'height': return rect.height * 100;
-      case 'angle': return rect.angle;
+      case 'left': return page.left * 100;
+      case 'top': return page.top * 100;
+      case 'width': return page.width * 100;
+      case 'height': return page.height * 100;
+      case 'angle': return page.angle;
     }
   }
 
@@ -433,13 +412,13 @@ export class RightPanelComponent {
     return Math.min(Math.max(value, min), max);
   }
 
-  private updateAndRedraw(rect: any): void {
+  private updateAndRedraw(page: Page): void {
     const imgSvc = this.imagesService;
-    imgSvc.wasEdited = true;
-    imgSvc.lastSelectedRect = rect;
-    imgSvc.currentRects = imgSvc.currentRects.map(r => (r.id === rect.id ? rect : r));
+    imgSvc.imgWasEdited = true;
+    imgSvc.lastSelectedPage = page;
+    imgSvc.currentPages = imgSvc.currentPages.map(p => (p._id === page._id ? page : p));
 
     imgSvc.redrawImage();
-    imgSvc.currentRects.forEach(r => imgSvc.drawRect(imgSvc.c, imgSvc.ctx, r));
+    imgSvc.currentPages.forEach(p => imgSvc.drawPage(p));
   }
 }

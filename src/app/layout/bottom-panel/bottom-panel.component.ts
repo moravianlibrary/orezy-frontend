@@ -11,18 +11,18 @@ import { defer, scrollToSelectedImage } from '../../utils/utils';
 export class BottomPanelComponent {
   imagesService = inject(ImagesService);
 
-  currentIndex = computed<number>(() => this.imagesService.displayedImages().findIndex(img => img.name === this.imagesService.mainImageItem().name));
+  currentIndex = computed<number>(() => this.imagesService.displayedImages().findIndex(img => img._id === this.imagesService.mainImageItem()._id));
 
   showPrevImage(): void {
     if (this.currentIndex() === 0) return;
     this.showImage(-1);
-    if (this.imagesService.wasEdited) defer(() => this.imagesService.setDisplayedImages(), 100);
+    if (this.imagesService.imgWasEdited) defer(() => this.imagesService.setDisplayedImages(), 100);
   }
 
   showNextImage(): void {
     if (this.currentIndex() === this.imagesService.displayedImages().length - 1) return;
     this.showImage(1);
-    if (this.imagesService.wasEdited) defer(() => this.imagesService.setDisplayedImages(), 100);
+    if (this.imagesService.imgWasEdited) defer(() => this.imagesService.setDisplayedImages(), 100);
   }
 
   private showImage(offset: number): void {

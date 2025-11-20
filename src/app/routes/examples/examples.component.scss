@@ -1,0 +1,37 @@
+:host {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  justify-content: center;
+  align-items: center;
+  height: 100%;
+}
+
+h2 {
+  color: #333;
+  font-size: 22px;
+  font-weight: 400;
+  margin-bottom: 10px;
+}
+
+.example {
+  text-align: center;
+  line-height: 22px;
+  opacity: .9;
+  color: #333;
+
+  padding: 16px 24px;
+  box-shadow: 0 0 0 0 rgba(0, 0, 0, 0.1), 0 0 6px 0 rgba(0, 0, 0, 0.1);
+  border-radius: 6px;
+  background-color: #fff;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-width: 220px;
+  transition: filter 0.2s ease;
+
+  &:hover {
+    cursor: pointer;
+    filter: brightness(.95);
+  }
+}

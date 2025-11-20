@@ -1,51 +1,44 @@
-export interface ImageItem {
-  name?: string;
-  url?: string;
-  crop_part?: number;
-  low_confidence?: boolean;
-  bad_sides_ratio?: boolean;
-  edited?: boolean;
-  rects?: Rect[];
-}
+export type InputType = 'left' | 'top' | 'width' | 'height' | 'angle';
 
-export interface ImageFlags {
-  low_confidence?: boolean;
-  bad_sides_ratio?: boolean;
-}
+export type PageType = 'left' | 'right';
 
-export interface Transformation {
-  image_path: string;
-  x_center: number;
-  y_center: number;
-  width: number;
-  height: number;
-  confidence: number;
-  angle: number;
-  crop_part: number;
-  color: string;
-  low_confidence: boolean;
-  bad_sides_ratio: boolean;
-}
-
-export interface Rect {
-  id: string;
-  x_center: number;
-  y_center: number;
+export interface PagePosition {
+  xc: number;
+  yc: number;
   left: number;
   right: number;
   top: number;
   bottom: number;
+}
+
+export interface Page {
+  _id: string;
+  xc: number;
+  yc: number;
   width: number;
   height: number;
   angle: number;
-  crop_part: number;
-  color: string;
+  type: PageType;
+  flags: string[];
+  left: number;
+  right: number;
+  top: number;
+  bottom: number;
   edited: boolean;
 }
 
-export interface AvgRect {
+export interface AvgPage {
   width: number;
   height: number;
 }
 
-export type InputType = 'left' | 'top' | 'width' | 'height' | 'angle';
+export interface ImageItem { // = Instructions
+  _id: string;
+  url?: string;
+  thumbnailUrl?: string;
+  edited: boolean;
+  flags: string[];
+  pages: Page[];
+}
+
+export type ImgOrCanvas = 'image' | 'canvas';

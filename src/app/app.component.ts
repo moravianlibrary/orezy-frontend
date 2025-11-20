@@ -1,19 +1,14 @@
 import { Component, inject } from '@angular/core';
-import { MainComponent } from './layout/main/main.component';
-import { LeftPanelComponent } from './layout/left-panel/left-panel.component';
-import { RightPanelComponent } from './layout/right-panel/right-panel.component';
-import { ImagesService } from './services/images.service';
 import { EnvironmentService } from './services/environment.service';
-import { BottomPanelComponent } from './layout/bottom-panel/bottom-panel.component';
+import { RouterOutlet } from '@angular/router';
 
 @Component({
   selector: 'app-root',
-  imports: [MainComponent, BottomPanelComponent, LeftPanelComponent, RightPanelComponent],
+  imports: [RouterOutlet],
   templateUrl: './app.component.html',
   styleUrl: './app.component.scss'
 })
 export class AppComponent {
-  imagesService = inject(ImagesService);
   envService = inject(EnvironmentService);
 
   ngOnInit(): void {

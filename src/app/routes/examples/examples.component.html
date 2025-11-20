@@ -1,0 +1,11 @@
+<h2>Example books</h2>
+
+@if (loading()) { Loading... }
+@else {
+  @for (example of examples(); track $index) {
+    <p
+      class="example"
+      (click)="onClick(example)"
+    >{{ example }}</p>
+  }
+}

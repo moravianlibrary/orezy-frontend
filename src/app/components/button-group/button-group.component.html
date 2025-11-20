@@ -1,8 +1,0 @@
-@for (item of items(); track $index) {
-  <button
-    (click)="select(item)"
-    [class.selected]="currentItem() === item"
-  >
-    {{ item }}
-  </button>
-}

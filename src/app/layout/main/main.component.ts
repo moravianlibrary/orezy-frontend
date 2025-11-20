@@ -1,18 +1,18 @@
 import { Component, inject } from '@angular/core';
-import { RouterOutlet } from '@angular/router';
 import { ImagesService } from '../../services/images.service';
-import { ButtonGroupComponent } from '../../components/button-group/button-group.component';
 import { degreeToRadian } from '../../utils/utils';
-import { Rect } from '../../app.types';
+import { Page } from '../../app.types';
+import { LoaderComponent } from '../../components/loader/loader.component';
 
 @Component({
   selector: 'app-main',
-  imports: [RouterOutlet, ButtonGroupComponent],
+  imports: [LoaderComponent],
   templateUrl: './main.component.html',
   styleUrl: './main.component.scss'
 })
 export class MainComponent {
   imagesService = inject(ImagesService);
+  private moveCursor: string = "url('/assets/move-cursor.png'), auto";
 
   ngAfterViewInit(): void {
     const imgSvc = this.imagesService;
@@ -20,12 +20,6 @@ export class MainComponent {
     // Set canvas
     imgSvc.c = document.getElementById('main-canvas') as HTMLCanvasElement;
     imgSvc.ctx = imgSvc.c.getContext('2d')!;
-    
-    // Set main image for full mode
-    if (imgSvc.mode() === 'full') {
-      const [firstFlagged] = imgSvc.flaggedImages();
-      if (firstFlagged) imgSvc.setMainImage(firstFlagged);
-    }
 
     // Attach event handlers
     this.attachMainImageEvents();
@@ -42,20 +36,27 @@ export class MainComponent {
       if (tagName === 'APP-RIGHT-PANEL') return;
       if (tagName !== 'APP-LEFT-PANEL' && tagName !== 'DIV' && tagName !== 'APP-RIGHT-PANEL' && tagName !== 'APP-BOTTOM-PANEL') return;
       if (el.tagName === 'DIV' && tagName !== 'DIV') return;
-      if (imgSvc.mode() === 'single' || !imgSvc.selectedRect) return;
-      imgSvc.selectedRect = null;
-      imgSvc.lastRectCursorIsInside = null;
+      if (!imgSvc.selectedPage) return;
+      if (imgSvc.pageWasEdited) {
+        imgSvc.currentPages = imgSvc.currentPages.map(p => p._id === imgSvc.selectedPage?._id
+          ? { ...p, edited: true }
+          : p
+        );
+        imgSvc.pageWasEdited = false;
+      }
+      imgSvc.selectedPage = null;
+      imgSvc.lastPageCursorIsInside = null;
       imgSvc.editable.set(false);
       imgSvc.toggleMainImageOrCanvas();
-      this.hoveringRect('');
+      this.hoveringPage('');
       imgSvc.updateMainImageItemAndImages();
     };
 
     el.onmousemove = (ev) => {
       if (el.tagName === 'DIV' && (ev.target as HTMLElement).tagName !== 'DIV') return;
-      const rectId = this.rectIdCursorInside(ev);
-      const insideRect = Boolean(rectId);
-      this.imagesService.editable.set(insideRect);
+      const pageId = this.pageIdCursorInside(ev);
+      const insidePage = Boolean(pageId);
+      this.imagesService.editable.set(insidePage);
       this.imagesService.toggleMainImageOrCanvas();
     };
   }
@@ -66,9 +67,9 @@ export class MainComponent {
 
     el.onmousemove = (ev) => {
       if ((ev.target as HTMLElement).tagName !== 'IMG') return;
-      const rectId = this.rectIdCursorInside(ev);
-      const insideRect = Boolean(rectId);
-      this.imagesService.editable.set(insideRect);
+      const pageId = this.pageIdCursorInside(ev);
+      const insidePage = Boolean(pageId);
+      this.imagesService.editable.set(insidePage);
       this.imagesService.toggleMainImageOrCanvas();
     };
   }
@@ -82,25 +83,25 @@ export class MainComponent {
     });
   }
 
-  // ---------- RECTANGLE LOGIC ----------
-  private rectIdCursorInside(e: MouseEvent): string {
+  // ---------- PAGE LOGIC ----------
+  private pageIdCursorInside(e: MouseEvent): string {
     const imgSvc = this.imagesService;
     const mainElement = document.getElementById(imgSvc.editable() ? 'main-canvas' : 'main-image') as HTMLElement;
     if (!mainElement) return '';
 
-    const rect = mainElement.getBoundingClientRect();
-    const [x, y] = [e.clientX - rect.left, e.clientY - rect.top];
+    const page = mainElement.getBoundingClientRect();
+    const [x, y] = [e.clientX - page.left, e.clientY - page.top];
 
-    const hit = imgSvc.selectedRect && imgSvc.currentRects.filter(r => this.isPointInRect(x, y, r)).includes(imgSvc.selectedRect)
-      ? imgSvc.selectedRect
-      : imgSvc.currentRects.find(r => this.isPointInRect(x, y, r));
+    const hit = imgSvc.selectedPage && imgSvc.currentPages.filter(p => this.isPointInPage(x, y, p)).includes(imgSvc.selectedPage)
+      ? imgSvc.selectedPage
+      : imgSvc.currentPages.find(p => this.isPointInPage(x, y, p));
     
-    return hit?.id ?? '';
+    return hit?._id ?? '';
   }
 
-  private isPointInRect(x: number, y: number, r: Rect): boolean {
+  private isPointInPage(x: number, y: number, r: Page): boolean {
     const c = this.imagesService.c;
-    const [centerX, centerY] = [c.width * r.x_center, c.height * r.y_center];
+    const [centerX, centerY] = [c.width * r.xc, c.height * r.yc];
     const [width, height] = [c.width * r.width, c.height * r.height];
     const angle = degreeToRadian(r.angle);
     const [halfW, halfH] = [width / 2, height / 2];
@@ -113,61 +114,72 @@ export class MainComponent {
     return localX >= -halfW && localX <= halfW && localY >= -halfH && localY <= halfH;
   }
 
-  private hoveringRect(hoveredRectId: string): void {
+  private hoveringPage(hoveredPageId: string): void {
     const imgSvc = this.imagesService;
     imgSvc.redrawImage();
-    imgSvc.currentRects.forEach(r => imgSvc.drawRect(imgSvc.c, imgSvc.ctx, r, hoveredRectId));
+    imgSvc.currentPages.forEach(p => imgSvc.drawPage(p, hoveredPageId));
   }
 
   private handleCanvasInteraction(ev: MouseEvent, el: HTMLElement): void {
     if ((ev.target as HTMLElement).tagName !== 'CANVAS') return;
     const imgSvc = this.imagesService;
-    const rectId = this.rectIdCursorInside(ev);
-    const insideRect = Boolean(rectId);
+    const pageId = this.pageIdCursorInside(ev);
+    const insidePage = Boolean(pageId);
 
     if (ev.type === 'mousedown') {
-      imgSvc.selectedRect = imgSvc.currentRects.find(r => r.id === rectId) || null;
-      imgSvc.lastRectCursorIsInside = imgSvc.currentRects.find(r => r.id === rectId) ?? null;
-      imgSvc.editable.set(insideRect);
+      const potentialSelectedPage = imgSvc.currentPages.find(p => p._id === pageId);
+      if (imgSvc.pageWasEdited && potentialSelectedPage === undefined) {
+        imgSvc.currentPages = imgSvc.currentPages.map(p => p._id === imgSvc.selectedPage?._id
+          ? { ...p, edited: true }
+          : p
+        );
+        imgSvc.pageWasEdited = false;
+      }
+      imgSvc.selectedPage = potentialSelectedPage || null;
+      imgSvc.lastPageCursorIsInside = imgSvc.currentPages.find(p => p._id === pageId) ?? null;
+      imgSvc.editable.set(insidePage);
       imgSvc.toggleMainImageOrCanvas();
-      this.hoveringRect(rectId);
+      this.hoveringPage(pageId);
       imgSvc.updateMainImageItemAndImages();
     }
 
     if (ev.type === 'mousemove') {
-      if (imgSvc.lastRectCursorIsInside?.id === rectId && !imgSvc.selectedRect) return;
+      if (imgSvc.lastPageCursorIsInside?._id === pageId && !imgSvc.selectedPage) return;
       if (!imgSvc.isDragging) {
-        imgSvc.lastRectCursorIsInside = imgSvc.currentRects.find(r => r.id === rectId) ?? null;
-        imgSvc.editable.set(insideRect);
+        imgSvc.lastPageCursorIsInside = imgSvc.currentPages.find(p => p._id === pageId) ?? null;
+        imgSvc.editable.set(insidePage);
         imgSvc.toggleMainImageOrCanvas();
-        this.hoveringRect(rectId);
+        this.hoveringPage(pageId);
       }
     }
 
-    // Drag rect
-    el.style.cursor = insideRect ? 'move' : 'initial';
-    if (insideRect) {
+    // Drag page
+    el.style.cursor = insidePage ? (imgSvc.selectedPage?._id === pageId ? this.moveCursor : 'pointer') : 'initial';
+    if (insidePage) {
       if (ev.type === 'mousedown') {
-        const rect = imgSvc.selectedRect;
-        if (!rect) return;
+        const page = imgSvc.selectedPage;
+        if (!page) return;
 
         imgSvc.isDragging = true;
         imgSvc.mouseDownCurPos = { x: ev.clientX, y: ev.clientY };
-        imgSvc.startRectPos = { x_center: rect.x_center, y_center: rect.y_center, left: rect.left, right: rect.right, top: rect.top, bottom: rect.bottom };
+        imgSvc.startPagePos = { xc: page.xc, yc: page.yc, left: page.left, right: page.right, top: page.top, bottom: page.bottom };
       }
 
       if (ev.type === 'mousemove') {
         if (!imgSvc.isDragging) return;
-        this.dragRect(ev);
+        el.style.cursor = this.moveCursor;
+        imgSvc.pageWasEdited = true;
+        imgSvc.imgWasEdited = true;
+        this.dragPage(ev);
       }
 
       if (ev.type === 'mouseup') {
         if (!imgSvc.isDragging) return;
+        el.style.cursor = insidePage ? (imgSvc.selectedPage?._id === pageId ? this.moveCursor : 'pointer') : 'initial';
         imgSvc.isDragging = false;
-        imgSvc.startRectPos = { x_center: -1, y_center: -1, left: -1, right: -1, top: -1, bottom: -1 };
+        imgSvc.startPagePos = { xc: -1, yc: -1, left: -1, right: -1, top: -1, bottom: -1 };
         
-        if (!imgSvc.currentRects.find(r => r.edited)) return;
-        imgSvc.wasEdited = true;
+        if (!imgSvc.imgWasEdited) return;
         imgSvc.updateMainImageItemAndImages();
       }
     }
@@ -179,23 +191,21 @@ export class MainComponent {
     // Rotate
   }
 
-  private dragRect(e: MouseEvent): void {    
+  private dragPage(e: MouseEvent): void {    
     const imgSvc = this.imagesService;
-    if (!imgSvc.selectedRect) return;
+    if (!imgSvc.selectedPage) return;
 
     const { width, height } = imgSvc.c;
-    // this.shouldUpdateCroppedImages = true;
+    const start = imgSvc.startPagePos;
+    const page = imgSvc.selectedPage;
 
     // Normalized deltas
     const dx = (e.clientX - imgSvc.mouseDownCurPos.x) / width;
     const dy = (e.clientY - imgSvc.mouseDownCurPos.y) / height;
 
-    const start = imgSvc.startRectPos;
-    const rect = imgSvc.selectedRect;
-
     // Compute proposed new position
-    let newCx = start.x_center + dx;
-    let newCy = start.y_center + dy;
+    let newCx = start.xc + dx;
+    let newCy = start.yc + dy;
     let newLeft = start.left + dx;
     let newRight = start.right + dx;
     let newTop = start.top + dy;
@@ -204,46 +214,45 @@ export class MainComponent {
     // Adjust so all corners stay within [0,1]
     if (newLeft < 0) {
       newCx += -newLeft;
+      newRight += -newLeft;
       newLeft = 0;
-      newRight = rect.width;
     }
     if (newRight > 1) {
       newCx -= newRight - 1;
+      newLeft -= newRight - 1;
       newRight = 1;
-      newLeft = 1 - rect.width;
     }
     if (newTop < 0) {
       newCy += -newTop;
+      newBottom += -newTop;
       newTop = 0;
-      newBottom = rect.height;
     }
     if (newBottom > 1) {
       newCy -= newBottom - 1;
+      newTop -= newBottom - 1;
       newBottom = 1;
-      newTop = 1 - rect.height;
     }
 
-    // Build updated rect
-    const updatedRect: Rect = {
-      ...rect,
-      x_center: newCx,
-      y_center: newCy,
+    // Build updated page
+    const updatedPage: Page = {
+      ...page,
+      xc: newCx,
+      yc: newCy,
       left: newLeft,
       right: newRight,
       top: newTop,
       bottom: newBottom,
-      edited: true
     };
 
     // Update state
-    imgSvc.selectedRect = updatedRect;
-    imgSvc.lastSelectedRect = updatedRect;
-    imgSvc.currentRects = imgSvc.currentRects.map(r =>
-      r.id === updatedRect.id ? updatedRect : r
+    imgSvc.selectedPage = updatedPage;
+    imgSvc.lastSelectedPage = updatedPage;
+    imgSvc.currentPages = imgSvc.currentPages.map(p =>
+      p._id === updatedPage._id ? updatedPage : p
     );
 
     // Redraw
     imgSvc.redrawImage();
-    imgSvc.currentRects.forEach(r => imgSvc.drawRect(imgSvc.c, imgSvc.ctx, r));
+    imgSvc.currentPages.forEach(p => imgSvc.drawPage(p));
   }
 }
