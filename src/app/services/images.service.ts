@@ -375,6 +375,8 @@ export class ImagesService {
   
   addPage(): void {
     if (this.currentPages.length >= this.maxPages) return;
+
+    if (this.pageWasEdited) this.updateCurrentPagesWithEdited();
     
     const type = this.currentPages.length && this.currentPages[0].type === 'left' ? 'right' : 'left';
     const addedPage: Page = {
@@ -408,6 +410,14 @@ export class ImagesService {
     this.currentPages.forEach(p => this.drawPage(p));
     this.updateMainImageItemAndImages();
     this.imgWasEdited = true;
+  }
+
+  updateCurrentPagesWithEdited(): void {
+    this.currentPages = this.currentPages.map(p => p._id === this.selectedPage?._id
+      ? { ...p, edited: true }
+      : p
+    );
+    this.pageWasEdited = false;
   }
 
   redrawImage(): void {

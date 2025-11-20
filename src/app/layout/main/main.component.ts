@@ -37,13 +37,7 @@ export class MainComponent {
       if (tagName !== 'APP-LEFT-PANEL' && tagName !== 'DIV' && tagName !== 'APP-RIGHT-PANEL' && tagName !== 'APP-BOTTOM-PANEL') return;
       if (el.tagName === 'DIV' && tagName !== 'DIV') return;
       if (!imgSvc.selectedPage) return;
-      if (imgSvc.pageWasEdited) {
-        imgSvc.currentPages = imgSvc.currentPages.map(p => p._id === imgSvc.selectedPage?._id
-          ? { ...p, edited: true }
-          : p
-        );
-        imgSvc.pageWasEdited = false;
-      }
+      if (imgSvc.pageWasEdited) imgSvc.updateCurrentPagesWithEdited();
       imgSvc.selectedPage = null;
       imgSvc.lastPageCursorIsInside = null;
       imgSvc.editable.set(false);
@@ -129,11 +123,7 @@ export class MainComponent {
     if (ev.type === 'mousedown') {
       const potentialSelectedPage = imgSvc.currentPages.find(p => p._id === pageId);
       if (imgSvc.pageWasEdited && potentialSelectedPage === undefined) {
-        imgSvc.currentPages = imgSvc.currentPages.map(p => p._id === imgSvc.selectedPage?._id
-          ? { ...p, edited: true }
-          : p
-        );
-        imgSvc.pageWasEdited = false;
+        imgSvc.updateCurrentPagesWithEdited();
       }
       imgSvc.selectedPage = potentialSelectedPage || null;
       imgSvc.lastPageCursorIsInside = imgSvc.currentPages.find(p => p._id === pageId) ?? null;
