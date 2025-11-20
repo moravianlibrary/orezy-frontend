@@ -11,6 +11,10 @@ import { defer, scrollToSelectedImage } from '../../utils/utils';
 export class BottomPanelComponent {
   imagesService = inject(ImagesService);
 
+  
+  /* ------------------------------
+    SHOW PREV / NEXT IMAGE
+  ------------------------------ */
   currentIndex = computed<number>(() => this.imagesService.displayedImages().findIndex(img => img._id === this.imagesService.mainImageItem()._id));
 
   showPrevImage(): void {
@@ -34,5 +38,15 @@ export class BottomPanelComponent {
     this.imagesService.setMainImage(displayedImages[newIndex]);
 
     scrollToSelectedImage();
+  }
+
+
+  /* ------------------------------
+    ZOOMS & FIT TO SCREEN
+  ------------------------------ */
+  fitToScreen(): void {
+    const img = this.imagesService.displayedImages().find(img => img._id === this.imagesService.mainImageItem()._id);
+    if (!img) return;
+    this.imagesService.setMainImage(img);
   }
 }
