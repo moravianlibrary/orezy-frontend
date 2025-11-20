@@ -6,6 +6,7 @@ import { EnvironmentService } from './services/environment.service';
 
 export const defaultColor = '#00DDFF';
 export const warningColor = '#FF9500';
+export const errorColor = '#FF3A30';
 export const editedColor = '#FFCC00';
 
 export const appConfig: ApplicationConfig = {

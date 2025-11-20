@@ -4,10 +4,11 @@ import { ImageItem } from '../../app.types';
 import { scrollToSelectedImage } from '../../utils/utils';
 import { LoaderComponent } from '../../components/loader/loader.component';
 import { forkJoin } from 'rxjs';
+import { NgClass } from '../../../../node_modules/@angular/common';
 
 @Component({
   selector: 'app-left-panel',
-  imports: [LoaderComponent],
+  imports: [LoaderComponent, NgClass],
   templateUrl: './left-panel.component.html',
   styleUrl: './left-panel.component.scss'
 })
@@ -96,6 +97,30 @@ export class LeftPanelComponent {
     this.imagesService.setMainImage(image);
   }
 
+  getStatus(image: ImageItem): 'edited' | 'error' | 'warning' | 'success' {
+    if (image.edited) return 'edited';
+
+    const errorFlags = [
+      'page_count_mismatch',
+      'no_prediction',
+      'prediction_overlap',
+    ];
+    if (image.flags.some(f => errorFlags.includes(f))) {
+      return 'error';
+    }
+
+    const warningFlags = [
+      'low_confidence',
+      'odd_dimensions',
+    ];
+    if (image.flags.some(f => warningFlags.includes(f))) {
+      return 'warning';
+    }
+
+    return 'success';
+  }
+
+
   getStatusIconTooltip(image: ImageItem): string {
     if (image.edited) {
       return 'Upraveno';
@@ -103,10 +128,11 @@ export class LeftPanelComponent {
 
     const flags = image.flags;
     const flagMessages: Record<string, string> = {
-      low_confidence: 'Nejistota',
-      odd_dimensions: 'Podezřelý rozměr',
-      page_count_mismatch: 'Chybějící strana',
       prediction_overlap: 'Výřezy se překrývají',
+      page_count_mismatch: 'Chybějící strana',
+      no_prediction: 'Neúspěšná predikce',
+      low_confidence: 'Nejistota',
+      odd_dimensions: 'Podezřelý rozměr'
     };
 
     let matchedMessages = Object.entries(flagMessages)

@@ -1,4 +1,4 @@
-import { defaultColor, editedColor, warningColor } from '../app.config';
+import { defaultColor, editedColor, errorColor, warningColor } from '../app.config';
 import { Page } from '../app.types';
 
 /* ------------------------------
@@ -35,5 +35,24 @@ export function scrollToSelectedImage(timeout: number = 100): void {
     PAGES
   ------------------------------ */
 export function getColor(page: Page): string {
-  return page.edited ? editedColor : (page.flags.length ? warningColor : defaultColor);
+  if (page.edited) return editedColor;
+
+  const errorFlags = [
+    'page_count_mismatch',
+    'no_prediction',
+    'prediction_overlap',
+  ];
+  if (page.flags.some(f => errorFlags.includes(f))) {
+    return errorColor;
+  }
+
+  const warningFlags = [
+    'low_confidence',
+    'odd_dimensions',
+  ];
+  if (page.flags.some(f => warningFlags.includes(f))) {
+    return warningColor;
+  }
+
+  return defaultColor;
 }

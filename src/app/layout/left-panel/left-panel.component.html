@@ -48,10 +48,7 @@
         <img #lazyImg [attr.data-id]="image._id" />
         <span
           class="status-icon"
-          [class.success]="!image.edited && !image.flags.length"
-          [class.warning]="!image.edited && image.flags.length"
-          [class.edited]="image.edited"
-          [class.error]="false"
+          [ngClass]="getStatus(image)"
           [attr.data-tooltip]="getStatusIconTooltip(image)"
         ></span>
       </div>
