@@ -73,13 +73,14 @@ export class ImagesService {
   ------------------------------ */
   private apiUrl: string = 'https://api.ai-orezy.trinera.cloud';
 
-  private headers(type: string = 'json'): HttpHeaders {
+  private headers(type: string = 'json', contentType: boolean = false): HttpHeaders {
     const authType = 'Bearer';
     const token = '2fMRGgdFqWG1xJdPoiyVT6hKuwxKe2JmimxPbDtrmrpOUuW86uLwdGurVDxLPjPT';
 
     return new HttpHeaders({
       accept: type === 'json' ? 'application/json' : '*/*',
-      Authorization: `${authType} ${token}`
+      Authorization: `${authType} ${token}`,
+      ...(contentType && { 'Content-Type': 'application/json' })
     });
   }
 
@@ -103,6 +104,10 @@ export class ImagesService {
       responseType: 'blob',
       headers: this.headers('*/*')
     });
+  }
+
+  updatePages(id: string, data: ImageItem[]): any {
+    return this.http.patch(`${this.apiUrl}/${id}`, data, { headers: this.headers('json', true) });
   }
 
 

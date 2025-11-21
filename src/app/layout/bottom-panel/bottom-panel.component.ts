@@ -1,7 +1,7 @@
 import { Component, computed, inject, signal } from '@angular/core';
 import { ImagesService } from '../../services/images.service';
 import { defer, scrollToSelectedImage } from '../../utils/utils';
-import { DialogButton } from '../../app.types';
+import { DialogButton, ImageItem } from '../../app.types';
 import { DialogComponent } from '../../components/dialog/dialog.component';
 
 @Component({
@@ -47,9 +47,10 @@ export class BottomPanelComponent {
     ZOOMS & FIT TO SCREEN
   ------------------------------ */
   fitToScreen(): void {
-    const img = this.imagesService.displayedImages().find(img => img._id === this.imagesService.mainImageItem()._id);
+    const imgSvc = this.imagesService;
+    const img = imgSvc.displayedImages().find(img => img._id === imgSvc.mainImageItem()._id);
     if (!img) return;
-    this.imagesService.setMainImage(img);
+    imgSvc.setMainImage(img);
   }
 
 
@@ -68,7 +69,17 @@ export class BottomPanelComponent {
       {
         label: 'Ano, dokončit',
         primary: true,
-        action: () => console.log(this.imagesService.images())
+        action: () => {
+          // const final = this.imagesService.images().map(img => {
+          //     const clone: any = { ...img };
+          //     ['loaded', 'thumbnailUrl', 'url'].forEach(key => delete clone[key]);
+          //     return clone;
+          //   });
+          // console.log(final);
+
+          const imgSvc = this.imagesService;
+          imgSvc.updatePages(imgSvc.book(), imgSvc.images());
+        }
       }
     ]);
 
