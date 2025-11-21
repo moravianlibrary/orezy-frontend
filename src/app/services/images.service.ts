@@ -92,6 +92,10 @@ export class ImagesService {
     return this.http.get<ImageItem[]>(`${this.apiUrl}/${id}/scans`, { headers: this.headers() });
   }
 
+  fetchPredictedScans(id: string): Observable<ImageItem[]> {
+    return this.http.get<ImageItem[]>(`${this.apiUrl}/${id}/predicted-scans`, { headers: this.headers() });
+  }
+
   fetchThumbnail(id: string): Observable<Blob> {
     return this.http.get(`${this.apiUrl}/${this.book()}/thumbnails/${id}`, { 
       responseType: 'blob',

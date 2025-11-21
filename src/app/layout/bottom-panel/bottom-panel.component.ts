@@ -1,7 +1,7 @@
 import { Component, computed, inject, signal } from '@angular/core';
 import { ImagesService } from '../../services/images.service';
 import { defer, scrollToSelectedImage } from '../../utils/utils';
-import { DialogButton, ImageItem } from '../../app.types';
+import { DialogButton } from '../../app.types';
 import { DialogComponent } from '../../components/dialog/dialog.component';
 
 @Component({
@@ -59,10 +59,9 @@ export class BottomPanelComponent {
   ------------------------------ */
   dialogOpen = signal(false);
   dialogTitle = signal('');
-  dialogDescription = signal<string | null>(null);
   dialogButtons = signal<DialogButton[]>([]);
 
-  openDialog() {
+  openDialog(): void {
     this.dialogTitle.set('Opravdu chcete dokončit proces?');
     this.dialogButtons.set([
       { label: 'Ne, zrušit' },
@@ -71,7 +70,7 @@ export class BottomPanelComponent {
         primary: true,
         action: () => this.imagesService.updatePages(this.imagesService.book(), this.imagesService.images())
           .subscribe({
-            next: (res: { id: string }) => console.log(res),
+            next: (r: { id: string }) => console.log(r),
             error: (err: Error) => console.error(err)
           })
       }
@@ -80,7 +79,7 @@ export class BottomPanelComponent {
     this.dialogOpen.set(true);
   }
 
-  closeDialog() {
+  closeDialog(): void {
     this.dialogOpen.set(false);
   }
 }

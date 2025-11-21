@@ -65,7 +65,6 @@
 @if (dialogOpen()) {
   <app-dialog
     [title]="dialogTitle()"
-    [description]="dialogDescription()"
     [buttons]="dialogButtons()"
     (closed)="closeDialog()"
   />

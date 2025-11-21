@@ -1,3 +1,12 @@
+@mixin font($font-weight, $font-size, $line-height, $color) {
+  font-family: 'IBM Plex Sans', sans-serif;
+  letter-spacing: 0%;
+  font-weight: $font-weight;
+  font-size: $font-size;
+  line-height: $line-height;
+  color: $color;
+}
+
 .dialog-backdrop {
   position: fixed;
   inset: 0;
@@ -26,12 +35,14 @@
   align-items: center;
 
   h2 {
-    font-family: 'IBM Plex Sans', sans-serif;
-    letter-spacing: 0%;
-    font-weight: 450;
-    font-size: var(--font-size-x3);
-    line-height: var(--spacing-x8);
-    color: var(--text-base);
+    @include font(450, var(--font-size-x3), var(--spacing-x8), var(--text-base));
+  }
+}
+
+.dialog-body {
+  .dialog-description {
+    margin-bottom: var(--spacing-x2);
+    @include font(350, var(--font-size-x2), var(--spacing-x6), var(--text-base));
   }
 }
 

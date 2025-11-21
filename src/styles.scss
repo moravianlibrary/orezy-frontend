@@ -1,11 +1,10 @@
 :root {
-  --left: #00BFFF;
-  --right: #FF10F0;
   --primary: #0080A8;
   --bg-base: #FFFFFF;
   --bg-bright: #EFF2F5;
   --bg-selected: #EAF6FA;
   --bg-main-light: #F6F7F9;
+  --bg-destructive: #FF3A30;
   --border-color: #DFE5EC;
   --border-tertiary-color: #BFCCD9;
   --border-tertiary-pressed: #8099B3;
@@ -106,6 +105,12 @@ html, body {
   background-color: var(--bg-base);
   border: 1px solid var(--border-tertiary-color);
   color: var(--text-tertiary);
+}
+
+.destructive {
+  background-color: var(--bg-destructive);
+  border: none;
+  color: var(--text-white);
 }
 
 .disabled {

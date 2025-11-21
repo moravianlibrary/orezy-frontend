@@ -40,6 +40,7 @@ export interface ImageItem { // = Instructions
 export interface DialogButton {
   label: string;
   primary?: boolean;
+  destructive?: boolean;
   action?: () => void;
 }
 
