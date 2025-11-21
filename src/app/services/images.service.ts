@@ -305,7 +305,7 @@ export class ImagesService {
     ctx.rotate(degreeToRadian(p.angle));
 
     ctx.strokeStyle = getColor(p) + 'B2';
-    ctx.lineWidth = 2;
+    ctx.lineWidth = 3;
     ctx.strokeRect(-width / 2, -height / 2, width, height);
 
     ctx.restore();
@@ -362,7 +362,7 @@ export class ImagesService {
     ctx.rotate(degreeToRadian(p.angle));
 
     ctx.strokeStyle = color + 'B2';
-    ctx.lineWidth = 2;
+    ctx.lineWidth = 3;
     ctx.strokeRect(-width / 2, -height / 2, width, height);
 
     if (p._id === hoveredId && this.selectedPage?._id !== p._id) {
