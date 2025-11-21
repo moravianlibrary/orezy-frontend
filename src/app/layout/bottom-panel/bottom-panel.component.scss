@@ -14,12 +14,12 @@
   fill: var(--icon-white);
 }
 
-.primary {
-  font-size: var(--font-size-x1-5);
-}
-
 .disabled { 
   svg {
     fill: var(--icon-disabled);
   }
+}
+
+app-dialog {
+  position: absolute;
 }

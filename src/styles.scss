@@ -84,6 +84,12 @@ html, body {
   }
 }
 
+.real-button {
+  padding: var(--spacing-x3) var(--spacing-x4);
+  font-size: var(--font-size-x1-5);
+  line-height: var(--spacing-x4);
+}
+
 .primary {
   background-color: var(--primary);
   border: 1px solid var(--primary);
@@ -94,6 +100,12 @@ html, body {
   background-color: var(--bg-base);
   border: 1px solid var(--border-tertiary-color);
   color: var(--text-secondary);
+}
+
+.tertiary {
+  background-color: var(--bg-base);
+  border: 1px solid var(--border-tertiary-color);
+  color: var(--text-tertiary);
 }
 
 .disabled {

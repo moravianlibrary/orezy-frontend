@@ -1,10 +1,12 @@
-import { Component, computed, inject } from '@angular/core';
+import { Component, computed, inject, signal } from '@angular/core';
 import { ImagesService } from '../../services/images.service';
 import { defer, scrollToSelectedImage } from '../../utils/utils';
+import { DialogButton } from '../../app.types';
+import { DialogComponent } from '../../components/dialog/dialog.component';
 
 @Component({
   selector: 'app-bottom-panel',
-  imports: [],
+  imports: [DialogComponent],
   templateUrl: './bottom-panel.component.html',
   styleUrl: './bottom-panel.component.scss'
 })
@@ -48,5 +50,32 @@ export class BottomPanelComponent {
     const img = this.imagesService.displayedImages().find(img => img._id === this.imagesService.mainImageItem()._id);
     if (!img) return;
     this.imagesService.setMainImage(img);
+  }
+
+
+  /* ------------------------------
+    FINISH
+  ------------------------------ */
+  dialogOpen = signal(false);
+  dialogTitle = signal('');
+  dialogDescription = signal<string | null>(null);
+  dialogButtons = signal<DialogButton[]>([]);
+
+  openDialog() {
+    this.dialogTitle.set('Opravdu chcete dokončit proces?');
+    this.dialogButtons.set([
+      { label: 'Ne, zrušit' },
+      {
+        label: 'Ano, dokončit',
+        primary: true,
+        action: () => console.log(this.imagesService.images())
+      }
+    ]);
+
+    this.dialogOpen.set(true);
+  }
+
+  closeDialog() {
+    this.dialogOpen.set(false);
   }
 }

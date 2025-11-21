@@ -1,7 +1,3 @@
-export type InputType = 'left' | 'top' | 'width' | 'height' | 'angle';
-
-export type PageType = 'left' | 'right';
-
 export interface PagePosition {
   xc: number;
   yc: number;
@@ -40,5 +36,15 @@ export interface ImageItem { // = Instructions
   flags: string[];
   pages: Page[];
 }
+
+export interface DialogButton {
+  label: string;
+  primary?: boolean;
+  action?: () => void;
+}
+
+export type InputType = 'left' | 'top' | 'width' | 'height' | 'angle';
+
+export type PageType = 'left' | 'right';
 
 export type ImgOrCanvas = 'image' | 'canvas';
