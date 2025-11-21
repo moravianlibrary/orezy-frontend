@@ -69,17 +69,11 @@ export class BottomPanelComponent {
       {
         label: 'Ano, dokončit',
         primary: true,
-        action: () => {
-          // const final = this.imagesService.images().map(img => {
-          //     const clone: any = { ...img };
-          //     ['loaded', 'thumbnailUrl', 'url'].forEach(key => delete clone[key]);
-          //     return clone;
-          //   });
-          // console.log(final);
-
-          const imgSvc = this.imagesService;
-          imgSvc.updatePages(imgSvc.book(), imgSvc.images());
-        }
+        action: () => this.imagesService.updatePages(this.imagesService.book(), this.imagesService.images())
+          .subscribe({
+            next: (res: { id: string }) => console.log(res),
+            error: (err: Error) => console.error(err)
+          })
       }
     ]);
 

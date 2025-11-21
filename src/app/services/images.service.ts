@@ -106,8 +106,8 @@ export class ImagesService {
     });
   }
 
-  updatePages(id: string, data: ImageItem[]): any {
-    return this.http.patch(`${this.apiUrl}/${id}`, data, { headers: this.headers('json', true) });
+  updatePages(id: string, payload: ImageItem[]): any {
+    return this.http.patch(`${this.apiUrl}/${id}/update-pages`, payload, { headers: this.headers('json', true) });
   }
 
 
