@@ -47,6 +47,11 @@
     &:hover {
       cursor: pointer;
       background-color: var(--bg-main-light);
+      color: var(--primary);
+
+      svg {
+        fill: var(--primary);
+      }
     }
   }
 
