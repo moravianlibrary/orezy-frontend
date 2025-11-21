@@ -55,6 +55,7 @@ export class ImagesService {
   lastHeightInput: number = 0;
   lastAngleInput: number = 0;
 
+  pageOutlineWidth: number = 3;
   maxPages: number = 2;
   toggledMore: boolean = false;
 
@@ -305,7 +306,7 @@ export class ImagesService {
     ctx.rotate(degreeToRadian(p.angle));
 
     ctx.strokeStyle = getColor(p) + 'B2';
-    ctx.lineWidth = 3;
+    ctx.lineWidth = this.pageOutlineWidth;
     ctx.strokeRect(-width / 2, -height / 2, width, height);
 
     ctx.restore();
@@ -362,7 +363,7 @@ export class ImagesService {
     ctx.rotate(degreeToRadian(p.angle));
 
     ctx.strokeStyle = color + 'B2';
-    ctx.lineWidth = 3;
+    ctx.lineWidth = this.pageOutlineWidth;
     ctx.strokeRect(-width / 2, -height / 2, width, height);
 
     if (p._id === hoveredId && this.selectedPage?._id !== p._id) {

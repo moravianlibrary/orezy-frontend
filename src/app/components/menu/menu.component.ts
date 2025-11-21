@@ -1,18 +1,20 @@
 import { CdkConnectedOverlay, CdkOverlayOrigin, ConnectedPosition } from '@angular/cdk/overlay';
-import { Component, ElementRef, HostListener, ViewChild } from '@angular/core';
+import { Component, ElementRef, HostListener, input, ViewChild } from '@angular/core';
+import { NgClass } from '../../../../node_modules/@angular/common';
 
 @Component({
-  selector: 'app-menu-primary',
-  imports: [CdkConnectedOverlay, CdkOverlayOrigin],
-  templateUrl: './menu-primary.component.html',
-  styleUrl: './menu-primary.component.scss'
+  selector: 'app-menu',
+  imports: [CdkConnectedOverlay, CdkOverlayOrigin, NgClass],
+  templateUrl: './menu.component.html',
+  styleUrl: './menu.component.scss'
 })
-export class MenuPrimaryComponent {
+export class MenuComponent {
+  type = input('menu-primary');
 
   /* ------------------------------
     TOGGLE BEHAVIOR
   ------------------------------ */
-  @ViewChild('menuPrimary', { static: true }) menuPrimary!: ElementRef;
+  @ViewChild('menu', { static: true }) menu!: ElementRef;
   show = false;
   positions: ConnectedPosition[] = [
     {
@@ -23,13 +25,13 @@ export class MenuPrimaryComponent {
     }
   ];
 
-  toggleMenuPrimary(): void {
+  toggleMenu(): void {
     this.show = !this.show;
   }
 
   @HostListener('document:click', ['$event'])
   onDocumentClick(event: MouseEvent): void {
-    if (!this.menuPrimary.nativeElement.contains(event.target)) this.show = false;
+    if (!this.menu.nativeElement.contains(event.target)) this.show = false;
   }
 
 
@@ -42,5 +44,9 @@ export class MenuPrimaryComponent {
 
   resetDoc(): void {
     console.log('should reset doc');
+  }
+
+  resetScan(): void {
+    console.log('should reset scan');
   }
 }

@@ -5,10 +5,11 @@ import { DecimalPipe } from '@angular/common';
 import { ChangeDetectorRef } from '@angular/core';
 import { InputType, Page } from '../../app.types';
 import { defer, degreeToRadian } from '../../utils/utils';
+import { MenuComponent } from '../../components/menu/menu.component';
 
 @Component({
   selector: 'app-right-panel',
-  imports: [DecimalPipe, FormsModule],
+  imports: [MenuComponent, DecimalPipe, FormsModule],
   templateUrl: './right-panel.component.html',
   styleUrl: './right-panel.component.scss'
 })

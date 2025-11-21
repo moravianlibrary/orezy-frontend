@@ -1,9 +1,9 @@
-.menu-primary-container {
+.menu-container {
   position: relative;
   display: inline-block;
 }
 
-.menu-primary-icon {
+.menu-icon {
   cursor: pointer;
   padding: var(--spacing-x2);
 
@@ -12,10 +12,9 @@
   }
 }
 
-.menu-primary-bubble {
+.menu-bubble {
   position: absolute;
   top: var(--spacing-x1);
-  left: 0;
   background-color: var(--bg-base);
   border: 1px solid var(--border-tertiary-pressed);
   border-radius: var(--spacing-x1);
@@ -66,6 +65,18 @@
   .last {
     border-radius: 0 0 var(--spacing-x1) var(--spacing-x1);
   }
+
+  .only-item {
+    border-radius: var(--spacing-x1);
+  }
+}
+
+.menu-primary {
+  left: 0;
+}
+
+.menu-secondary {
+  right: -34px;
 }
 
 .clicked {
