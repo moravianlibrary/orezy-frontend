@@ -37,6 +37,10 @@ export class MainComponent {
       if (tagName !== 'APP-LEFT-PANEL' && tagName !== 'DIV' && tagName !== 'APP-RIGHT-PANEL' && tagName !== 'APP-BOTTOM-PANEL') return;
       if (el.tagName === 'DIV' && tagName !== 'DIV') return;
       if (!imgSvc.selectedPage) return;
+      if (imgSvc.dialogOpened) {
+        imgSvc.dialogOpened = false;
+        return;
+      }
       if (imgSvc.pageWasEdited) imgSvc.updateCurrentPagesWithEdited();
       imgSvc.selectedPage = null;
       imgSvc.lastPageCursorIsInside = null;
@@ -122,11 +126,11 @@ export class MainComponent {
 
     if (ev.type === 'mousedown') {
       const potentialSelectedPage = imgSvc.currentPages.find(p => p._id === pageId);
-      if (imgSvc.pageWasEdited && potentialSelectedPage === undefined) {
+      if (imgSvc.pageWasEdited) {
         imgSvc.updateCurrentPagesWithEdited();
       }
-      imgSvc.selectedPage = potentialSelectedPage || null;
-      imgSvc.lastPageCursorIsInside = imgSvc.currentPages.find(p => p._id === pageId) ?? null;
+      imgSvc.selectedPage = potentialSelectedPage ?? null;
+      imgSvc.lastPageCursorIsInside = potentialSelectedPage ?? null;
       imgSvc.editable.set(insidePage);
       imgSvc.toggleMainImageOrCanvas();
       this.hoveringPage(pageId);

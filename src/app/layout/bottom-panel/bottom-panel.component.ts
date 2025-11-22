@@ -55,28 +55,34 @@ export class BottomPanelComponent {
 
 
   /* ------------------------------
-    FINISH
+    DOKONČIT
   ------------------------------ */
   dialogOpen = signal(false);
   dialogTitle = signal('');
   dialogButtons = signal<DialogButton[]>([]);
 
   openDialog(): void {
+    const imgSvc = this.imagesService;
+
     this.dialogTitle.set('Opravdu chcete dokončit proces?');
     this.dialogButtons.set([
       { label: 'Ne, zrušit' },
       {
         label: 'Ano, dokončit',
         primary: true,
-        action: () => this.imagesService.updatePages(this.imagesService.book(), this.imagesService.images())
-          .subscribe({
-            next: (r: { id: string }) => console.log(r),
-            error: (err: Error) => console.error(err)
-          })
+        action: () => {
+          if (imgSvc.imgWasEdited) imgSvc.updateImagesByEdited(imgSvc.mainImageItem()._id);
+          imgSvc.updatePages(imgSvc.book(), imgSvc.images())
+            .subscribe({
+              next: (r: { id: string }) => console.log(r),
+              error: (err: Error) => console.error(err)
+            })
+        }
       }
     ]);
 
     this.dialogOpen.set(true);
+    imgSvc.dialogOpened = true;
   }
 
   closeDialog(): void {

@@ -91,6 +91,7 @@ export class MenuComponent {
     ]);
 
     this.dialogOpen.set(true);
+    this.imagesService.dialogOpened = true;
   }
 
   resetScan(): void {
@@ -123,5 +124,6 @@ export class MenuComponent {
     ]);
 
     this.dialogOpen.set(true);
+    this.imagesService.dialogOpened = true;
   }
 }

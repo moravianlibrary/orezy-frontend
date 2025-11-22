@@ -24,6 +24,7 @@ export class ImagesService {
   book = signal<string>('');
   selectedFilter: string = 'flagged';
   editable = signal<boolean>(false);
+  dialogOpened: boolean = false;
 
   images = signal<ImageItem[]>([]);
   displayedImages = signal<ImageItem[]>([]);
@@ -177,7 +178,7 @@ export class ImagesService {
     });
   }
 
-  private renderFullImageAndCanvas(img: ImageItem): void {
+  renderFullImageAndCanvas(img: ImageItem): void {
     ['image', 'canvas'].forEach(type =>
       this.setMainFullImageOrCanvas(type as ImgOrCanvas, img)
     );
