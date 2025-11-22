@@ -67,6 +67,7 @@ export class EditorComponent {
       )
       .subscribe((imgItems: ImageItem[]) => {
         imgSvc.loadingLeft = false;
+        if (!imgItems.length) imgSvc.loadingMain = false;;
         imgSvc.images.set(imgItems);
         imgSvc.displayedImages.set(imgSvc.flaggedImages());
         const [firstFlagged] = imgSvc.flaggedImages();
