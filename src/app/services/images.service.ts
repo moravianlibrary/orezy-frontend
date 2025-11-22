@@ -165,6 +165,11 @@ export class ImagesService {
       return;
     }
 
+    if (!img._id) {
+      this.loadingMain = false;
+      return;
+    }
+
     this.fetchImage(img._id).subscribe(blob => {
       const url = URL.createObjectURL(blob);
 
@@ -178,7 +183,7 @@ export class ImagesService {
     });
   }
 
-  renderFullImageAndCanvas(img: ImageItem): void {
+  private renderFullImageAndCanvas(img: ImageItem): void {
     ['image', 'canvas'].forEach(type =>
       this.setMainFullImageOrCanvas(type as ImgOrCanvas, img)
     );
