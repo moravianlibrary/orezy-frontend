@@ -1,15 +1,16 @@
-import { Component, inject } from '@angular/core';
+import { Component, inject, signal } from '@angular/core';
 import { ImagesService } from '../../services/images.service';
 import { FormsModule } from '@angular/forms';
 import { DecimalPipe } from '@angular/common';
 import { ChangeDetectorRef } from '@angular/core';
-import { InputType, Page } from '../../app.types';
+import { DialogButton, InputType, Page } from '../../app.types';
+import { DialogComponent } from '../../components/dialog/dialog.component';
 import { defer, degreeToRadian } from '../../utils/utils';
 import { MenuComponent } from '../../components/menu/menu.component';
 
 @Component({
   selector: 'app-right-panel',
-  imports: [MenuComponent, DecimalPipe, FormsModule],
+  imports: [MenuComponent, DecimalPipe, FormsModule, DialogComponent],
   templateUrl: './right-panel.component.html',
   styleUrl: './right-panel.component.scss'
 })
@@ -421,5 +422,41 @@ export class RightPanelComponent {
 
     imgSvc.redrawImage();
     imgSvc.currentPages.forEach(p => imgSvc.drawPage(p));
+  }
+
+
+  /* ------------------------------
+    DOKONČIT
+  ------------------------------ */
+  dialogOpen = signal(false);
+  dialogTitle = signal('');
+  dialogButtons = signal<DialogButton[]>([]);
+
+  openDialog(): void {
+    const imgSvc = this.imagesService;
+
+    this.dialogTitle.set('Opravdu chcete dokončit proces?');
+    this.dialogButtons.set([
+      { label: 'Ne, zrušit' },
+      {
+        label: 'Ano, dokončit',
+        primary: true,
+        action: () => {
+          if (imgSvc.imgWasEdited) imgSvc.updateImagesByEdited(imgSvc.mainImageItem()._id);
+          imgSvc.updatePages(imgSvc.book(), imgSvc.images())
+            .subscribe({
+              next: (r: { id: string }) => console.log(r),
+              error: (err: Error) => console.error(err)
+            })
+        }
+      }
+    ]);
+
+    this.dialogOpen.set(true);
+    imgSvc.dialogOpened = true;
+  }
+
+  closeDialog(): void {
+    this.dialogOpen.set(false);
   }
 }

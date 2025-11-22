@@ -1,12 +1,10 @@
-import { Component, computed, inject, signal } from '@angular/core';
+import { Component, computed, inject } from '@angular/core';
 import { ImagesService } from '../../services/images.service';
 import { defer, scrollToSelectedImage } from '../../utils/utils';
-import { DialogButton } from '../../app.types';
-import { DialogComponent } from '../../components/dialog/dialog.component';
 
 @Component({
   selector: 'app-bottom-panel',
-  imports: [DialogComponent],
+  imports: [],
   templateUrl: './bottom-panel.component.html',
   styleUrl: './bottom-panel.component.scss'
 })
@@ -51,41 +49,5 @@ export class BottomPanelComponent {
     const img = imgSvc.displayedImages().find(img => img._id === imgSvc.mainImageItem()._id);
     if (!img) return;
     imgSvc.setMainImage(img);
-  }
-
-
-  /* ------------------------------
-    DOKONČIT
-  ------------------------------ */
-  dialogOpen = signal(false);
-  dialogTitle = signal('');
-  dialogButtons = signal<DialogButton[]>([]);
-
-  openDialog(): void {
-    const imgSvc = this.imagesService;
-
-    this.dialogTitle.set('Opravdu chcete dokončit proces?');
-    this.dialogButtons.set([
-      { label: 'Ne, zrušit' },
-      {
-        label: 'Ano, dokončit',
-        primary: true,
-        action: () => {
-          if (imgSvc.imgWasEdited) imgSvc.updateImagesByEdited(imgSvc.mainImageItem()._id);
-          imgSvc.updatePages(imgSvc.book(), imgSvc.images())
-            .subscribe({
-              next: (r: { id: string }) => console.log(r),
-              error: (err: Error) => console.error(err)
-            })
-        }
-      }
-    ]);
-
-    this.dialogOpen.set(true);
-    imgSvc.dialogOpened = true;
-  }
-
-  closeDialog(): void {
-    this.dialogOpen.set(false);
   }
 }

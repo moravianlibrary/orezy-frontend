@@ -10,16 +10,12 @@
   fill: var(--icon-dark);
 }
 
-.right-part svg {
-  fill: var(--icon-white);
+.right-part {
+  width: 92px;
 }
 
 .disabled { 
   svg {
     fill: var(--icon-disabled);
   }
-}
-
-app-dialog {
-  position: absolute;
 }

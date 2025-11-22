@@ -20,6 +20,7 @@
     </svg>
   </span>
 </div>
+
 <div class="middle-part button-group">
   <span class="button secondary">
     <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -49,23 +50,5 @@
     </svg>
   </span>
 </div>
-<div class="right-part button-group">
-  <span 
-    class="button real-button primary"
-    (click)="openDialog()"
-  >
-    Dokončit
-    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <path fill-rule="evenodd" clip-rule="evenodd" d="M9.26616 3.59957C9.46142 3.40431 9.778 3.40431 9.97326 3.59957L14.0199 7.64624C14.1137 7.74001 14.1664 7.86718 14.1664 7.99979C14.1664 8.1324 14.1137 8.25958 14.0199 8.35335L9.97326 12.4C9.778 12.5953 9.46142 12.5953 9.26616 12.4C9.0709 12.2048 9.0709 11.8882 9.26616 11.6929L12.9593 7.99979L9.26616 4.30668C9.0709 4.11142 9.0709 3.79483 9.26616 3.59957Z" />
-      <path fill-rule="evenodd" clip-rule="evenodd" d="M1.83325 8C1.83325 7.72386 2.05711 7.5 2.33325 7.5H13.5533C13.8294 7.5 14.0533 7.72386 14.0533 8C14.0533 8.27614 13.8294 8.5 13.5533 8.5H2.33325C2.05711 8.5 1.83325 8.27614 1.83325 8Z" />
-    </svg>
-  </span>
-</div>
 
-@if (dialogOpen()) {
-  <app-dialog
-    [title]="dialogTitle()"
-    [buttons]="dialogButtons()"
-    (closed)="closeDialog()"
-  />
-}
+<div class="right-part fill"></div>
