@@ -49,3 +49,15 @@ export type InputType = 'left' | 'top' | 'width' | 'height' | 'angle';
 export type PageType = 'left' | 'right';
 
 export type ImgOrCanvas = 'image' | 'canvas';
+
+
+// Cursors
+export type HitArea = 'none' | 'inside' | 'edge' | 'corner' | 'rotate';
+export type EdgeLocalOrientation = 'vertical' | 'horizontal';
+export type CornerName = 'nw' | 'ne' | 'se' | 'sw';
+export interface HitInfo {
+  area: HitArea;
+  page?: Page;
+  edgeOrientation?: EdgeLocalOrientation;
+  corner?: CornerName;
+}

@@ -53,7 +53,7 @@ export class EditorComponent {
 
             return {
               ...imgItem,
-              loaded: false,
+              // loaded: false,
               pages: newPages
             }
           })
