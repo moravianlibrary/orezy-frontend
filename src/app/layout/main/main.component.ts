@@ -174,6 +174,7 @@ export class MainComponent {
         imgSvc.startPagePos = { xc: -1, yc: -1, left: -1, right: -1, top: -1, bottom: -1 };
         
         if (!imgSvc.imgWasEdited) return;
+        this.hoveringPage(pageId);
         imgSvc.updateMainImageItemAndImages();
       }
     }

@@ -57,6 +57,7 @@ export class ImagesService {
   lastAngleInput: number = 0;
 
   pageOutlineWidth: number = 3;
+  cornerSize: number = 6;
   maxPages: number = 2;
   toggledMore: boolean = false;
 
@@ -381,9 +382,35 @@ export class ImagesService {
     ctx.lineWidth = this.pageOutlineWidth;
     ctx.strokeRect(-width / 2, -height / 2, width, height);
 
+    // Hover
     if (p._id === hoveredId && this.selectedPage?._id !== p._id) {
       ctx.fillStyle = color + '10';
       ctx.fillRect(-width / 2, -height / 2, width, height);
+    }
+
+    // Corner squares
+    if (this.selectedPage?._id === p._id && !this.isDragging) {
+      const hw = width / 2;
+      const hh = height / 2;
+
+      const corners = [
+        { x: -hw, y: -hh },
+        { x: hw,  y: -hh },
+        { x: hw,  y: hh },
+        { x: -hw, y: hh }
+      ];
+
+      ctx.fillStyle = '#FFFFFF';
+      ctx.strokeStyle = color + 'B2';
+      ctx.lineWidth = this.pageOutlineWidth - 1;
+
+      for (const c of corners) {
+        const offsetX = c.x < 0 ? -this.cornerSize : 0;
+        const offsetY = c.y < 0 ? -this.cornerSize : 0;
+
+        ctx.fillRect(c.x + offsetX, c.y + offsetY, this.cornerSize, this.cornerSize);
+        ctx.strokeRect(c.x + offsetX, c.y + offsetY, this.cornerSize, this.cornerSize);
+      }
     }
 
     ctx.restore();
