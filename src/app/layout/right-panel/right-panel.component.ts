@@ -441,7 +441,7 @@ export class RightPanelComponent {
         primary: true,
         action: () => {
           if (imgSvc.imgWasEdited) imgSvc.updateImagesByEdited(imgSvc.mainImageItem()._id);
-          imgSvc.updatePages(imgSvc.book(), imgSvc.images())
+          imgSvc.updatePages(imgSvc.book(), imgSvc.images().filter(img => img.edited))
             .subscribe({
               next: (r: { id: string }) => console.log(r),
               error: (err: Error) => console.error(err)
