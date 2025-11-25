@@ -270,18 +270,6 @@ export class MainComponent {
     const insideArea = hit.area !== 'none';
     const hitPage = hit.page ?? null;
 
-     if (ev.type === 'mousedown') {
-      if (imgSvc.pageWasEdited) {
-        imgSvc.updateCurrentPagesWithEdited();
-      }
-      imgSvc.selectedPage = hitPage;
-      imgSvc.lastPageCursorIsInside = hitPage;
-      imgSvc.editable.set(insideArea);
-      imgSvc.toggleMainImageOrCanvas();
-      this.hoveringPage(hitPage?._id ?? '');
-      imgSvc.updateMainImageItemAndImages();
-    }
-
     // Hover
     if (ev.type === 'mousemove') {
       if (imgSvc.lastPageCursorIsInside?._id === pageId && !imgSvc.selectedPage) return;
@@ -289,21 +277,9 @@ export class MainComponent {
         imgSvc.lastPageCursorIsInside = imgSvc.currentPages.find(p => p._id === pageId) ?? null;
         imgSvc.editable.set(insidePage);
         imgSvc.toggleMainImageOrCanvas();
-        this.hoveringPage(pageId);
+        this.hoveringPage(hitPage?._id === imgSvc.selectedPage?._id ? imgSvc.selectedPage?._id ?? '' : pageId);
       }
     }
-
-    // if (ev.type === 'mousedown') {
-    //   if (imgSvc.pageWasEdited) {
-    //     imgSvc.updateCurrentPagesWithEdited();
-    //   }
-    //   imgSvc.selectedPage = hitPage;
-    //   imgSvc.lastPageCursorIsInside = hitPage;
-    //   imgSvc.editable.set(insidePage);
-    //   imgSvc.toggleMainImageOrCanvas();
-    //   this.hoveringPage(hitPage?._id ?? '');
-    //   imgSvc.updateMainImageItemAndImages();
-    // }
 
     // Change to correct cursor while having selected page
     let cursor = insidePage ? (imgSvc.selectedPage?._id === hitPage?._id ? this.moveCursor : 'pointer') : 'initial';
@@ -324,6 +300,19 @@ export class MainComponent {
       }
     }
     el.style.cursor = cursor;
+
+    // On mousedown
+    if (ev.type === 'mousedown') {
+      if (imgSvc.pageWasEdited && (cursor === 'initial' || cursor === 'pointer')) {
+        imgSvc.updateCurrentPagesWithEdited();
+      }
+      imgSvc.selectedPage = hitPage;
+      imgSvc.lastPageCursorIsInside = hitPage;
+      imgSvc.editable.set(insideArea);
+      imgSvc.toggleMainImageOrCanvas();
+      this.hoveringPage(hitPage?._id ?? '');
+      imgSvc.updateMainImageItemAndImages();
+    }    
 
     // Drag
     if (hit.area === 'inside' || imgSvc.isDragging) {
@@ -372,7 +361,7 @@ export class MainComponent {
       imgSvc.rotationStartMouseAngle = Math.atan2(dy, dx);
 
       if (!imgSvc.isRotating) {
-        imgSvc.rotationStartPage = hitPage;
+        imgSvc.rotationStartPage = imgSvc.selectedPage;
         imgSvc.isRotating = true;
       }
     }
@@ -415,16 +404,25 @@ export class MainComponent {
           proposedAngle = temp;
         }
 
-        if (imgSvc.selectedPage) {
-          const page = imgSvc.selectedPage;
-          page.angle = proposedAngle;
+        // Build updated page
+        if (!imgSvc.selectedPage) return;
 
-          const bounds = imgSvc.computeBounds(startPage.xc, startPage.yc, startPage.width, startPage.height, proposedAngle);
-          page.left = bounds.left;
-          page.right = bounds.right;
-          page.top = bounds.top;
-          page.bottom = bounds.bottom;
-        }
+        const bounds = imgSvc.computeBounds(startPage.xc, startPage.yc, startPage.width, startPage.height, proposedAngle);
+        const updatedPage: Page = {
+          ...imgSvc.selectedPage,
+          angle: proposedAngle,
+          left: bounds.left,
+          right: bounds.right,
+          top: bounds.top,
+          bottom: bounds.bottom,
+        };
+
+        // Update state
+        imgSvc.selectedPage = updatedPage;
+        imgSvc.lastSelectedPage = updatedPage;
+        imgSvc.currentPages = imgSvc.currentPages.map(p =>
+          p._id === updatedPage._id ? updatedPage : p
+        );
 
         imgSvc.redrawImage();
         imgSvc.currentPages.forEach(p => imgSvc.drawPage(p));
@@ -435,81 +433,11 @@ export class MainComponent {
         imgSvc.isRotating = false;
         imgSvc.rotationStartPage = null;
         imgSvc.pageWasEdited = true;
+        // imgSvc.redrawImage();
+        // imgSvc.currentPages.forEach(p => imgSvc.drawPage(p));
         imgSvc.updateMainImageItemAndImages();
       }
     }
-
-    // CHATGPT
-    // if (hit.area === 'rotate' && hitPage) {
-    //   if (ev.type === 'mousedown') {
-    //     imgSvc.isRotating = true;
-
-    //     const rect = el.getBoundingClientRect();
-    //     const cx = imgSvc.c.width * hitPage.xc;
-    //     const cy = imgSvc.c.height * hitPage.yc;
-
-    //     // angle from center to mouse
-    //     const dx = ev.clientX - rect.left - cx;
-    //     const dy = ev.clientY - rect.top - cy;
-    //     imgSvc.rotationStartMouseAngle = Math.atan2(dy, dx);
-
-    //     imgSvc.rotationStartPage = hitPage;
-    //   }
-    // }
-
-    // if (imgSvc.isRotating && imgSvc.rotationStartPage && hitPage && ev.type === 'mousemove') {
-    //   const rect = el.getBoundingClientRect();
-    //   const cx = imgSvc.c.width * hitPage.xc;
-    //   const cy = imgSvc.c.height * hitPage.yc;
-
-    //   const dx = ev.clientX - rect.left - cx;
-    //   const dy = ev.clientY - rect.top - cy;
-
-    //   const currentMouseAngle = Math.atan2(dy, dx);
-
-    //   // Change from start
-    //   let delta = currentMouseAngle - imgSvc.rotationStartMouseAngle;
-
-    //   // Convert to degrees
-    //   let proposedAngle = imgSvc.rotationStartPage.angle + (delta * 180 / Math.PI);
-
-    //   // normalize to [-180, 180]
-    //   proposedAngle = ((proposedAngle + 180) % 360 + 360) % 360 - 180;
-
-    //   // ---- apply boundary constraints ----
-    //   const canRotate = (angle: number) => {
-    //     const bounds = imgSvc.computeBounds(hitPage.xc, hitPage.yc, hitPage.width, hitPage.height, angle);
-    //     return bounds.left >= 0 && bounds.right <= 1 && bounds.top >= 0 && bounds.bottom <= 1;
-    //   }
-
-    //   if (!canRotate(proposedAngle)) {
-    //     const step = (proposedAngle - hitPage.angle) < 0 ? imgSvc.incrementAngle : -imgSvc.incrementAngle;
-
-    //     let temp = hitPage.angle;
-    //     while (canRotate(temp + step)) temp += step;
-
-    //     proposedAngle = temp;
-    //   }
-
-    //   // Update angle
-    //   hitPage.angle = proposedAngle;
-
-    //   // recompute bounds
-    //   const bounds = imgSvc.computeBounds(hitPage.xc, hitPage.yc, hitPage.width, hitPage.height, proposedAngle);
-    //   hitPage.left = bounds.left;
-    //   hitPage.right = bounds.right;
-    //   hitPage.top = bounds.top;
-    //   hitPage.bottom = bounds.bottom;
-
-    //   imgSvc.redrawImage();
-    //   imgSvc.currentPages.forEach(p => imgSvc.drawPage(p));
-    // }
-
-    // if (ev.type === 'mouseup' && imgSvc.isRotating) {
-    //   imgSvc.isRotating = false;
-    //   imgSvc.pageWasEdited = true;
-    //   imgSvc.updateMainImageItemAndImages();
-    // }
 
     // OLD CODE
     // const pageId = this.pageIdCursorInside(ev);

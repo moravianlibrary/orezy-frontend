@@ -35,6 +35,7 @@ export class EditorComponent {
         }),
         switchMap(() => imgSvc.fetchScans(imgSvc.book())),
         map((imgItems: ImageItem[]) => {
+          console.log(imgItems);
           
           const enrichedImgItems = imgItems.map(imgItem => {
             const newPages: Page[] = [];
@@ -42,18 +43,12 @@ export class EditorComponent {
             imgItem.pages.forEach(p => {
               newPages.push({ 
                 ...p,
-                angle: roundToDecimals(p.angle, 2),
-                // left: 0,
-                // right: 0,
-                // top: 0,
-                // bottom: 0,
-                // edited: false
+                angle: roundToDecimals(p.angle, 2)
               });
             });
 
             return {
               ...imgItem,
-              // loaded: false,
               pages: newPages
             }
           })
