@@ -108,14 +108,6 @@ export class ImagesService {
     return this.http.get<ImageItem[]>(`${this.apiUrl}/${id}/scans`, { headers: this.headers() });
   }
 
-  fetchScanById(bookId: string, scanId: string): Observable<ImageItem[]> {
-    return this.http.get<ImageItem[]>(`${this.apiUrl}/${bookId}/scans/${scanId}`, { headers: this.headers() });
-  }
-
-  fetchPredictedScans(id: string): Observable<ImageItem[]> {
-    return this.http.get<ImageItem[]>(`${this.apiUrl}/${id}/predicted-scans`, { headers: this.headers() });
-  }
-
   fetchThumbnail(id: string): Observable<Blob> {
     return this.http.get(`${this.apiUrl}/${this.book()}/thumbnails/${id}`, { 
       responseType: 'blob',
@@ -132,6 +124,10 @@ export class ImagesService {
 
   updatePages(id: string, payload: ImageItem[]): any {
     return this.http.patch(`${this.apiUrl}/${id}/update-pages`, payload, { headers: this.headers('json', true) });
+  }
+
+  reset(id: string): Observable<ImageItem[]> {
+    return this.http.patch<ImageItem[]>(`${this.apiUrl}/${id}/reset`, {}, { headers: this.headers('json', false) });
   }
 
 

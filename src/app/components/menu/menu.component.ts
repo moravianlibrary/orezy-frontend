@@ -73,16 +73,15 @@ export class MenuComponent {
         destructive: true,
         action: () => {
           const imgSvc = this.imagesService;
-          imgSvc.fetchPredictedScans(imgSvc.book()).pipe(
+          imgSvc.reset(imgSvc.book()).pipe(
             catchError(err => {
               console.error('Fetch error:', err);
               return of([]);
             })
-          ).subscribe((r: ImageItem[]) => {
-            imgSvc.images.set(r);
+          ).subscribe((response: ImageItem[]) => {
+            imgSvc.images.set(response);
+            imgSvc.originalImages.set(response);
             
-            // Go to flagged images
-            imgSvc.selectedFilter = 'flagged';
             imgSvc.setDisplayedImages();
             imgSvc.setMainImage(imgSvc.displayedImages()[0]);
           });

@@ -161,9 +161,6 @@ export class LeftPanelComponent {
     const last = messages[messages.length - 1];
     const secondLast = messages[messages.length - 2];
 
-    console.log(matchedMessages);
-    console.log(`${messages.join(', ')}, ${secondLast} a ${last}`);
-
     return `${messages.join(', ')}, ${secondLast} a ${last}`;
   }
 }
