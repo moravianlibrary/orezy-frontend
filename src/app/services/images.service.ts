@@ -300,7 +300,7 @@ export class ImagesService {
     
     const [centerX, centerY] = [c.width * p.xc, c.height * p.yc];
     const [width, height] = [c.width * p.width, c.height * p.height];
-    const angle = degreeToRadian(-p.angle);
+    const angle = degreeToRadian(p.angle);
 
     ctx.save();
 
@@ -332,7 +332,7 @@ export class ImagesService {
     ctx.save();
 
     ctx.translate(centerX, centerY);
-    ctx.rotate(degreeToRadian(-p.angle));
+    ctx.rotate(degreeToRadian(p.angle));
 
     ctx.strokeStyle = getColor(p) + 'B2';
     ctx.lineWidth = this.pageOutlineWidth;
@@ -351,7 +351,7 @@ export class ImagesService {
     top: number,
     bottom: number
   } {
-    const rad = degreeToRadian(-angle);
+    const rad = degreeToRadian(angle);
     const cw = this.c.width;
     const ch = this.c.height;
     const hw = (width * cw) / 2;
@@ -389,7 +389,7 @@ export class ImagesService {
     ctx.save();
 
     ctx.translate(centerX, centerY);
-    ctx.rotate(degreeToRadian(-p.angle));
+    ctx.rotate(degreeToRadian(p.angle));
 
     ctx.strokeStyle = color + 'B2';
     ctx.lineWidth = this.pageOutlineWidth;

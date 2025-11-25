@@ -108,7 +108,7 @@ export class MainComponent {
     const c = this.imagesService.c;
     const [centerX, centerY] = [c.width * p.xc, c.height * p.yc];
     const [width, height] = [c.width * p.width, c.height * p.height];
-    const angle = degreeToRadian(-p.angle);
+    const angle = degreeToRadian(p.angle);
     const [halfW, halfH] = [width / 2, height / 2];
     const dx = x - centerX;
     const dy = y - centerY;
@@ -174,7 +174,7 @@ export class MainComponent {
     const c = imgSvc.c;
     const [centerX, centerY] = [c.width * p.xc, c.height * p.yc];
     const [width, height] = [c.width * p.width, c.height * p.height];
-    const angle = degreeToRadian(-p.angle);
+    const angle = degreeToRadian(p.angle);
 
     const hw = width / 2;
     const hh = height / 2;
@@ -360,85 +360,156 @@ export class MainComponent {
     }
 
     // Rotate
-    // if (ev.type === 'mousedown' && hit.area === 'rotate' && hitPage) {
-    //   imgSvc.startHit = hit;
+    if (ev.type === 'mousedown' && hit.area === 'rotate' && hitPage) {
+      imgSvc.startHit = hit;
 
+      const rect = el.getBoundingClientRect();
+      const cx = imgSvc.c.width * hitPage.xc;
+      const cy = imgSvc.c.height * hitPage.yc;
+
+      const dx = ev.clientX - rect.left - cx;
+      const dy = ev.clientY - rect.top - cy;
+      imgSvc.rotationStartMouseAngle = Math.atan2(dy, dx);
+
+      if (!imgSvc.isRotating) {
+        imgSvc.rotationStartPage = hitPage;
+        imgSvc.isRotating = true;
+      }
+    }
+
+    if (imgSvc.isRotating) {
+      if (ev.type === 'mousemove' && imgSvc.rotationStartPage) {
+        if (imgSvc.startHit?.corner === 'ne') cursor = this.rotateCursorTopRight;
+        if (imgSvc.startHit?.corner === 'nw') cursor = this.rotateCursorTopLeft;
+        if (imgSvc.startHit?.corner === 'se') cursor = this.rotateCursorBottomRight;
+        if (imgSvc.startHit?.corner === 'sw') cursor = this.rotateCursorBottomLeft;
+        el.style.cursor = cursor;
+        
+        const startPage = imgSvc.rotationStartPage;
+        
+        const rect = el.getBoundingClientRect();
+        const cx = imgSvc.c.width * startPage.xc;
+        const cy = imgSvc.c.height * startPage.yc;
+
+        const dx = ev.clientX - rect.left - cx;
+        const dy = ev.clientY - rect.top - cy;
+
+        const currentMouseAngle = Math.atan2(dy, dx);
+
+        let delta = currentMouseAngle - imgSvc.rotationStartMouseAngle;
+
+        let proposedAngle = startPage.angle + radianToDegree(delta);
+        proposedAngle = ((proposedAngle + 180) % 360 + 360) % 360 - 180;
+
+        const canRotate = (angle: number) => {
+          const bounds = imgSvc.computeBounds(startPage.xc, startPage.yc, startPage.width, startPage.height, angle);
+          return bounds.left >= 0 && bounds.right <= 1 && bounds.top >= 0 && bounds.bottom <= 1;
+        }
+
+        if (!canRotate(proposedAngle)) {
+          const step = (proposedAngle - startPage.angle) > 0 ? imgSvc.incrementAngle : -imgSvc.incrementAngle;
+
+          let temp = startPage.angle;
+          while (canRotate(temp + step)) temp += step;
+
+          proposedAngle = temp;
+        }
+
+        if (imgSvc.selectedPage) {
+          const page = imgSvc.selectedPage;
+          page.angle = proposedAngle;
+
+          const bounds = imgSvc.computeBounds(startPage.xc, startPage.yc, startPage.width, startPage.height, proposedAngle);
+          page.left = bounds.left;
+          page.right = bounds.right;
+          page.top = bounds.top;
+          page.bottom = bounds.bottom;
+        }
+
+        imgSvc.redrawImage();
+        imgSvc.currentPages.forEach(p => imgSvc.drawPage(p));
+      }
+
+      if (ev.type === 'mouseup') {
+        imgSvc.startHit = null;
+        imgSvc.isRotating = false;
+        imgSvc.rotationStartPage = null;
+        imgSvc.pageWasEdited = true;
+        imgSvc.updateMainImageItemAndImages();
+      }
+    }
+
+    // CHATGPT
+    // if (hit.area === 'rotate' && hitPage) {
+    //   if (ev.type === 'mousedown') {
+    //     imgSvc.isRotating = true;
+
+    //     const rect = el.getBoundingClientRect();
+    //     const cx = imgSvc.c.width * hitPage.xc;
+    //     const cy = imgSvc.c.height * hitPage.yc;
+
+    //     // angle from center to mouse
+    //     const dx = ev.clientX - rect.left - cx;
+    //     const dy = ev.clientY - rect.top - cy;
+    //     imgSvc.rotationStartMouseAngle = Math.atan2(dy, dx);
+
+    //     imgSvc.rotationStartPage = hitPage;
+    //   }
+    // }
+
+    // if (imgSvc.isRotating && imgSvc.rotationStartPage && hitPage && ev.type === 'mousemove') {
     //   const rect = el.getBoundingClientRect();
     //   const cx = imgSvc.c.width * hitPage.xc;
     //   const cy = imgSvc.c.height * hitPage.yc;
 
     //   const dx = ev.clientX - rect.left - cx;
     //   const dy = ev.clientY - rect.top - cy;
-    //   imgSvc.rotationStartMouseAngle = Math.atan2(dy, dx);
 
-    //   if (!imgSvc.isRotating) {
-    //     imgSvc.rotationStartPage = hitPage;
-    //     imgSvc.isRotating = true;
+    //   const currentMouseAngle = Math.atan2(dy, dx);
+
+    //   // Change from start
+    //   let delta = currentMouseAngle - imgSvc.rotationStartMouseAngle;
+
+    //   // Convert to degrees
+    //   let proposedAngle = imgSvc.rotationStartPage.angle + (delta * 180 / Math.PI);
+
+    //   // normalize to [-180, 180]
+    //   proposedAngle = ((proposedAngle + 180) % 360 + 360) % 360 - 180;
+
+    //   // ---- apply boundary constraints ----
+    //   const canRotate = (angle: number) => {
+    //     const bounds = imgSvc.computeBounds(hitPage.xc, hitPage.yc, hitPage.width, hitPage.height, angle);
+    //     return bounds.left >= 0 && bounds.right <= 1 && bounds.top >= 0 && bounds.bottom <= 1;
     //   }
+
+    //   if (!canRotate(proposedAngle)) {
+    //     const step = (proposedAngle - hitPage.angle) < 0 ? imgSvc.incrementAngle : -imgSvc.incrementAngle;
+
+    //     let temp = hitPage.angle;
+    //     while (canRotate(temp + step)) temp += step;
+
+    //     proposedAngle = temp;
+    //   }
+
+    //   // Update angle
+    //   hitPage.angle = proposedAngle;
+
+    //   // recompute bounds
+    //   const bounds = imgSvc.computeBounds(hitPage.xc, hitPage.yc, hitPage.width, hitPage.height, proposedAngle);
+    //   hitPage.left = bounds.left;
+    //   hitPage.right = bounds.right;
+    //   hitPage.top = bounds.top;
+    //   hitPage.bottom = bounds.bottom;
+
+    //   imgSvc.redrawImage();
+    //   imgSvc.currentPages.forEach(p => imgSvc.drawPage(p));
     // }
 
-    // if (imgSvc.isRotating) {
-    //   if (ev.type === 'mousemove' && imgSvc.rotationStartPage) {
-    //     if (imgSvc.startHit?.corner === 'ne') cursor = this.rotateCursorTopRight;
-    //     if (imgSvc.startHit?.corner === 'nw') cursor = this.rotateCursorTopLeft;
-    //     if (imgSvc.startHit?.corner === 'se') cursor = this.rotateCursorBottomRight;
-    //     if (imgSvc.startHit?.corner === 'sw') cursor = this.rotateCursorBottomLeft;
-    //     el.style.cursor = cursor;
-        
-    //     const startPage = imgSvc.rotationStartPage;
-        
-    //     const rect = el.getBoundingClientRect();
-    //     const cx = imgSvc.c.width * startPage.xc;
-    //     const cy = imgSvc.c.height * startPage.yc;
-
-    //     const dx = ev.clientX - rect.left - cx;
-    //     const dy = ev.clientY - rect.top - cy;
-
-    //     const currentMouseAngle = Math.atan2(dy, dx);
-
-    //     let delta = currentMouseAngle - imgSvc.rotationStartMouseAngle;
-
-    //     let proposedAngle = startPage.angle + radianToDegree(delta);
-    //     proposedAngle = ((proposedAngle + 180) % 360 + 360) % 360 - 180;
-
-    //     const canRotate = (angle: number) => {
-    //       const bounds = imgSvc.computeBounds(startPage.xc, startPage.yc, startPage.width, startPage.height, angle);
-    //       return bounds.left >= 0 && bounds.right <= 1 && bounds.top >= 0 && bounds.bottom <= 1;
-    //     }
-
-    //     if (!canRotate(proposedAngle)) {
-    //       const step = (proposedAngle - startPage.angle) > 0 ? imgSvc.incrementAngle : -imgSvc.incrementAngle;
-
-    //       let temp = startPage.angle;
-    //       while (canRotate(temp + step)) temp += step;
-
-    //       proposedAngle = temp;
-    //     }
-
-    //     if (imgSvc.selectedPage) {
-    //       const page = imgSvc.selectedPage;
-    //       page.angle = proposedAngle;
-
-    //       const bounds = imgSvc.computeBounds(startPage.xc, startPage.yc, startPage.width, startPage.height, proposedAngle);
-    //       page.left = bounds.left;
-    //       page.right = bounds.right;
-    //       page.top = bounds.top;
-    //       page.bottom = bounds.bottom;
-    //     }
-
-    //     imgSvc.redrawImage();
-    //     imgSvc.currentPages.forEach(p => imgSvc.drawPage(p));
-    //   }
-
-    //   if (ev.type === 'mouseup') {
-    //     imgSvc.startHit = null;
-    //     imgSvc.isRotating = false;
-    //     imgSvc.rotationStartPage = null;
-    //     imgSvc.pageWasEdited = true;
-    //     imgSvc.updateMainImageItemAndImages();
-    //   }
+    // if (ev.type === 'mouseup' && imgSvc.isRotating) {
+    //   imgSvc.isRotating = false;
+    //   imgSvc.pageWasEdited = true;
+    //   imgSvc.updateMainImageItemAndImages();
     // }
-
 
     // OLD CODE
     // const pageId = this.pageIdCursorInside(ev);
