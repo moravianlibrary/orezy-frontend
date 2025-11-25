@@ -19,8 +19,6 @@ export class RightPanelComponent {
   private cdr = inject(ChangeDetectorRef);
 
   rotationDirection: number = 1;
-  private increment: number = 0.001;
-  private incrementAngle: number = this.increment * 100;
   private decimals: number = 2;
 
   private firstFocus = { left: true, top: true, width: true, height: true, angle: true };
@@ -381,7 +379,7 @@ export class RightPanelComponent {
     const page = this.imagesService.selectedPage;
     if (!page) return;
 
-    const increment = (type === 'angle' ? this.incrementAngle : this.increment) * multiplier;
+    const increment = (type === 'angle' ? this.imagesService.incrementAngle : this.imagesService.increment) * multiplier;
     const multiplicator = type === 'angle' ? 1 : 100;
     const currentValue = Number(input.value);
     const newValue = (currentValue / multiplicator + direction * increment) * multiplicator;

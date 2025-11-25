@@ -1,6 +1,6 @@
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { computed, inject, Injectable, signal } from '@angular/core';
-import { ImageItem, ImgOrCanvas, Page, PagePosition } from '../app.types';
+import { HitInfo, ImageItem, ImgOrCanvas, Page, PagePosition } from '../app.types';
 import { Observable } from 'rxjs';
 import { defer, degreeToRadian, getColor } from '../utils/utils';
 import { EnvironmentService } from './environment.service';
@@ -41,15 +41,29 @@ export class ImagesService {
   loadingLeft: boolean = false;
   loadingMain: boolean = false;
 
+  pageWasEdited: boolean = false;
   currentPages: Page[] = [];
   selectedPage: Page | null = null;
   lastSelectedPage: Page | null = null;
+
+  startHit: HitInfo | null = null;
+
+  // Hover
   lastPageCursorIsInside: Page | null = null;
+
+  // Drag
   isDragging: boolean = false;
   mouseDownCurPos: { x: number, y: number } = { x: -1, y: -1 };
   startPagePos: PagePosition = { xc: -1, yc: -1, left: -1, right: -1, top: -1, bottom: -1 };
-  pageWasEdited: boolean = false;
+  increment: number = 0.001;
   
+  // Rotate
+  isRotating: boolean = false;
+  rotationStartPage: Page | null = null;
+  rotationStartMouseAngle: number = 0;
+  incrementAngle: number = this.increment * 100;
+  
+  // Inputs
   lastLeftInput: number = 0;
   lastTopInput: number = 0;
   lastWidthInput: number = 0;
@@ -59,7 +73,6 @@ export class ImagesService {
   pageOutlineWidth: number = 3;
   cornerSize: number = 6;
   maxPages: number = 2;
-  toggledMore: boolean = false;
 
 
   /* ------------------------------
@@ -287,7 +300,7 @@ export class ImagesService {
     
     const [centerX, centerY] = [c.width * p.xc, c.height * p.yc];
     const [width, height] = [c.width * p.width, c.height * p.height];
-    const angle = degreeToRadian(p.angle);
+    const angle = degreeToRadian(-p.angle);
 
     ctx.save();
 
@@ -319,7 +332,7 @@ export class ImagesService {
     ctx.save();
 
     ctx.translate(centerX, centerY);
-    ctx.rotate(degreeToRadian(p.angle));
+    ctx.rotate(degreeToRadian(-p.angle));
 
     ctx.strokeStyle = getColor(p) + 'B2';
     ctx.lineWidth = this.pageOutlineWidth;
@@ -376,7 +389,7 @@ export class ImagesService {
     ctx.save();
 
     ctx.translate(centerX, centerY);
-    ctx.rotate(degreeToRadian(p.angle));
+    ctx.rotate(degreeToRadian(-p.angle));
 
     ctx.strokeStyle = color + 'B2';
     ctx.lineWidth = this.pageOutlineWidth;

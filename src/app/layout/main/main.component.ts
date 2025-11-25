@@ -1,6 +1,6 @@
 import { Component, inject } from '@angular/core';
 import { ImagesService } from '../../services/images.service';
-import { degreeToRadian } from '../../utils/utils';
+import { degreeToRadian, radianToDegree } from '../../utils/utils';
 import { CornerName, EdgeLocalOrientation, HitInfo, Page } from '../../app.types';
 import { LoaderComponent } from '../../components/loader/loader.component';
 
@@ -265,34 +265,49 @@ export class MainComponent {
     const imgSvc = this.imagesService;
     
     const hit = this.hitTest(ev);
-    const insidePage = hit.area !== 'none';
+    const pageId = this.pageIdCursorInside(ev);
+    const insidePage = Boolean(pageId);
+    const insideArea = hit.area !== 'none';
     const hitPage = hit.page ?? null;
 
-    if (ev.type === 'mousedown') {
+     if (ev.type === 'mousedown') {
       if (imgSvc.pageWasEdited) {
         imgSvc.updateCurrentPagesWithEdited();
       }
       imgSvc.selectedPage = hitPage;
       imgSvc.lastPageCursorIsInside = hitPage;
-      imgSvc.editable.set(insidePage);
+      imgSvc.editable.set(insideArea);
       imgSvc.toggleMainImageOrCanvas();
       this.hoveringPage(hitPage?._id ?? '');
       imgSvc.updateMainImageItemAndImages();
     }
 
+    // Hover
     if (ev.type === 'mousemove') {
-      if (imgSvc.lastPageCursorIsInside?._id === hitPage?._id && !imgSvc.selectedPage) return;
-      if (!imgSvc.isDragging) {
-        imgSvc.lastPageCursorIsInside = hitPage;
+      if (imgSvc.lastPageCursorIsInside?._id === pageId && !imgSvc.selectedPage) return;
+      if (!imgSvc.isDragging && !imgSvc.isRotating) {
+        imgSvc.lastPageCursorIsInside = imgSvc.currentPages.find(p => p._id === pageId) ?? null;
         imgSvc.editable.set(insidePage);
         imgSvc.toggleMainImageOrCanvas();
-        this.hoveringPage(hitPage?._id ?? '');
+        this.hoveringPage(pageId);
       }
     }
 
-    let cursor = insidePage ? (imgSvc.selectedPage?._id === hitPage?._id ? this.moveCursor : 'pointer') : 'initial';
+    // if (ev.type === 'mousedown') {
+    //   if (imgSvc.pageWasEdited) {
+    //     imgSvc.updateCurrentPagesWithEdited();
+    //   }
+    //   imgSvc.selectedPage = hitPage;
+    //   imgSvc.lastPageCursorIsInside = hitPage;
+    //   imgSvc.editable.set(insidePage);
+    //   imgSvc.toggleMainImageOrCanvas();
+    //   this.hoveringPage(hitPage?._id ?? '');
+    //   imgSvc.updateMainImageItemAndImages();
+    // }
 
-    if (hitPage === imgSvc.selectedPage) {
+    // Change to correct cursor while having selected page
+    let cursor = insidePage ? (imgSvc.selectedPage?._id === hitPage?._id ? this.moveCursor : 'pointer') : 'initial';
+    if (hitPage && hitPage === imgSvc.selectedPage) {
       if (hit.area === 'inside') {
         cursor = hitPage && imgSvc.selectedPage?._id === hitPage._id
           ? this.moveCursor
@@ -302,19 +317,17 @@ export class MainComponent {
       } else if (hit.area === 'corner' && hit.corner && hitPage) {
         cursor = this.getCornerCursor(hitPage.angle, hit.corner);
       } else if (hit.area === 'rotate') {
-        console.log(hit.corner);
         if (hit.corner === 'ne') cursor = this.rotateCursorTopRight;
         if (hit.corner === 'nw') cursor = this.rotateCursorTopLeft;
         if (hit.corner === 'se') cursor = this.rotateCursorBottomRight;
         if (hit.corner === 'sw') cursor = this.rotateCursorBottomLeft;
       }
     }
-
     el.style.cursor = cursor;
 
     // Drag
-    if (hit.area === 'inside' && hitPage) {
-      if (ev.type === 'mousedown') {
+    if (hit.area === 'inside' || imgSvc.isDragging) {
+      if (ev.type === 'mousedown' && hitPage) {
         imgSvc.isDragging = true;
         imgSvc.mouseDownCurPos = { x: ev.clientX, y: ev.clientY };
         imgSvc.startPagePos = {
@@ -327,27 +340,107 @@ export class MainComponent {
         };
       }
 
-      if (ev.type === 'mousemove') {
-        if (!imgSvc.isDragging) return;
-        el.style.cursor = this.moveCursor;
-        imgSvc.pageWasEdited = true;
-        imgSvc.imgWasEdited = true;
-        this.dragPage(ev);
-      }
+      if (imgSvc.isDragging) {
+        if (ev.type === 'mousemove') {
+          el.style.cursor = this.moveCursor;
+          imgSvc.pageWasEdited = true;
+          imgSvc.imgWasEdited = true;
+          this.dragPage(ev);
+        }
 
-      if (ev.type === 'mouseup') {
-        if (!imgSvc.isDragging) return;
-        imgSvc.isDragging = false;
-        imgSvc.startPagePos = { xc: -1, yc: -1, left: -1, right: -1, top: -1, bottom: -1 };
+        if (ev.type === 'mouseup' && hitPage) {
+          imgSvc.isDragging = false;
+          imgSvc.startPagePos = { xc: -1, yc: -1, left: -1, right: -1, top: -1, bottom: -1 };
 
-        if (!imgSvc.imgWasEdited) return;
-        this.hoveringPage(hitPage._id);
-        imgSvc.updateMainImageItemAndImages();
+          if (!imgSvc.imgWasEdited) return;
+          this.hoveringPage(hitPage._id);
+          imgSvc.updateMainImageItemAndImages();
+        }
       }
     }
 
     // Rotate
+    // if (ev.type === 'mousedown' && hit.area === 'rotate' && hitPage) {
+    //   imgSvc.startHit = hit;
 
+    //   const rect = el.getBoundingClientRect();
+    //   const cx = imgSvc.c.width * hitPage.xc;
+    //   const cy = imgSvc.c.height * hitPage.yc;
+
+    //   const dx = ev.clientX - rect.left - cx;
+    //   const dy = ev.clientY - rect.top - cy;
+    //   imgSvc.rotationStartMouseAngle = Math.atan2(dy, dx);
+
+    //   if (!imgSvc.isRotating) {
+    //     imgSvc.rotationStartPage = hitPage;
+    //     imgSvc.isRotating = true;
+    //   }
+    // }
+
+    // if (imgSvc.isRotating) {
+    //   if (ev.type === 'mousemove' && imgSvc.rotationStartPage) {
+    //     if (imgSvc.startHit?.corner === 'ne') cursor = this.rotateCursorTopRight;
+    //     if (imgSvc.startHit?.corner === 'nw') cursor = this.rotateCursorTopLeft;
+    //     if (imgSvc.startHit?.corner === 'se') cursor = this.rotateCursorBottomRight;
+    //     if (imgSvc.startHit?.corner === 'sw') cursor = this.rotateCursorBottomLeft;
+    //     el.style.cursor = cursor;
+        
+    //     const startPage = imgSvc.rotationStartPage;
+        
+    //     const rect = el.getBoundingClientRect();
+    //     const cx = imgSvc.c.width * startPage.xc;
+    //     const cy = imgSvc.c.height * startPage.yc;
+
+    //     const dx = ev.clientX - rect.left - cx;
+    //     const dy = ev.clientY - rect.top - cy;
+
+    //     const currentMouseAngle = Math.atan2(dy, dx);
+
+    //     let delta = currentMouseAngle - imgSvc.rotationStartMouseAngle;
+
+    //     let proposedAngle = startPage.angle + radianToDegree(delta);
+    //     proposedAngle = ((proposedAngle + 180) % 360 + 360) % 360 - 180;
+
+    //     const canRotate = (angle: number) => {
+    //       const bounds = imgSvc.computeBounds(startPage.xc, startPage.yc, startPage.width, startPage.height, angle);
+    //       return bounds.left >= 0 && bounds.right <= 1 && bounds.top >= 0 && bounds.bottom <= 1;
+    //     }
+
+    //     if (!canRotate(proposedAngle)) {
+    //       const step = (proposedAngle - startPage.angle) > 0 ? imgSvc.incrementAngle : -imgSvc.incrementAngle;
+
+    //       let temp = startPage.angle;
+    //       while (canRotate(temp + step)) temp += step;
+
+    //       proposedAngle = temp;
+    //     }
+
+    //     if (imgSvc.selectedPage) {
+    //       const page = imgSvc.selectedPage;
+    //       page.angle = proposedAngle;
+
+    //       const bounds = imgSvc.computeBounds(startPage.xc, startPage.yc, startPage.width, startPage.height, proposedAngle);
+    //       page.left = bounds.left;
+    //       page.right = bounds.right;
+    //       page.top = bounds.top;
+    //       page.bottom = bounds.bottom;
+    //     }
+
+    //     imgSvc.redrawImage();
+    //     imgSvc.currentPages.forEach(p => imgSvc.drawPage(p));
+    //   }
+
+    //   if (ev.type === 'mouseup') {
+    //     imgSvc.startHit = null;
+    //     imgSvc.isRotating = false;
+    //     imgSvc.rotationStartPage = null;
+    //     imgSvc.pageWasEdited = true;
+    //     imgSvc.updateMainImageItemAndImages();
+    //   }
+    // }
+
+
+    // OLD CODE
     // const pageId = this.pageIdCursorInside(ev);
     // const insidePage = Boolean(pageId);
 
