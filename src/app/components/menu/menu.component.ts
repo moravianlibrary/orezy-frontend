@@ -105,6 +105,8 @@ export class MenuComponent {
         destructive: true,
         action: () => {
           const imgSvc = this.imagesService;
+          if (!imgSvc.displayedImages().length) return;
+
           const mainImageItemBefore = imgSvc.mainImageItem();
           imgSvc.mainImageItem.set(imgSvc.originalImages().find(img => img._id === mainImageItemBefore._id) ?? mainImageItemBefore);
           const mainImageItemAfter = imgSvc.mainImageItem();
