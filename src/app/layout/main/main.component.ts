@@ -306,7 +306,9 @@ export class MainComponent {
       if (imgSvc.pageWasEdited && (cursor === 'initial' || cursor === 'pointer')) {
         imgSvc.updateCurrentPagesWithEdited();
       }
+      imgSvc.lastSelectedPage = imgSvc.selectedPage;
       imgSvc.selectedPage = hitPage;
+      imgSvc.clickedDiffPage = imgSvc.lastSelectedPage && imgSvc.selectedPage && imgSvc.lastSelectedPage !== imgSvc.selectedPage;
       imgSvc.lastPageCursorIsInside = hitPage;
       imgSvc.editable.set(insideArea);
       imgSvc.toggleMainImageOrCanvas();
@@ -367,65 +369,8 @@ export class MainComponent {
     }
 
     if (imgSvc.isRotating) {
-      if (ev.type === 'mousemove' && imgSvc.rotationStartPage) {
-        if (imgSvc.startHit?.corner === 'ne') cursor = this.rotateCursorTopRight;
-        if (imgSvc.startHit?.corner === 'nw') cursor = this.rotateCursorTopLeft;
-        if (imgSvc.startHit?.corner === 'se') cursor = this.rotateCursorBottomRight;
-        if (imgSvc.startHit?.corner === 'sw') cursor = this.rotateCursorBottomLeft;
-        el.style.cursor = cursor;
-        
-        const startPage = imgSvc.rotationStartPage;
-        
-        const rect = el.getBoundingClientRect();
-        const cx = imgSvc.c.width * startPage.xc;
-        const cy = imgSvc.c.height * startPage.yc;
-
-        const dx = ev.clientX - rect.left - cx;
-        const dy = ev.clientY - rect.top - cy;
-
-        const currentMouseAngle = Math.atan2(dy, dx);
-
-        let delta = currentMouseAngle - imgSvc.rotationStartMouseAngle;
-
-        let proposedAngle = startPage.angle + radianToDegree(delta);
-        proposedAngle = ((proposedAngle + 180) % 360 + 360) % 360 - 180;
-
-        const canRotate = (angle: number) => {
-          const bounds = imgSvc.computeBounds(startPage.xc, startPage.yc, startPage.width, startPage.height, angle);
-          return bounds.left >= 0 && bounds.right <= 1 && bounds.top >= 0 && bounds.bottom <= 1;
-        }
-
-        if (!canRotate(proposedAngle)) {
-          const step = (proposedAngle - startPage.angle) > 0 ? imgSvc.incrementAngle : -imgSvc.incrementAngle;
-
-          let temp = startPage.angle;
-          while (canRotate(temp + step)) temp += step;
-
-          proposedAngle = temp;
-        }
-
-        // Build updated page
-        if (!imgSvc.selectedPage) return;
-
-        const bounds = imgSvc.computeBounds(startPage.xc, startPage.yc, startPage.width, startPage.height, proposedAngle);
-        const updatedPage: Page = {
-          ...imgSvc.selectedPage,
-          angle: proposedAngle,
-          left: bounds.left,
-          right: bounds.right,
-          top: bounds.top,
-          bottom: bounds.bottom,
-        };
-
-        // Update state
-        imgSvc.selectedPage = updatedPage;
-        imgSvc.lastSelectedPage = updatedPage;
-        imgSvc.currentPages = imgSvc.currentPages.map(p =>
-          p._id === updatedPage._id ? updatedPage : p
-        );
-
-        imgSvc.redrawImage();
-        imgSvc.currentPages.forEach(p => imgSvc.drawPage(p));
+      if (ev.type === 'mousemove') {
+        this.rotatePage(cursor, ev, el);
       }
 
       if (ev.type === 'mouseup') {
@@ -433,70 +378,9 @@ export class MainComponent {
         imgSvc.isRotating = false;
         imgSvc.rotationStartPage = null;
         imgSvc.pageWasEdited = true;
-        // imgSvc.redrawImage();
-        // imgSvc.currentPages.forEach(p => imgSvc.drawPage(p));
         imgSvc.updateMainImageItemAndImages();
       }
     }
-
-    // OLD CODE
-    // const pageId = this.pageIdCursorInside(ev);
-    // const insidePage = Boolean(pageId);
-
-    // if (ev.type === 'mousedown') {
-    //   const potentialSelectedPage = imgSvc.currentPages.find(p => p._id === pageId);
-    //   if (imgSvc.pageWasEdited) {
-    //     imgSvc.updateCurrentPagesWithEdited();
-    //   }
-    //   imgSvc.selectedPage = potentialSelectedPage ?? null;
-    //   imgSvc.lastPageCursorIsInside = potentialSelectedPage ?? null;
-    //   imgSvc.editable.set(insidePage);
-    //   imgSvc.toggleMainImageOrCanvas();
-    //   this.hoveringPage(pageId);
-    //   imgSvc.updateMainImageItemAndImages();
-    // }
-
-    // if (ev.type === 'mousemove') {
-    //   if (imgSvc.lastPageCursorIsInside?._id === pageId && !imgSvc.selectedPage) return;
-    //   if (!imgSvc.isDragging) {
-    //     imgSvc.lastPageCursorIsInside = imgSvc.currentPages.find(p => p._id === pageId) ?? null;
-    //     imgSvc.editable.set(insidePage);
-    //     imgSvc.toggleMainImageOrCanvas();
-    //     this.hoveringPage(pageId);
-    //   }
-    // }
-
-    // Drag page
-    // el.style.cursor = insidePage ? (imgSvc.selectedPage?._id === pageId ? this.moveCursor : 'pointer') : 'initial';
-    // if (insidePage) {
-    //   if (ev.type === 'mousedown') {
-    //     const page = imgSvc.selectedPage;
-    //     if (!page) return;
-
-    //     imgSvc.isDragging = true;
-    //     imgSvc.mouseDownCurPos = { x: ev.clientX, y: ev.clientY };
-    //     imgSvc.startPagePos = { xc: page.xc, yc: page.yc, left: page.left, right: page.right, top: page.top, bottom: page.bottom };
-    //   }
-
-    //   if (ev.type === 'mousemove') {
-    //     if (!imgSvc.isDragging) return;
-    //     el.style.cursor = this.moveCursor;
-    //     imgSvc.pageWasEdited = true;
-    //     imgSvc.imgWasEdited = true;
-    //     this.dragPage(ev);
-    //   }
-
-    //   if (ev.type === 'mouseup') {
-    //     if (!imgSvc.isDragging) return;
-    //     el.style.cursor = insidePage ? (imgSvc.selectedPage?._id === pageId ? this.moveCursor : 'pointer') : 'initial';
-    //     imgSvc.isDragging = false;
-    //     imgSvc.startPagePos = { xc: -1, yc: -1, left: -1, right: -1, top: -1, bottom: -1 };
-        
-    //     if (!imgSvc.imgWasEdited) return;
-    //     this.hoveringPage(pageId);
-    //     imgSvc.updateMainImageItemAndImages();
-    //   }
-    // }
   }
 
   private dragPage(e: MouseEvent): void {    
@@ -560,6 +444,70 @@ export class MainComponent {
     );
 
     // Redraw
+    imgSvc.redrawImage();
+    imgSvc.currentPages.forEach(p => imgSvc.drawPage(p));
+  }
+
+  private rotatePage(cursor: string, ev: MouseEvent, el: HTMLElement): void {
+    const imgSvc = this.imagesService;
+    if (!imgSvc.rotationStartPage) return;
+
+    if (imgSvc.startHit?.corner === 'ne') cursor = this.rotateCursorTopRight;
+    if (imgSvc.startHit?.corner === 'nw') cursor = this.rotateCursorTopLeft;
+    if (imgSvc.startHit?.corner === 'se') cursor = this.rotateCursorBottomRight;
+    if (imgSvc.startHit?.corner === 'sw') cursor = this.rotateCursorBottomLeft;
+    el.style.cursor = cursor;
+    
+    const startPage = imgSvc.rotationStartPage;
+    
+    const rect = el.getBoundingClientRect();
+    const cx = imgSvc.c.width * startPage.xc;
+    const cy = imgSvc.c.height * startPage.yc;
+
+    const dx = ev.clientX - rect.left - cx;
+    const dy = ev.clientY - rect.top - cy;
+
+    const currentMouseAngle = Math.atan2(dy, dx);
+
+    let delta = currentMouseAngle - imgSvc.rotationStartMouseAngle;
+
+    let proposedAngle = startPage.angle + radianToDegree(delta);
+    proposedAngle = ((proposedAngle + 180) % 360 + 360) % 360 - 180;
+
+    const canRotate = (angle: number) => {
+      const bounds = imgSvc.computeBounds(startPage.xc, startPage.yc, startPage.width, startPage.height, angle);
+      return bounds.left >= 0 && bounds.right <= 1 && bounds.top >= 0 && bounds.bottom <= 1;
+    }
+
+    if (!canRotate(proposedAngle)) {
+      const step = (proposedAngle - startPage.angle) > 0 ? imgSvc.incrementAngle : -imgSvc.incrementAngle;
+
+      let temp = startPage.angle;
+      while (canRotate(temp + step)) temp += step;
+
+      proposedAngle = temp;
+    }
+
+    // Build updated page
+    if (!imgSvc.selectedPage) return;
+
+    const bounds = imgSvc.computeBounds(startPage.xc, startPage.yc, startPage.width, startPage.height, proposedAngle);
+    const updatedPage: Page = {
+      ...imgSvc.selectedPage,
+      angle: proposedAngle,
+      left: bounds.left,
+      right: bounds.right,
+      top: bounds.top,
+      bottom: bounds.bottom,
+    };
+
+    // Update state
+    imgSvc.selectedPage = updatedPage;
+    imgSvc.lastSelectedPage = updatedPage;
+    imgSvc.currentPages = imgSvc.currentPages.map(p =>
+      p._id === updatedPage._id ? updatedPage : p
+    );
+
     imgSvc.redrawImage();
     imgSvc.currentPages.forEach(p => imgSvc.drawPage(p));
   }

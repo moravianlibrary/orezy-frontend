@@ -32,7 +32,7 @@ export class RightPanelComponent {
 
   changeInputValue(type: InputType, event: any): void {
     const imgSvc = this.imagesService;
-    const page = imgSvc.selectedPage;
+    const page = imgSvc.clickedDiffPage ? imgSvc.lastSelectedPage : imgSvc.selectedPage;
     if (!page) return;
 
     imgSvc.lastLeftInput = page.left;

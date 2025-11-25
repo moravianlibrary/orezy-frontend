@@ -46,6 +46,7 @@ export class ImagesService {
   currentPages: Page[] = [];
   selectedPage: Page | null = null;
   lastSelectedPage: Page | null = null;
+  clickedDiffPage: boolean | null = null;
 
   startHit: HitInfo | null = null;
 
@@ -163,8 +164,9 @@ export class ImagesService {
     mainCanvas.visibility = 'hidden';
 
     const applyFinalImage = (updated: ImageItem) => {
-      if (this.pageWasEdited && this.selectedPage) {
-        this.selectedPage.edited = true;
+      const page = this.clickedDiffPage ? this.lastSelectedPage : this.selectedPage;
+      if (this.pageWasEdited && page) {
+        page.edited = true;
         this.pageWasEdited = false;
       }
       this.selectedPage = null;
@@ -470,7 +472,7 @@ export class ImagesService {
   }
 
   updateCurrentPagesWithEdited(): void {
-    this.currentPages = this.currentPages.map(p => p._id === this.selectedPage?._id
+    this.currentPages = this.currentPages.map(p => p._id === (this.clickedDiffPage ? this.lastSelectedPage : this.selectedPage)?._id
       ? { ...p, edited: true }
       : p
     );
