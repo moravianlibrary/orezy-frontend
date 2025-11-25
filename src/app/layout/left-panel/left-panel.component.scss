@@ -10,12 +10,9 @@
   min-width: 250px;
   flex-basis: 250px;
   flex: 1;
-  padding-block: var(--spacing-x4);
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: var(--spacing-x5);
-  overflow-y: auto;
   border-right: 1px solid var(--border-color);
 }
 
@@ -24,7 +21,6 @@
   flex-direction: column;
   gap: var(--spacing-x3);
   padding: var(--spacing-x4);
-  padding-top: 0;
   border-bottom: 1px solid var(--border-color);
   color: var(--text-base);
   max-width: 100%;
@@ -74,15 +70,17 @@
   display: flex;
   flex-direction: column;
   gap: var(--spacing-x4);
-  padding-inline: var(--spacing-x4);
+  padding: var(--spacing-x4);
+  padding-top: var(--spacing-x5);
   width: 100%;
+  overflow-y: scroll;
 }
 
 .thumbnail-wrapper {
   display: flex;
   justify-content: center;
   align-items: center;
-  height: 100px;
+  min-height: 100px;
   width: 100%;
   background-color: var(--bg-bright);
   border: 1px solid var(--border-color);
@@ -179,4 +177,8 @@
 
 .selected {
   border-color: var(--primary);
+}
+
+app-loader {
+  margin-top: var(--spacing-x5);
 }

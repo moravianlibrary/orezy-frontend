@@ -27,8 +27,8 @@
   </div>
 </div>
 
-<div class="thumbnails-wrapper">
-  @if (imagesService.displayedImages().length) {
+@if (imagesService.displayedImages().length) {
+  <div class="thumbnails-wrapper">
     @for (image of imagesService.displayedImages(); track $index) {
       @let mainImageItem = imagesService.mainImageItem();
       <div
@@ -44,8 +44,8 @@
         ></span>
       </div>
     }
-  } @else {
-    @if (imagesService.loadingLeft) { <app-loader /> }
-    @else if (imagesService.displayedImages().length) { <p>Nebyly nalezeny žádné skeny.</p> }
-  }
-</div>
+  </div>
+} @else {
+  @if (imagesService.loadingLeft) { <app-loader /> }
+  @else if (imagesService.displayedImages().length) { <p>Nebyly nalezeny žádné skeny.</p> }
+}
