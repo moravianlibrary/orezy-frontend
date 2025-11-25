@@ -35,7 +35,6 @@ export class EditorComponent {
         }),
         switchMap(() => imgSvc.fetchScans(imgSvc.book())),
         map((imgItems: ImageItem[]) => {
-          console.log(imgItems);
           
           const enrichedImgItems = imgItems.map(imgItem => {
             const newPages: Page[] = [];
@@ -63,6 +62,7 @@ export class EditorComponent {
       .subscribe((imgItems: ImageItem[]) => {
         imgSvc.loadingLeft = false;
         imgSvc.images.set(imgItems);
+        imgSvc.originalImages.set(imgItems);
         imgSvc.displayedImages.set(imgSvc.flaggedImages());
         if (!imgSvc.displayedImages().length) imgSvc.loadingMain = false;;
         const [firstFlagged] = imgSvc.flaggedImages();

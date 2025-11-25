@@ -105,20 +105,20 @@ export class MenuComponent {
         primary: true,
         destructive: true,
         action: () => {
-          // const imgSvc = this.imagesService;
-          // imgSvc.fetchPredictedScans(imgSvc.book()).pipe(
-          //   catchError(err => {
-          //     console.error('Fetch error:', err);
-          //     return of([]);
-          //   })
-          // ).subscribe((r: ImageItem[]) => {
-          //   imgSvc.images.set(r);
-            
-          //   // Go to flagged images
-          //   imgSvc.selectedFilter = 'flagged';
-          //   imgSvc.setDisplayedImages();
-          //   imgSvc.setMainImage(imgSvc.displayedImages()[0]);
-          // });
+          const imgSvc = this.imagesService;
+          const mainImageItemBefore = imgSvc.mainImageItem();
+          imgSvc.mainImageItem.set(imgSvc.originalImages().find(img => img._id === mainImageItemBefore._id) ?? mainImageItemBefore);
+          const mainImageItemAfter = imgSvc.mainImageItem();
+          imgSvc.images.update(prev =>
+            prev.map(img => img._id === mainImageItemAfter._id
+              ? mainImageItemAfter
+              : img
+            )
+          );
+
+          imgSvc.selectedFilter = mainImageItemAfter.edited ? 'edited' : (mainImageItemAfter.flags.length ? 'flagged' : 'ok');
+          imgSvc.setDisplayedImages();
+          imgSvc.setMainImage(mainImageItemAfter);
         }
       }
     ]);

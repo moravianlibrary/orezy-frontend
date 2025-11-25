@@ -27,6 +27,7 @@ export class ImagesService {
   dialogOpened: boolean = false;
 
   images = signal<ImageItem[]>([]);
+  originalImages = signal<ImageItem[]>([]);
   displayedImages = signal<ImageItem[]>([]);
 
   mainImageItem = signal<ImageItem>({ _id: '', url: '', thumbnailUrl: '', edited: false, flags: [], pages: [] });
@@ -105,6 +106,10 @@ export class ImagesService {
 
   fetchScans(id: string): Observable<ImageItem[]> {
     return this.http.get<ImageItem[]>(`${this.apiUrl}/${id}/scans`, { headers: this.headers() });
+  }
+
+  fetchScanById(bookId: string, scanId: string): Observable<ImageItem[]> {
+    return this.http.get<ImageItem[]>(`${this.apiUrl}/${bookId}/scans/${scanId}`, { headers: this.headers() });
   }
 
   fetchPredictedScans(id: string): Observable<ImageItem[]> {
