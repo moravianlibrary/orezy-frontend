@@ -57,6 +57,14 @@
   border-bottom: 1px solid var(--border-color);
 }
 
+.top, .middle {
+  border-left: 1px solid var(--border-color);
+}
+
+.middle {
+  flex: 1;
+}
+
 .page {
   display: flex;
   flex-direction: column;
@@ -209,8 +217,6 @@ input[type=number] {
   width: 100%;
   padding: var(--spacing-x2) var(--spacing-x4);
   border-top: 1px solid var(--border-color);
-  position: absolute;
-  bottom: 0;
 
   svg {
     fill: var(--icon-white);

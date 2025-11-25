@@ -1,4 +1,4 @@
-<span class="header border-bottom">
+<div class="header top border-bottom">
   <span class="title-menu-wrapper">
     <h1>Sken {{ getCurrentIndexImage() }}/{{ imagesService.displayedImages().length }}</h1>
     <app-menu [type]="'menu-secondary'" />
@@ -22,196 +22,255 @@
       </svg>
     </span>
   </span>
-</span>
+</div>
 
-@if (!!imagesService.selectedPage) {
-  <span class="page">
-    <span class="header">
-      <span class="title-menu-wrapper">
-        <h1>Obdélník (výřez)</h1>
-      </span>
-      <span class="actions">
-        <span
-          class="action"
-          (click)="imagesService.removePage()"
-        >
-          Smazat
-          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path fill-rule="evenodd" clip-rule="evenodd" d="M3.31052 3.35614C4.64689 3.22118 5.98341 3.15369 7.32004 3.15369C9.56362 3.15369 11.8134 3.26788 14.0493 3.48946C14.3241 3.51669 14.5248 3.76153 14.4976 4.03633C14.4704 4.31112 14.2255 4.51181 13.9507 4.48458C11.7467 4.26616 9.52979 4.15369 7.32004 4.15369C6.0169 4.15369 4.71367 4.2195 3.41029 4.35116L3.40882 4.3513L2.04882 4.48463C1.774 4.51158 1.52937 4.31063 1.50242 4.03581C1.47548 3.76098 1.67643 3.51635 1.95125 3.48941L3.31052 3.35614Z" />
-            <path fill-rule="evenodd" clip-rule="evenodd" d="M6.30647 2.52308L6.15984 3.39618C6.11411 3.66851 5.85626 3.8522 5.58394 3.80647C5.31161 3.76073 5.12792 3.50289 5.17365 3.23056L5.32032 2.35723C5.32288 2.34202 5.32552 2.32609 5.32819 2.30996C5.37409 2.0327 5.44144 1.62596 5.71257 1.3185C6.02861 0.960119 6.51081 0.833374 7.12675 0.833374H8.87341C9.49684 0.833374 9.97856 0.970307 10.2927 1.33234C10.5642 1.64521 10.6299 2.05341 10.6737 2.32598C10.6759 2.33924 10.6779 2.35218 10.68 2.36478L10.8264 3.22994C10.8725 3.50222 10.6891 3.76029 10.4168 3.80636C10.1446 3.85244 9.8865 3.66907 9.84042 3.3968L9.69325 2.52717C9.63749 2.18515 9.60221 2.06239 9.53744 1.98774C9.5016 1.94644 9.37665 1.83337 8.87341 1.83337H7.12675C6.61601 1.83337 6.49488 1.9433 6.46259 1.97991C6.40118 2.04955 6.36652 2.16655 6.30647 2.52308Z" />
-            <path fill-rule="evenodd" clip-rule="evenodd" d="M12.5985 5.5942C12.8741 5.61198 13.083 5.8498 13.0653 6.12536L12.6317 12.8414L12.6309 12.8541C12.6133 13.1049 12.594 13.3808 12.5423 13.6374C12.4887 13.9035 12.3942 14.1844 12.2028 14.4336C11.802 14.9554 11.12 15.1665 10.1396 15.1665H5.85963C4.87925 15.1665 4.19721 14.9554 3.79643 14.4336C3.60503 14.1844 3.51056 13.9035 3.45697 13.6374C3.40528 13.3808 3.38597 13.1049 3.3684 12.8541L3.36733 12.8387L2.934 6.12536C2.91621 5.8498 3.12518 5.61198 3.40075 5.5942C3.67632 5.57641 3.91413 5.78538 3.93192 6.06095L4.36507 12.7715L4.36517 12.7729C4.38398 13.0414 4.39991 13.2544 4.43729 13.44C4.47369 13.6207 4.52423 13.7395 4.58949 13.8244C4.70204 13.971 4.98 14.1665 5.85963 14.1665H10.1396C11.0193 14.1665 11.2972 13.971 11.4098 13.8244C11.475 13.7395 11.5256 13.6207 11.562 13.44C11.5993 13.2544 11.6153 13.0414 11.6341 12.7729L11.6342 12.7715L12.0673 6.06095C12.0851 5.78538 12.3229 5.57641 12.5985 5.5942Z" />
-            <path fill-rule="evenodd" clip-rule="evenodd" d="M6.38672 11C6.38672 10.7239 6.61058 10.5 6.88672 10.5H9.10672C9.38286 10.5 9.60672 10.7239 9.60672 11C9.60672 11.2762 9.38286 11.5 9.10672 11.5H6.88672C6.61058 11.5 6.38672 11.2762 6.38672 11Z" />
-            <path fill-rule="evenodd" clip-rule="evenodd" d="M5.83333 8.33337C5.83333 8.05723 6.05719 7.83337 6.33333 7.83337H9.66667C9.94281 7.83337 10.1667 8.05723 10.1667 8.33337C10.1667 8.60952 9.94281 8.83337 9.66667 8.83337H6.33333C6.05719 8.83337 5.83333 8.60952 5.83333 8.33337Z" />
-          </svg>
+<div class="middle">
+  @if (!!imagesService.selectedPage) {
+    <span class="page">
+      <span class="header">
+        <span class="title-menu-wrapper">
+          <h1>Obdélník (výřez)</h1>
         </span>
-      </span>
-    </span>
-
-    <span class="properties">
-      <h2>Pozice (%)</h2>
-      <span class="inputs-wrapper">
-        <span class="input-wrapper">
-          <label for="X">X: </label>
-          <input
-            #xInput
-            id="X"
-            name="X"
-            title="Nejlevější bod obdélníku (většinou levá strana nebo roh)"
-            class="left-input"
-            type="number"
-            [ngModel]="imagesService.selectedPage.left * 100 | number:'1.0-2'"
-            [ngModelOptions]="{ updateOn: 'blur' }"
-            (ngModelChange)="changeInputValue('left', $event)"
-            (keydown.enter)="changeInputValue('left', $event)"
-            (blur)="onInputBlur('left', xInput)"
-            (keydown)="onKeyDown('left', $event, xInput)"
-            (focus)="onFocus('left', xInput)"
-          />
-          <span class="arrow up" (mousedown)="onArrowMouseDown('up', $event, 'left', xInput)">
-            <svg 
-              width="15" height="15" viewBox="0 0 15 15" fill="none" xmlns="http://www.w3.org/2000/svg"
-              [class.disabled]="imagesService.selectedPage.right >= 0.999946"
-            >
-              <path fill-rule="evenodd" clip-rule="evenodd" d="M1.22978 1.22978C2.11943 0.340134 3.45069 0 5.16667 0H9.16667C10.8826 0 12.2139 0.340134 13.1036 1.22978C13.9932 2.11943 14.3333 3.45069 14.3333 5.16667V9.16667C14.3333 10.8826 13.9932 12.2139 13.1036 13.1036C12.2139 13.9932 10.8826 14.3333 9.16667 14.3333H5.16667C3.45069 14.3333 2.11943 13.9932 1.22978 13.1036C0.340134 12.2139 0 10.8826 0 9.16667V5.16667C0 3.45069 0.340134 2.11943 1.22978 1.22978ZM1.93689 1.93689C1.32653 2.54724 1 3.54931 1 5.16667V9.16667C1 10.784 1.32653 11.7861 1.93689 12.3964C2.54724 13.0068 3.54931 13.3333 5.16667 13.3333H9.16667C10.784 13.3333 11.7861 13.0068 12.3964 12.3964C13.0068 11.7861 13.3333 10.784 13.3333 9.16667V5.16667C13.3333 3.54931 13.0068 2.54724 12.3964 1.93689C11.7861 1.32653 10.784 1 9.16667 1H5.16667C3.54931 1 2.54724 1.32653 1.93689 1.93689Z" />
-              <path fill-rule="evenodd" clip-rule="evenodd" d="M6.81343 5.43957C7.00858 5.24497 7.32439 5.24497 7.51954 5.43957L9.87287 7.78623C10.0684 7.98122 10.0689 8.2978 9.87387 8.49334C9.67889 8.68888 9.3623 8.68933 9.16677 8.49434L7.16648 6.49973L5.1662 8.49434C4.97066 8.68933 4.65408 8.68888 4.4591 8.49334C4.26411 8.2978 4.26456 7.98122 4.4601 7.78623L6.81343 5.43957Z" />
-            </svg>
-          </span>
-          <span class="arrow down" (mousedown)="onArrowMouseDown('down', $event, 'left', xInput)">
-            <svg 
-              width="15" height="15" viewBox="0 0 15 15" fill="none" xmlns="http://www.w3.org/2000/svg"
-              [class.disabled]="imagesService.selectedPage.left <= 0.000045"
-            >
-              <path fill-rule="evenodd" clip-rule="evenodd" d="M1.22978 1.22978C2.11943 0.340134 3.45069 0 5.16667 0H9.16667C10.8826 0 12.2139 0.340134 13.1036 1.22978C13.9932 2.11943 14.3333 3.45069 14.3333 5.16667V9.16667C14.3333 10.8826 13.9932 12.2139 13.1036 13.1036C12.2139 13.9932 10.8826 14.3333 9.16667 14.3333H5.16667C3.45069 14.3333 2.11943 13.9932 1.22978 13.1036C0.340134 12.2139 0 10.8826 0 9.16667V5.16667C0 3.45069 0.340134 2.11943 1.22978 1.22978ZM1.93689 1.93689C1.32653 2.54724 1 3.54931 1 5.16667V9.16667C1 10.784 1.32653 11.7861 1.93689 12.3964C2.54724 13.0068 3.54931 13.3333 5.16667 13.3333H9.16667C10.784 13.3333 11.7861 13.0068 12.3964 12.3964C13.0068 11.7861 13.3333 10.784 13.3333 9.16667V5.16667C13.3333 3.54931 13.0068 2.54724 12.3964 1.93689C11.7861 1.32653 10.784 1 9.16667 1H5.16667C3.54931 1 2.54724 1.32653 1.93689 1.93689Z" />
-              <path fill-rule="evenodd" clip-rule="evenodd" d="M4.4591 5.90671C4.65408 5.71118 4.97066 5.71073 5.1662 5.90571L7.16648 7.90033L9.16677 5.90571C9.3623 5.71073 9.67889 5.71118 9.87387 5.90671C10.0689 6.10225 10.0684 6.41884 9.87287 6.61382L7.51954 8.96049C7.32439 9.15508 7.00858 9.15508 6.81343 8.96049L4.4601 6.61382C4.26456 6.41884 4.26411 6.10225 4.4591 5.90671Z" />
-            </svg>
-          </span>
-        </span>
-        <span class="input-wrapper">
-          <label for="Y">Y: </label>
-          <input
-            #yInput
-            id="Y"
-            name="Y"
-            title="Nejhornější bod obdélníku (většinou horní strana nebo roh)"
-            class="right-input"
-            type="number"
-            [ngModel]="imagesService.selectedPage.top * 100 | number:'1.0-2'"
-            [ngModelOptions]="{ updateOn: 'blur' }"
-            (ngModelChange)="changeInputValue('top', $event)"
-            (keydown.enter)="changeInputValue('top', $event)"
-            (blur)="onInputBlur('top', yInput)"
-            (keydown)="onKeyDown('top', $event, yInput)"
-            (focus)="onFocus('top', yInput)"
-          />
-          <span class="arrow up" (mousedown)="onArrowMouseDown('up', $event, 'top', yInput)">
-            <svg 
-              width="15" height="15" viewBox="0 0 15 15" fill="none" xmlns="http://www.w3.org/2000/svg"
-              [class.disabled]="imagesService.selectedPage.bottom >= 0.999946"
-            >
-              <path fill-rule="evenodd" clip-rule="evenodd" d="M1.22978 1.22978C2.11943 0.340134 3.45069 0 5.16667 0H9.16667C10.8826 0 12.2139 0.340134 13.1036 1.22978C13.9932 2.11943 14.3333 3.45069 14.3333 5.16667V9.16667C14.3333 10.8826 13.9932 12.2139 13.1036 13.1036C12.2139 13.9932 10.8826 14.3333 9.16667 14.3333H5.16667C3.45069 14.3333 2.11943 13.9932 1.22978 13.1036C0.340134 12.2139 0 10.8826 0 9.16667V5.16667C0 3.45069 0.340134 2.11943 1.22978 1.22978ZM1.93689 1.93689C1.32653 2.54724 1 3.54931 1 5.16667V9.16667C1 10.784 1.32653 11.7861 1.93689 12.3964C2.54724 13.0068 3.54931 13.3333 5.16667 13.3333H9.16667C10.784 13.3333 11.7861 13.0068 12.3964 12.3964C13.0068 11.7861 13.3333 10.784 13.3333 9.16667V5.16667C13.3333 3.54931 13.0068 2.54724 12.3964 1.93689C11.7861 1.32653 10.784 1 9.16667 1H5.16667C3.54931 1 2.54724 1.32653 1.93689 1.93689Z" />
-              <path fill-rule="evenodd" clip-rule="evenodd" d="M6.81343 5.43957C7.00858 5.24497 7.32439 5.24497 7.51954 5.43957L9.87287 7.78623C10.0684 7.98122 10.0689 8.2978 9.87387 8.49334C9.67889 8.68888 9.3623 8.68933 9.16677 8.49434L7.16648 6.49973L5.1662 8.49434C4.97066 8.68933 4.65408 8.68888 4.4591 8.49334C4.26411 8.2978 4.26456 7.98122 4.4601 7.78623L6.81343 5.43957Z" />
-            </svg>
-          </span>
-          <span class="arrow down" (mousedown)="onArrowMouseDown('down', $event, 'top', yInput)">
-            <svg 
-              width="15" height="15" viewBox="0 0 15 15" fill="none" xmlns="http://www.w3.org/2000/svg"
-              [class.disabled]="imagesService.selectedPage.top <= 0.000045"
-            >
-              <path fill-rule="evenodd" clip-rule="evenodd" d="M1.22978 1.22978C2.11943 0.340134 3.45069 0 5.16667 0H9.16667C10.8826 0 12.2139 0.340134 13.1036 1.22978C13.9932 2.11943 14.3333 3.45069 14.3333 5.16667V9.16667C14.3333 10.8826 13.9932 12.2139 13.1036 13.1036C12.2139 13.9932 10.8826 14.3333 9.16667 14.3333H5.16667C3.45069 14.3333 2.11943 13.9932 1.22978 13.1036C0.340134 12.2139 0 10.8826 0 9.16667V5.16667C0 3.45069 0.340134 2.11943 1.22978 1.22978ZM1.93689 1.93689C1.32653 2.54724 1 3.54931 1 5.16667V9.16667C1 10.784 1.32653 11.7861 1.93689 12.3964C2.54724 13.0068 3.54931 13.3333 5.16667 13.3333H9.16667C10.784 13.3333 11.7861 13.0068 12.3964 12.3964C13.0068 11.7861 13.3333 10.784 13.3333 9.16667V5.16667C13.3333 3.54931 13.0068 2.54724 12.3964 1.93689C11.7861 1.32653 10.784 1 9.16667 1H5.16667C3.54931 1 2.54724 1.32653 1.93689 1.93689Z" />
-              <path fill-rule="evenodd" clip-rule="evenodd" d="M4.4591 5.90671C4.65408 5.71118 4.97066 5.71073 5.1662 5.90571L7.16648 7.90033L9.16677 5.90571C9.3623 5.71073 9.67889 5.71118 9.87387 5.90671C10.0689 6.10225 10.0684 6.41884 9.87287 6.61382L7.51954 8.96049C7.32439 9.15508 7.00858 9.15508 6.81343 8.96049L4.4601 6.61382C4.26456 6.41884 4.26411 6.10225 4.4591 5.90671Z" />
+        <span class="actions">
+          <span
+            class="action"
+            (click)="imagesService.removePage()"
+          >
+            Smazat
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path fill-rule="evenodd" clip-rule="evenodd" d="M3.31052 3.35614C4.64689 3.22118 5.98341 3.15369 7.32004 3.15369C9.56362 3.15369 11.8134 3.26788 14.0493 3.48946C14.3241 3.51669 14.5248 3.76153 14.4976 4.03633C14.4704 4.31112 14.2255 4.51181 13.9507 4.48458C11.7467 4.26616 9.52979 4.15369 7.32004 4.15369C6.0169 4.15369 4.71367 4.2195 3.41029 4.35116L3.40882 4.3513L2.04882 4.48463C1.774 4.51158 1.52937 4.31063 1.50242 4.03581C1.47548 3.76098 1.67643 3.51635 1.95125 3.48941L3.31052 3.35614Z" />
+              <path fill-rule="evenodd" clip-rule="evenodd" d="M6.30647 2.52308L6.15984 3.39618C6.11411 3.66851 5.85626 3.8522 5.58394 3.80647C5.31161 3.76073 5.12792 3.50289 5.17365 3.23056L5.32032 2.35723C5.32288 2.34202 5.32552 2.32609 5.32819 2.30996C5.37409 2.0327 5.44144 1.62596 5.71257 1.3185C6.02861 0.960119 6.51081 0.833374 7.12675 0.833374H8.87341C9.49684 0.833374 9.97856 0.970307 10.2927 1.33234C10.5642 1.64521 10.6299 2.05341 10.6737 2.32598C10.6759 2.33924 10.6779 2.35218 10.68 2.36478L10.8264 3.22994C10.8725 3.50222 10.6891 3.76029 10.4168 3.80636C10.1446 3.85244 9.8865 3.66907 9.84042 3.3968L9.69325 2.52717C9.63749 2.18515 9.60221 2.06239 9.53744 1.98774C9.5016 1.94644 9.37665 1.83337 8.87341 1.83337H7.12675C6.61601 1.83337 6.49488 1.9433 6.46259 1.97991C6.40118 2.04955 6.36652 2.16655 6.30647 2.52308Z" />
+              <path fill-rule="evenodd" clip-rule="evenodd" d="M12.5985 5.5942C12.8741 5.61198 13.083 5.8498 13.0653 6.12536L12.6317 12.8414L12.6309 12.8541C12.6133 13.1049 12.594 13.3808 12.5423 13.6374C12.4887 13.9035 12.3942 14.1844 12.2028 14.4336C11.802 14.9554 11.12 15.1665 10.1396 15.1665H5.85963C4.87925 15.1665 4.19721 14.9554 3.79643 14.4336C3.60503 14.1844 3.51056 13.9035 3.45697 13.6374C3.40528 13.3808 3.38597 13.1049 3.3684 12.8541L3.36733 12.8387L2.934 6.12536C2.91621 5.8498 3.12518 5.61198 3.40075 5.5942C3.67632 5.57641 3.91413 5.78538 3.93192 6.06095L4.36507 12.7715L4.36517 12.7729C4.38398 13.0414 4.39991 13.2544 4.43729 13.44C4.47369 13.6207 4.52423 13.7395 4.58949 13.8244C4.70204 13.971 4.98 14.1665 5.85963 14.1665H10.1396C11.0193 14.1665 11.2972 13.971 11.4098 13.8244C11.475 13.7395 11.5256 13.6207 11.562 13.44C11.5993 13.2544 11.6153 13.0414 11.6341 12.7729L11.6342 12.7715L12.0673 6.06095C12.0851 5.78538 12.3229 5.57641 12.5985 5.5942Z" />
+              <path fill-rule="evenodd" clip-rule="evenodd" d="M6.38672 11C6.38672 10.7239 6.61058 10.5 6.88672 10.5H9.10672C9.38286 10.5 9.60672 10.7239 9.60672 11C9.60672 11.2762 9.38286 11.5 9.10672 11.5H6.88672C6.61058 11.5 6.38672 11.2762 6.38672 11Z" />
+              <path fill-rule="evenodd" clip-rule="evenodd" d="M5.83333 8.33337C5.83333 8.05723 6.05719 7.83337 6.33333 7.83337H9.66667C9.94281 7.83337 10.1667 8.05723 10.1667 8.33337C10.1667 8.60952 9.94281 8.83337 9.66667 8.83337H6.33333C6.05719 8.83337 5.83333 8.60952 5.83333 8.33337Z" />
             </svg>
           </span>
         </span>
       </span>
-    </span>
 
-    <span class="properties">
-      <h2>Rozměry (%)</h2>
-      <span class="inputs-wrapper">
-        <span class="input-wrapper">
-          <label for="width">š: </label>
+      <span class="properties">
+        <h2>Pozice (%)</h2>
+        <span class="inputs-wrapper">
+          <span class="input-wrapper">
+            <label for="X">X: </label>
+            <input
+              #xInput
+              id="X"
+              name="X"
+              title="Nejlevější bod obdélníku (většinou levá strana nebo roh)"
+              class="left-input"
+              type="number"
+              [ngModel]="imagesService.selectedPage.left * 100 | number:'1.0-2'"
+              [ngModelOptions]="{ updateOn: 'blur' }"
+              (ngModelChange)="changeInputValue('left', $event)"
+              (keydown.enter)="changeInputValue('left', $event)"
+              (blur)="onInputBlur('left', xInput)"
+              (keydown)="onKeyDown('left', $event, xInput)"
+              (focus)="onFocus('left', xInput)"
+            />
+            <span class="arrow up" (mousedown)="onArrowMouseDown('up', $event, 'left', xInput)">
+              <svg 
+                width="15" height="15" viewBox="0 0 15 15" fill="none" xmlns="http://www.w3.org/2000/svg"
+                [class.disabled]="imagesService.selectedPage.right >= 0.999946"
+              >
+                <path fill-rule="evenodd" clip-rule="evenodd" d="M1.22978 1.22978C2.11943 0.340134 3.45069 0 5.16667 0H9.16667C10.8826 0 12.2139 0.340134 13.1036 1.22978C13.9932 2.11943 14.3333 3.45069 14.3333 5.16667V9.16667C14.3333 10.8826 13.9932 12.2139 13.1036 13.1036C12.2139 13.9932 10.8826 14.3333 9.16667 14.3333H5.16667C3.45069 14.3333 2.11943 13.9932 1.22978 13.1036C0.340134 12.2139 0 10.8826 0 9.16667V5.16667C0 3.45069 0.340134 2.11943 1.22978 1.22978ZM1.93689 1.93689C1.32653 2.54724 1 3.54931 1 5.16667V9.16667C1 10.784 1.32653 11.7861 1.93689 12.3964C2.54724 13.0068 3.54931 13.3333 5.16667 13.3333H9.16667C10.784 13.3333 11.7861 13.0068 12.3964 12.3964C13.0068 11.7861 13.3333 10.784 13.3333 9.16667V5.16667C13.3333 3.54931 13.0068 2.54724 12.3964 1.93689C11.7861 1.32653 10.784 1 9.16667 1H5.16667C3.54931 1 2.54724 1.32653 1.93689 1.93689Z" />
+                <path fill-rule="evenodd" clip-rule="evenodd" d="M6.81343 5.43957C7.00858 5.24497 7.32439 5.24497 7.51954 5.43957L9.87287 7.78623C10.0684 7.98122 10.0689 8.2978 9.87387 8.49334C9.67889 8.68888 9.3623 8.68933 9.16677 8.49434L7.16648 6.49973L5.1662 8.49434C4.97066 8.68933 4.65408 8.68888 4.4591 8.49334C4.26411 8.2978 4.26456 7.98122 4.4601 7.78623L6.81343 5.43957Z" />
+              </svg>
+            </span>
+            <span class="arrow down" (mousedown)="onArrowMouseDown('down', $event, 'left', xInput)">
+              <svg 
+                width="15" height="15" viewBox="0 0 15 15" fill="none" xmlns="http://www.w3.org/2000/svg"
+                [class.disabled]="imagesService.selectedPage.left <= 0.000045"
+              >
+                <path fill-rule="evenodd" clip-rule="evenodd" d="M1.22978 1.22978C2.11943 0.340134 3.45069 0 5.16667 0H9.16667C10.8826 0 12.2139 0.340134 13.1036 1.22978C13.9932 2.11943 14.3333 3.45069 14.3333 5.16667V9.16667C14.3333 10.8826 13.9932 12.2139 13.1036 13.1036C12.2139 13.9932 10.8826 14.3333 9.16667 14.3333H5.16667C3.45069 14.3333 2.11943 13.9932 1.22978 13.1036C0.340134 12.2139 0 10.8826 0 9.16667V5.16667C0 3.45069 0.340134 2.11943 1.22978 1.22978ZM1.93689 1.93689C1.32653 2.54724 1 3.54931 1 5.16667V9.16667C1 10.784 1.32653 11.7861 1.93689 12.3964C2.54724 13.0068 3.54931 13.3333 5.16667 13.3333H9.16667C10.784 13.3333 11.7861 13.0068 12.3964 12.3964C13.0068 11.7861 13.3333 10.784 13.3333 9.16667V5.16667C13.3333 3.54931 13.0068 2.54724 12.3964 1.93689C11.7861 1.32653 10.784 1 9.16667 1H5.16667C3.54931 1 2.54724 1.32653 1.93689 1.93689Z" />
+                <path fill-rule="evenodd" clip-rule="evenodd" d="M4.4591 5.90671C4.65408 5.71118 4.97066 5.71073 5.1662 5.90571L7.16648 7.90033L9.16677 5.90571C9.3623 5.71073 9.67889 5.71118 9.87387 5.90671C10.0689 6.10225 10.0684 6.41884 9.87287 6.61382L7.51954 8.96049C7.32439 9.15508 7.00858 9.15508 6.81343 8.96049L4.4601 6.61382C4.26456 6.41884 4.26411 6.10225 4.4591 5.90671Z" />
+              </svg>
+            </span>
+          </span>
+          <span class="input-wrapper">
+            <label for="Y">Y: </label>
+            <input
+              #yInput
+              id="Y"
+              name="Y"
+              title="Nejhornější bod obdélníku (většinou horní strana nebo roh)"
+              class="right-input"
+              type="number"
+              [ngModel]="imagesService.selectedPage.top * 100 | number:'1.0-2'"
+              [ngModelOptions]="{ updateOn: 'blur' }"
+              (ngModelChange)="changeInputValue('top', $event)"
+              (keydown.enter)="changeInputValue('top', $event)"
+              (blur)="onInputBlur('top', yInput)"
+              (keydown)="onKeyDown('top', $event, yInput)"
+              (focus)="onFocus('top', yInput)"
+            />
+            <span class="arrow up" (mousedown)="onArrowMouseDown('up', $event, 'top', yInput)">
+              <svg 
+                width="15" height="15" viewBox="0 0 15 15" fill="none" xmlns="http://www.w3.org/2000/svg"
+                [class.disabled]="imagesService.selectedPage.bottom >= 0.999946"
+              >
+                <path fill-rule="evenodd" clip-rule="evenodd" d="M1.22978 1.22978C2.11943 0.340134 3.45069 0 5.16667 0H9.16667C10.8826 0 12.2139 0.340134 13.1036 1.22978C13.9932 2.11943 14.3333 3.45069 14.3333 5.16667V9.16667C14.3333 10.8826 13.9932 12.2139 13.1036 13.1036C12.2139 13.9932 10.8826 14.3333 9.16667 14.3333H5.16667C3.45069 14.3333 2.11943 13.9932 1.22978 13.1036C0.340134 12.2139 0 10.8826 0 9.16667V5.16667C0 3.45069 0.340134 2.11943 1.22978 1.22978ZM1.93689 1.93689C1.32653 2.54724 1 3.54931 1 5.16667V9.16667C1 10.784 1.32653 11.7861 1.93689 12.3964C2.54724 13.0068 3.54931 13.3333 5.16667 13.3333H9.16667C10.784 13.3333 11.7861 13.0068 12.3964 12.3964C13.0068 11.7861 13.3333 10.784 13.3333 9.16667V5.16667C13.3333 3.54931 13.0068 2.54724 12.3964 1.93689C11.7861 1.32653 10.784 1 9.16667 1H5.16667C3.54931 1 2.54724 1.32653 1.93689 1.93689Z" />
+                <path fill-rule="evenodd" clip-rule="evenodd" d="M6.81343 5.43957C7.00858 5.24497 7.32439 5.24497 7.51954 5.43957L9.87287 7.78623C10.0684 7.98122 10.0689 8.2978 9.87387 8.49334C9.67889 8.68888 9.3623 8.68933 9.16677 8.49434L7.16648 6.49973L5.1662 8.49434C4.97066 8.68933 4.65408 8.68888 4.4591 8.49334C4.26411 8.2978 4.26456 7.98122 4.4601 7.78623L6.81343 5.43957Z" />
+              </svg>
+            </span>
+            <span class="arrow down" (mousedown)="onArrowMouseDown('down', $event, 'top', yInput)">
+              <svg 
+                width="15" height="15" viewBox="0 0 15 15" fill="none" xmlns="http://www.w3.org/2000/svg"
+                [class.disabled]="imagesService.selectedPage.top <= 0.000045"
+              >
+                <path fill-rule="evenodd" clip-rule="evenodd" d="M1.22978 1.22978C2.11943 0.340134 3.45069 0 5.16667 0H9.16667C10.8826 0 12.2139 0.340134 13.1036 1.22978C13.9932 2.11943 14.3333 3.45069 14.3333 5.16667V9.16667C14.3333 10.8826 13.9932 12.2139 13.1036 13.1036C12.2139 13.9932 10.8826 14.3333 9.16667 14.3333H5.16667C3.45069 14.3333 2.11943 13.9932 1.22978 13.1036C0.340134 12.2139 0 10.8826 0 9.16667V5.16667C0 3.45069 0.340134 2.11943 1.22978 1.22978ZM1.93689 1.93689C1.32653 2.54724 1 3.54931 1 5.16667V9.16667C1 10.784 1.32653 11.7861 1.93689 12.3964C2.54724 13.0068 3.54931 13.3333 5.16667 13.3333H9.16667C10.784 13.3333 11.7861 13.0068 12.3964 12.3964C13.0068 11.7861 13.3333 10.784 13.3333 9.16667V5.16667C13.3333 3.54931 13.0068 2.54724 12.3964 1.93689C11.7861 1.32653 10.784 1 9.16667 1H5.16667C3.54931 1 2.54724 1.32653 1.93689 1.93689Z" />
+                <path fill-rule="evenodd" clip-rule="evenodd" d="M4.4591 5.90671C4.65408 5.71118 4.97066 5.71073 5.1662 5.90571L7.16648 7.90033L9.16677 5.90571C9.3623 5.71073 9.67889 5.71118 9.87387 5.90671C10.0689 6.10225 10.0684 6.41884 9.87287 6.61382L7.51954 8.96049C7.32439 9.15508 7.00858 9.15508 6.81343 8.96049L4.4601 6.61382C4.26456 6.41884 4.26411 6.10225 4.4591 5.90671Z" />
+              </svg>
+            </span>
+          </span>
+        </span>
+      </span>
+
+      <span class="properties">
+        <h2>Rozměry (%)</h2>
+        <span class="inputs-wrapper">
+          <span class="input-wrapper">
+            <label for="width">š: </label>
+            <input
+              #widthInput
+              id="width"
+              name="width"
+              title="Šířka obdélníku"
+              class="left-input"
+              type="number"
+              [ngModel]="imagesService.selectedPage.width * 100 | number:'1.0-2'"
+              [ngModelOptions]="{ updateOn: 'blur' }"
+              (ngModelChange)="changeInputValue('width', $event)"
+              (keydown.enter)="changeInputValue('width', $event)"
+              (blur)="onInputBlur('width', widthInput)"
+              (keydown)="onKeyDown('width', $event, widthInput)"
+              (focus)="onFocus('width', widthInput)"
+            />
+            <span class="arrow up" (mousedown)="onArrowMouseDown('up', $event, 'width', widthInput)">
+              <svg
+                width="15" height="15" viewBox="0 0 15 15" fill="none" xmlns="http://www.w3.org/2000/svg"
+                [class.disabled]="
+                  (imagesService.selectedPage.angle === 0 && (imagesService.selectedPage.right) >= 0.999946)
+                  || (imagesService.selectedPage.angle === -180 && imagesService.selectedPage.left <= 0.000045)
+                  || (imagesService.selectedPage.angle === 90 && imagesService.selectedPage.bottom >= 0.999946)
+                  || (imagesService.selectedPage.angle === -90 && imagesService.selectedPage.top <= 0.000045)
+                  || (imagesService.selectedPage.angle > 0 && imagesService.selectedPage.angle < 90 && (imagesService.selectedPage.right >= 0.999946 || imagesService.selectedPage.bottom >= 0.999946))
+                  || (imagesService.selectedPage.angle > 90 && (imagesService.selectedPage.left <= 0.000045 || imagesService.selectedPage.bottom >= 0.999946))
+                  || (imagesService.selectedPage.angle < -90 && imagesService.selectedPage.angle > -180 && (imagesService.selectedPage.left <= 0.000045 || imagesService.selectedPage.top <= 0.000045))
+                  || (imagesService.selectedPage.angle < 0 && imagesService.selectedPage.angle > -90 && (imagesService.selectedPage.right >= 0.999946 || imagesService.selectedPage.top <= 0.000045))
+                "
+              >
+                <path fill-rule="evenodd" clip-rule="evenodd" d="M1.22978 1.22978C2.11943 0.340134 3.45069 0 5.16667 0H9.16667C10.8826 0 12.2139 0.340134 13.1036 1.22978C13.9932 2.11943 14.3333 3.45069 14.3333 5.16667V9.16667C14.3333 10.8826 13.9932 12.2139 13.1036 13.1036C12.2139 13.9932 10.8826 14.3333 9.16667 14.3333H5.16667C3.45069 14.3333 2.11943 13.9932 1.22978 13.1036C0.340134 12.2139 0 10.8826 0 9.16667V5.16667C0 3.45069 0.340134 2.11943 1.22978 1.22978ZM1.93689 1.93689C1.32653 2.54724 1 3.54931 1 5.16667V9.16667C1 10.784 1.32653 11.7861 1.93689 12.3964C2.54724 13.0068 3.54931 13.3333 5.16667 13.3333H9.16667C10.784 13.3333 11.7861 13.0068 12.3964 12.3964C13.0068 11.7861 13.3333 10.784 13.3333 9.16667V5.16667C13.3333 3.54931 13.0068 2.54724 12.3964 1.93689C11.7861 1.32653 10.784 1 9.16667 1H5.16667C3.54931 1 2.54724 1.32653 1.93689 1.93689Z" />
+                <path fill-rule="evenodd" clip-rule="evenodd" d="M6.81343 5.43957C7.00858 5.24497 7.32439 5.24497 7.51954 5.43957L9.87287 7.78623C10.0684 7.98122 10.0689 8.2978 9.87387 8.49334C9.67889 8.68888 9.3623 8.68933 9.16677 8.49434L7.16648 6.49973L5.1662 8.49434C4.97066 8.68933 4.65408 8.68888 4.4591 8.49334C4.26411 8.2978 4.26456 7.98122 4.4601 7.78623L6.81343 5.43957Z" />
+              </svg>
+            </span>
+            <span class="arrow down" (mousedown)="onArrowMouseDown('down', $event, 'width', widthInput)">
+              <svg 
+                width="15" height="15" viewBox="0 0 15 15" fill="none" xmlns="http://www.w3.org/2000/svg"
+                [class.disabled]="imagesService.selectedPage.width <= 0.000045"
+              >
+                <path fill-rule="evenodd" clip-rule="evenodd" d="M1.22978 1.22978C2.11943 0.340134 3.45069 0 5.16667 0H9.16667C10.8826 0 12.2139 0.340134 13.1036 1.22978C13.9932 2.11943 14.3333 3.45069 14.3333 5.16667V9.16667C14.3333 10.8826 13.9932 12.2139 13.1036 13.1036C12.2139 13.9932 10.8826 14.3333 9.16667 14.3333H5.16667C3.45069 14.3333 2.11943 13.9932 1.22978 13.1036C0.340134 12.2139 0 10.8826 0 9.16667V5.16667C0 3.45069 0.340134 2.11943 1.22978 1.22978ZM1.93689 1.93689C1.32653 2.54724 1 3.54931 1 5.16667V9.16667C1 10.784 1.32653 11.7861 1.93689 12.3964C2.54724 13.0068 3.54931 13.3333 5.16667 13.3333H9.16667C10.784 13.3333 11.7861 13.0068 12.3964 12.3964C13.0068 11.7861 13.3333 10.784 13.3333 9.16667V5.16667C13.3333 3.54931 13.0068 2.54724 12.3964 1.93689C11.7861 1.32653 10.784 1 9.16667 1H5.16667C3.54931 1 2.54724 1.32653 1.93689 1.93689Z" />
+                <path fill-rule="evenodd" clip-rule="evenodd" d="M4.4591 5.90671C4.65408 5.71118 4.97066 5.71073 5.1662 5.90571L7.16648 7.90033L9.16677 5.90571C9.3623 5.71073 9.67889 5.71118 9.87387 5.90671C10.0689 6.10225 10.0684 6.41884 9.87287 6.61382L7.51954 8.96049C7.32439 9.15508 7.00858 9.15508 6.81343 8.96049L4.4601 6.61382C4.26456 6.41884 4.26411 6.10225 4.4591 5.90671Z" />
+              </svg>
+            </span>
+          </span>
+          <span class="input-wrapper">
+            <label for="height">v: </label>
+            <input
+              #heightInput
+              id="height"
+              name="height"
+              title="Výška obdélníku"
+              class="right-input"
+              type="number"
+              [ngModel]="imagesService.selectedPage.height * 100 | number:'1.0-2'"
+              [ngModelOptions]="{ updateOn: 'blur' }"
+              (ngModelChange)="changeInputValue('height', $event)"
+              (keydown.enter)="changeInputValue('height', $event)"
+              (blur)="onInputBlur('height', heightInput)"
+              (keydown)="onKeyDown('height', $event, heightInput)"
+              (focus)="onFocus('height', heightInput)"
+            />
+            <span class="arrow up" (mousedown)="onArrowMouseDown('up', $event, 'height', heightInput)">
+              <svg 
+                width="15" height="15" viewBox="0 0 15 15" fill="none" xmlns="http://www.w3.org/2000/svg"
+                [class.disabled]="
+                  (imagesService.selectedPage.angle === 0 && imagesService.selectedPage.bottom >= 0.999946)
+                  || (imagesService.selectedPage.angle === -180 && imagesService.selectedPage.top <= 0.000045)
+                  || (imagesService.selectedPage.angle === -90 && imagesService.selectedPage.right >= 0.999946)
+                  || (imagesService.selectedPage.angle === 90 && imagesService.selectedPage.left <= 0.000045)
+                  || (imagesService.selectedPage.angle > 0 && imagesService.selectedPage.angle < 90 && (imagesService.selectedPage.bottom >= 0.999946 || imagesService.selectedPage.left <= 0.000045))
+                  || (imagesService.selectedPage.angle > 90 && (imagesService.selectedPage.top <= 0.000045 || imagesService.selectedPage.left <= 0.000045))
+                  || (imagesService.selectedPage.angle < -90 && imagesService.selectedPage.angle > -180 && (imagesService.selectedPage.top <= 0.000045 || imagesService.selectedPage.right >= 0.999946))
+                  || (imagesService.selectedPage.angle < 0 && imagesService.selectedPage.angle > -90 && (imagesService.selectedPage.right >= 0.999946 || imagesService.selectedPage.bottom >= 0.999946))
+                "
+              >
+                <path fill-rule="evenodd" clip-rule="evenodd" d="M1.22978 1.22978C2.11943 0.340134 3.45069 0 5.16667 0H9.16667C10.8826 0 12.2139 0.340134 13.1036 1.22978C13.9932 2.11943 14.3333 3.45069 14.3333 5.16667V9.16667C14.3333 10.8826 13.9932 12.2139 13.1036 13.1036C12.2139 13.9932 10.8826 14.3333 9.16667 14.3333H5.16667C3.45069 14.3333 2.11943 13.9932 1.22978 13.1036C0.340134 12.2139 0 10.8826 0 9.16667V5.16667C0 3.45069 0.340134 2.11943 1.22978 1.22978ZM1.93689 1.93689C1.32653 2.54724 1 3.54931 1 5.16667V9.16667C1 10.784 1.32653 11.7861 1.93689 12.3964C2.54724 13.0068 3.54931 13.3333 5.16667 13.3333H9.16667C10.784 13.3333 11.7861 13.0068 12.3964 12.3964C13.0068 11.7861 13.3333 10.784 13.3333 9.16667V5.16667C13.3333 3.54931 13.0068 2.54724 12.3964 1.93689C11.7861 1.32653 10.784 1 9.16667 1H5.16667C3.54931 1 2.54724 1.32653 1.93689 1.93689Z" />
+                <path fill-rule="evenodd" clip-rule="evenodd" d="M6.81343 5.43957C7.00858 5.24497 7.32439 5.24497 7.51954 5.43957L9.87287 7.78623C10.0684 7.98122 10.0689 8.2978 9.87387 8.49334C9.67889 8.68888 9.3623 8.68933 9.16677 8.49434L7.16648 6.49973L5.1662 8.49434C4.97066 8.68933 4.65408 8.68888 4.4591 8.49334C4.26411 8.2978 4.26456 7.98122 4.4601 7.78623L6.81343 5.43957Z" />
+              </svg>
+            </span>
+            <span class="arrow down" (mousedown)="onArrowMouseDown('down', $event, 'height', heightInput)">
+              <svg 
+                width="15" height="15" viewBox="0 0 15 15" fill="none" xmlns="http://www.w3.org/2000/svg"
+                [class.disabled]="imagesService.selectedPage.height <= 0.000045"
+              >
+                <path fill-rule="evenodd" clip-rule="evenodd" d="M1.22978 1.22978C2.11943 0.340134 3.45069 0 5.16667 0H9.16667C10.8826 0 12.2139 0.340134 13.1036 1.22978C13.9932 2.11943 14.3333 3.45069 14.3333 5.16667V9.16667C14.3333 10.8826 13.9932 12.2139 13.1036 13.1036C12.2139 13.9932 10.8826 14.3333 9.16667 14.3333H5.16667C3.45069 14.3333 2.11943 13.9932 1.22978 13.1036C0.340134 12.2139 0 10.8826 0 9.16667V5.16667C0 3.45069 0.340134 2.11943 1.22978 1.22978ZM1.93689 1.93689C1.32653 2.54724 1 3.54931 1 5.16667V9.16667C1 10.784 1.32653 11.7861 1.93689 12.3964C2.54724 13.0068 3.54931 13.3333 5.16667 13.3333H9.16667C10.784 13.3333 11.7861 13.0068 12.3964 12.3964C13.0068 11.7861 13.3333 10.784 13.3333 9.16667V5.16667C13.3333 3.54931 13.0068 2.54724 12.3964 1.93689C11.7861 1.32653 10.784 1 9.16667 1H5.16667C3.54931 1 2.54724 1.32653 1.93689 1.93689Z" />
+                <path fill-rule="evenodd" clip-rule="evenodd" d="M4.4591 5.90671C4.65408 5.71118 4.97066 5.71073 5.1662 5.90571L7.16648 7.90033L9.16677 5.90571C9.3623 5.71073 9.67889 5.71118 9.87387 5.90671C10.0689 6.10225 10.0684 6.41884 9.87287 6.61382L7.51954 8.96049C7.32439 9.15508 7.00858 9.15508 6.81343 8.96049L4.4601 6.61382C4.26456 6.41884 4.26411 6.10225 4.4591 5.90671Z" />
+              </svg>
+            </span>
+          </span>
+        </span>
+      </span>
+
+      <span class="properties">
+        <h2>Otáčení (°)</h2>
+        <span class="input-wrapper angle-wrapper">
           <input
-            #widthInput
-            id="width"
-            name="width"
-            title="Šířka obdélníku"
-            class="left-input"
+            #angleInput
+            title="Kladné stupně otáčí obdélník po směru hodinových ručiček"
+            class="left-input angle-input"
             type="number"
-            [ngModel]="imagesService.selectedPage.width * 100 | number:'1.0-2'"
+            [ngModel]="imagesService.selectedPage.angle | number:'1.0-2'"
             [ngModelOptions]="{ updateOn: 'blur' }"
-            (ngModelChange)="changeInputValue('width', $event)"
-            (keydown.enter)="changeInputValue('width', $event)"
-            (blur)="onInputBlur('width', widthInput)"
-            (keydown)="onKeyDown('width', $event, widthInput)"
-            (focus)="onFocus('width', widthInput)"
+            (ngModelChange)="changeInputValue('angle', $event)"
+            (keydown.enter)="changeInputValue('angle', $event)"
+            (blur)="onInputBlur('angle', angleInput)"
+            (keydown)="onKeyDown('angle', $event, angleInput)"
+            (focus)="onFocus('angle', angleInput)"
           />
-          <span class="arrow up" (mousedown)="onArrowMouseDown('up', $event, 'width', widthInput)">
+          <span class="arrow up" (mousedown)="onArrowMouseDown('up', $event, 'angle', angleInput)">
             <svg
               width="15" height="15" viewBox="0 0 15 15" fill="none" xmlns="http://www.w3.org/2000/svg"
               [class.disabled]="
-                (imagesService.selectedPage.angle === 0 && (imagesService.selectedPage.right) >= 0.999946)
-                || (imagesService.selectedPage.angle === -180 && imagesService.selectedPage.left <= 0.000045)
-                || (imagesService.selectedPage.angle === 90 && imagesService.selectedPage.bottom >= 0.999946)
-                || (imagesService.selectedPage.angle === -90 && imagesService.selectedPage.top <= 0.000045)
-                || (imagesService.selectedPage.angle > 0 && imagesService.selectedPage.angle < 90 && (imagesService.selectedPage.right >= 0.999946 || imagesService.selectedPage.bottom >= 0.999946))
-                || (imagesService.selectedPage.angle > 90 && (imagesService.selectedPage.left <= 0.000045 || imagesService.selectedPage.bottom >= 0.999946))
-                || (imagesService.selectedPage.angle < -90 && imagesService.selectedPage.angle > -180 && (imagesService.selectedPage.left <= 0.000045 || imagesService.selectedPage.top <= 0.000045))
-                || (imagesService.selectedPage.angle < 0 && imagesService.selectedPage.angle > -90 && (imagesService.selectedPage.right >= 0.999946 || imagesService.selectedPage.top <= 0.000045))
+                (
+                  rotationDirection > 0
+                  && (
+                    imagesService.selectedPage.bottom >= 0.999946
+                    || imagesService.selectedPage.top <= 0.000045
+                    || imagesService.selectedPage.right >= 0.999946
+                    || imagesService.selectedPage.left <= 0.000045
+                  )
+                )
               "
             >
               <path fill-rule="evenodd" clip-rule="evenodd" d="M1.22978 1.22978C2.11943 0.340134 3.45069 0 5.16667 0H9.16667C10.8826 0 12.2139 0.340134 13.1036 1.22978C13.9932 2.11943 14.3333 3.45069 14.3333 5.16667V9.16667C14.3333 10.8826 13.9932 12.2139 13.1036 13.1036C12.2139 13.9932 10.8826 14.3333 9.16667 14.3333H5.16667C3.45069 14.3333 2.11943 13.9932 1.22978 13.1036C0.340134 12.2139 0 10.8826 0 9.16667V5.16667C0 3.45069 0.340134 2.11943 1.22978 1.22978ZM1.93689 1.93689C1.32653 2.54724 1 3.54931 1 5.16667V9.16667C1 10.784 1.32653 11.7861 1.93689 12.3964C2.54724 13.0068 3.54931 13.3333 5.16667 13.3333H9.16667C10.784 13.3333 11.7861 13.0068 12.3964 12.3964C13.0068 11.7861 13.3333 10.784 13.3333 9.16667V5.16667C13.3333 3.54931 13.0068 2.54724 12.3964 1.93689C11.7861 1.32653 10.784 1 9.16667 1H5.16667C3.54931 1 2.54724 1.32653 1.93689 1.93689Z" />
               <path fill-rule="evenodd" clip-rule="evenodd" d="M6.81343 5.43957C7.00858 5.24497 7.32439 5.24497 7.51954 5.43957L9.87287 7.78623C10.0684 7.98122 10.0689 8.2978 9.87387 8.49334C9.67889 8.68888 9.3623 8.68933 9.16677 8.49434L7.16648 6.49973L5.1662 8.49434C4.97066 8.68933 4.65408 8.68888 4.4591 8.49334C4.26411 8.2978 4.26456 7.98122 4.4601 7.78623L6.81343 5.43957Z" />
             </svg>
           </span>
-          <span class="arrow down" (mousedown)="onArrowMouseDown('down', $event, 'width', widthInput)">
-            <svg 
-              width="15" height="15" viewBox="0 0 15 15" fill="none" xmlns="http://www.w3.org/2000/svg"
-              [class.disabled]="imagesService.selectedPage.width <= 0.000045"
-            >
-              <path fill-rule="evenodd" clip-rule="evenodd" d="M1.22978 1.22978C2.11943 0.340134 3.45069 0 5.16667 0H9.16667C10.8826 0 12.2139 0.340134 13.1036 1.22978C13.9932 2.11943 14.3333 3.45069 14.3333 5.16667V9.16667C14.3333 10.8826 13.9932 12.2139 13.1036 13.1036C12.2139 13.9932 10.8826 14.3333 9.16667 14.3333H5.16667C3.45069 14.3333 2.11943 13.9932 1.22978 13.1036C0.340134 12.2139 0 10.8826 0 9.16667V5.16667C0 3.45069 0.340134 2.11943 1.22978 1.22978ZM1.93689 1.93689C1.32653 2.54724 1 3.54931 1 5.16667V9.16667C1 10.784 1.32653 11.7861 1.93689 12.3964C2.54724 13.0068 3.54931 13.3333 5.16667 13.3333H9.16667C10.784 13.3333 11.7861 13.0068 12.3964 12.3964C13.0068 11.7861 13.3333 10.784 13.3333 9.16667V5.16667C13.3333 3.54931 13.0068 2.54724 12.3964 1.93689C11.7861 1.32653 10.784 1 9.16667 1H5.16667C3.54931 1 2.54724 1.32653 1.93689 1.93689Z" />
-              <path fill-rule="evenodd" clip-rule="evenodd" d="M4.4591 5.90671C4.65408 5.71118 4.97066 5.71073 5.1662 5.90571L7.16648 7.90033L9.16677 5.90571C9.3623 5.71073 9.67889 5.71118 9.87387 5.90671C10.0689 6.10225 10.0684 6.41884 9.87287 6.61382L7.51954 8.96049C7.32439 9.15508 7.00858 9.15508 6.81343 8.96049L4.4601 6.61382C4.26456 6.41884 4.26411 6.10225 4.4591 5.90671Z" />
-            </svg>
-          </span>
-        </span>
-        <span class="input-wrapper">
-          <label for="height">v: </label>
-          <input
-            #heightInput
-            id="height"
-            name="height"
-            title="Výška obdélníku"
-            class="right-input"
-            type="number"
-            [ngModel]="imagesService.selectedPage.height * 100 | number:'1.0-2'"
-            [ngModelOptions]="{ updateOn: 'blur' }"
-            (ngModelChange)="changeInputValue('height', $event)"
-            (keydown.enter)="changeInputValue('height', $event)"
-            (blur)="onInputBlur('height', heightInput)"
-            (keydown)="onKeyDown('height', $event, heightInput)"
-            (focus)="onFocus('height', heightInput)"
-          />
-          <span class="arrow up" (mousedown)="onArrowMouseDown('up', $event, 'height', heightInput)">
-            <svg 
+          <span class="arrow down" (mousedown)="onArrowMouseDown('down', $event, 'angle', angleInput)">
+            <svg
               width="15" height="15" viewBox="0 0 15 15" fill="none" xmlns="http://www.w3.org/2000/svg"
               [class.disabled]="
-                (imagesService.selectedPage.angle === 0 && imagesService.selectedPage.bottom >= 0.999946)
-                || (imagesService.selectedPage.angle === -180 && imagesService.selectedPage.top <= 0.000045)
-                || (imagesService.selectedPage.angle === -90 && imagesService.selectedPage.right >= 0.999946)
-                || (imagesService.selectedPage.angle === 90 && imagesService.selectedPage.left <= 0.000045)
-                || (imagesService.selectedPage.angle > 0 && imagesService.selectedPage.angle < 90 && (imagesService.selectedPage.bottom >= 0.999946 || imagesService.selectedPage.left <= 0.000045))
-                || (imagesService.selectedPage.angle > 90 && (imagesService.selectedPage.top <= 0.000045 || imagesService.selectedPage.left <= 0.000045))
-                || (imagesService.selectedPage.angle < -90 && imagesService.selectedPage.angle > -180 && (imagesService.selectedPage.top <= 0.000045 || imagesService.selectedPage.right >= 0.999946))
-                || (imagesService.selectedPage.angle < 0 && imagesService.selectedPage.angle > -90 && (imagesService.selectedPage.right >= 0.999946 || imagesService.selectedPage.bottom >= 0.999946))
+                (
+                  rotationDirection < 0
+                  && (
+                    imagesService.selectedPage.bottom >= 0.999946
+                    || imagesService.selectedPage.top <= 0.000045
+                    || imagesService.selectedPage.right >= 0.999946
+                    || imagesService.selectedPage.left <= 0.000045
+                  )
+                )
               "
-            >
-              <path fill-rule="evenodd" clip-rule="evenodd" d="M1.22978 1.22978C2.11943 0.340134 3.45069 0 5.16667 0H9.16667C10.8826 0 12.2139 0.340134 13.1036 1.22978C13.9932 2.11943 14.3333 3.45069 14.3333 5.16667V9.16667C14.3333 10.8826 13.9932 12.2139 13.1036 13.1036C12.2139 13.9932 10.8826 14.3333 9.16667 14.3333H5.16667C3.45069 14.3333 2.11943 13.9932 1.22978 13.1036C0.340134 12.2139 0 10.8826 0 9.16667V5.16667C0 3.45069 0.340134 2.11943 1.22978 1.22978ZM1.93689 1.93689C1.32653 2.54724 1 3.54931 1 5.16667V9.16667C1 10.784 1.32653 11.7861 1.93689 12.3964C2.54724 13.0068 3.54931 13.3333 5.16667 13.3333H9.16667C10.784 13.3333 11.7861 13.0068 12.3964 12.3964C13.0068 11.7861 13.3333 10.784 13.3333 9.16667V5.16667C13.3333 3.54931 13.0068 2.54724 12.3964 1.93689C11.7861 1.32653 10.784 1 9.16667 1H5.16667C3.54931 1 2.54724 1.32653 1.93689 1.93689Z" />
-              <path fill-rule="evenodd" clip-rule="evenodd" d="M6.81343 5.43957C7.00858 5.24497 7.32439 5.24497 7.51954 5.43957L9.87287 7.78623C10.0684 7.98122 10.0689 8.2978 9.87387 8.49334C9.67889 8.68888 9.3623 8.68933 9.16677 8.49434L7.16648 6.49973L5.1662 8.49434C4.97066 8.68933 4.65408 8.68888 4.4591 8.49334C4.26411 8.2978 4.26456 7.98122 4.4601 7.78623L6.81343 5.43957Z" />
-            </svg>
-          </span>
-          <span class="arrow down" (mousedown)="onArrowMouseDown('down', $event, 'height', heightInput)">
-            <svg 
-              width="15" height="15" viewBox="0 0 15 15" fill="none" xmlns="http://www.w3.org/2000/svg"
-              [class.disabled]="imagesService.selectedPage.height <= 0.000045"
             >
               <path fill-rule="evenodd" clip-rule="evenodd" d="M1.22978 1.22978C2.11943 0.340134 3.45069 0 5.16667 0H9.16667C10.8826 0 12.2139 0.340134 13.1036 1.22978C13.9932 2.11943 14.3333 3.45069 14.3333 5.16667V9.16667C14.3333 10.8826 13.9932 12.2139 13.1036 13.1036C12.2139 13.9932 10.8826 14.3333 9.16667 14.3333H5.16667C3.45069 14.3333 2.11943 13.9932 1.22978 13.1036C0.340134 12.2139 0 10.8826 0 9.16667V5.16667C0 3.45069 0.340134 2.11943 1.22978 1.22978ZM1.93689 1.93689C1.32653 2.54724 1 3.54931 1 5.16667V9.16667C1 10.784 1.32653 11.7861 1.93689 12.3964C2.54724 13.0068 3.54931 13.3333 5.16667 13.3333H9.16667C10.784 13.3333 11.7861 13.0068 12.3964 12.3964C13.0068 11.7861 13.3333 10.784 13.3333 9.16667V5.16667C13.3333 3.54931 13.0068 2.54724 12.3964 1.93689C11.7861 1.32653 10.784 1 9.16667 1H5.16667C3.54931 1 2.54724 1.32653 1.93689 1.93689Z" />
               <path fill-rule="evenodd" clip-rule="evenodd" d="M4.4591 5.90671C4.65408 5.71118 4.97066 5.71073 5.1662 5.90571L7.16648 7.90033L9.16677 5.90571C9.3623 5.71073 9.67889 5.71118 9.87387 5.90671C10.0689 6.10225 10.0684 6.41884 9.87287 6.61382L7.51954 8.96049C7.32439 9.15508 7.00858 9.15508 6.81343 8.96049L4.4601 6.61382C4.26456 6.41884 4.26411 6.10225 4.4591 5.90671Z" />
@@ -220,67 +279,10 @@
         </span>
       </span>
     </span>
+  }
+</div>
 
-    <span class="properties">
-      <h2>Otáčení (°)</h2>
-      <span class="input-wrapper angle-wrapper">
-        <input
-          #angleInput
-          title="Kladné stupně otáčí obdélník po směru hodinových ručiček"
-          class="left-input angle-input"
-          type="number"
-          [ngModel]="imagesService.selectedPage.angle | number:'1.0-2'"
-          [ngModelOptions]="{ updateOn: 'blur' }"
-          (ngModelChange)="changeInputValue('angle', $event)"
-          (keydown.enter)="changeInputValue('angle', $event)"
-          (blur)="onInputBlur('angle', angleInput)"
-          (keydown)="onKeyDown('angle', $event, angleInput)"
-          (focus)="onFocus('angle', angleInput)"
-        />
-        <span class="arrow up" (mousedown)="onArrowMouseDown('up', $event, 'angle', angleInput)">
-          <svg
-            width="15" height="15" viewBox="0 0 15 15" fill="none" xmlns="http://www.w3.org/2000/svg"
-            [class.disabled]="
-              (
-                rotationDirection > 0
-                && (
-                  imagesService.selectedPage.bottom >= 0.999946
-                  || imagesService.selectedPage.top <= 0.000045
-                  || imagesService.selectedPage.right >= 0.999946
-                  || imagesService.selectedPage.left <= 0.000045
-                )
-              )
-            "
-          >
-            <path fill-rule="evenodd" clip-rule="evenodd" d="M1.22978 1.22978C2.11943 0.340134 3.45069 0 5.16667 0H9.16667C10.8826 0 12.2139 0.340134 13.1036 1.22978C13.9932 2.11943 14.3333 3.45069 14.3333 5.16667V9.16667C14.3333 10.8826 13.9932 12.2139 13.1036 13.1036C12.2139 13.9932 10.8826 14.3333 9.16667 14.3333H5.16667C3.45069 14.3333 2.11943 13.9932 1.22978 13.1036C0.340134 12.2139 0 10.8826 0 9.16667V5.16667C0 3.45069 0.340134 2.11943 1.22978 1.22978ZM1.93689 1.93689C1.32653 2.54724 1 3.54931 1 5.16667V9.16667C1 10.784 1.32653 11.7861 1.93689 12.3964C2.54724 13.0068 3.54931 13.3333 5.16667 13.3333H9.16667C10.784 13.3333 11.7861 13.0068 12.3964 12.3964C13.0068 11.7861 13.3333 10.784 13.3333 9.16667V5.16667C13.3333 3.54931 13.0068 2.54724 12.3964 1.93689C11.7861 1.32653 10.784 1 9.16667 1H5.16667C3.54931 1 2.54724 1.32653 1.93689 1.93689Z" />
-            <path fill-rule="evenodd" clip-rule="evenodd" d="M6.81343 5.43957C7.00858 5.24497 7.32439 5.24497 7.51954 5.43957L9.87287 7.78623C10.0684 7.98122 10.0689 8.2978 9.87387 8.49334C9.67889 8.68888 9.3623 8.68933 9.16677 8.49434L7.16648 6.49973L5.1662 8.49434C4.97066 8.68933 4.65408 8.68888 4.4591 8.49334C4.26411 8.2978 4.26456 7.98122 4.4601 7.78623L6.81343 5.43957Z" />
-          </svg>
-        </span>
-        <span class="arrow down" (mousedown)="onArrowMouseDown('down', $event, 'angle', angleInput)">
-          <svg
-            width="15" height="15" viewBox="0 0 15 15" fill="none" xmlns="http://www.w3.org/2000/svg"
-            [class.disabled]="
-              (
-                rotationDirection < 0
-                && (
-                  imagesService.selectedPage.bottom >= 0.999946
-                  || imagesService.selectedPage.top <= 0.000045
-                  || imagesService.selectedPage.right >= 0.999946
-                  || imagesService.selectedPage.left <= 0.000045
-                )
-              )
-            "
-          >
-            <path fill-rule="evenodd" clip-rule="evenodd" d="M1.22978 1.22978C2.11943 0.340134 3.45069 0 5.16667 0H9.16667C10.8826 0 12.2139 0.340134 13.1036 1.22978C13.9932 2.11943 14.3333 3.45069 14.3333 5.16667V9.16667C14.3333 10.8826 13.9932 12.2139 13.1036 13.1036C12.2139 13.9932 10.8826 14.3333 9.16667 14.3333H5.16667C3.45069 14.3333 2.11943 13.9932 1.22978 13.1036C0.340134 12.2139 0 10.8826 0 9.16667V5.16667C0 3.45069 0.340134 2.11943 1.22978 1.22978ZM1.93689 1.93689C1.32653 2.54724 1 3.54931 1 5.16667V9.16667C1 10.784 1.32653 11.7861 1.93689 12.3964C2.54724 13.0068 3.54931 13.3333 5.16667 13.3333H9.16667C10.784 13.3333 11.7861 13.0068 12.3964 12.3964C13.0068 11.7861 13.3333 10.784 13.3333 9.16667V5.16667C13.3333 3.54931 13.0068 2.54724 12.3964 1.93689C11.7861 1.32653 10.784 1 9.16667 1H5.16667C3.54931 1 2.54724 1.32653 1.93689 1.93689Z" />
-            <path fill-rule="evenodd" clip-rule="evenodd" d="M4.4591 5.90671C4.65408 5.71118 4.97066 5.71073 5.1662 5.90571L7.16648 7.90033L9.16677 5.90571C9.3623 5.71073 9.67889 5.71118 9.87387 5.90671C10.0689 6.10225 10.0684 6.41884 9.87287 6.61382L7.51954 8.96049C7.32439 9.15508 7.00858 9.15508 6.81343 8.96049L4.4601 6.61382C4.26456 6.41884 4.26411 6.10225 4.4591 5.90671Z" />
-          </svg>
-        </span>
-      </span>
-    </span>
-  </span>
-}
-
-<span class="footer">
+<div class="footer">
   <span 
     class="button real-button primary"
     (click)="openDialog()"
@@ -291,7 +293,7 @@
       <path fill-rule="evenodd" clip-rule="evenodd" d="M1.83325 8C1.83325 7.72386 2.05711 7.5 2.33325 7.5H13.5533C13.8294 7.5 14.0533 7.72386 14.0533 8C14.0533 8.27614 13.8294 8.5 13.5533 8.5H2.33325C2.05711 8.5 1.83325 8.27614 1.83325 8Z" />
     </svg>
   </span>
-</span>
+</div>
 
 @if (dialogOpen()) {
   <app-dialog
