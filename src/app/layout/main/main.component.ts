@@ -108,7 +108,7 @@ export class MainComponent {
     const c = this.imagesService.c;
     const [centerX, centerY] = [c.width * p.xc, c.height * p.yc];
     const [width, height] = [c.width * p.width, c.height * p.height];
-    const angle = degreeToRadian(p.angle);
+    const angle = degreeToRadian(-p.angle);
     const [halfW, halfH] = [width / 2, height / 2];
     const dx = x - centerX;
     const dy = y - centerY;
@@ -174,7 +174,7 @@ export class MainComponent {
     const c = imgSvc.c;
     const [centerX, centerY] = [c.width * p.xc, c.height * p.yc];
     const [width, height] = [c.width * p.width, c.height * p.height];
-    const angle = degreeToRadian(p.angle);
+    const angle = degreeToRadian(-p.angle);
 
     const hw = width / 2;
     const hh = height / 2;

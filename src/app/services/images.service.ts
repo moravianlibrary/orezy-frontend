@@ -351,7 +351,7 @@ export class ImagesService {
     top: number,
     bottom: number
   } {
-    const rad = degreeToRadian(angle);
+    const rad = degreeToRadian(-angle);
     const cw = this.c.width;
     const ch = this.c.height;
     const hw = (width * cw) / 2;
