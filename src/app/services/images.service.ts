@@ -1,6 +1,6 @@
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { computed, inject, Injectable, signal } from '@angular/core';
-import { HitInfo, ImageItem, ImgOrCanvas, Page, PagePosition } from '../app.types';
+import { HitInfo, ImageItem, ImgOrCanvas, MousePos, Page } from '../app.types';
 import { Observable } from 'rxjs';
 import { defer, degreeToRadian, getColor } from '../utils/utils';
 import { EnvironmentService } from './environment.service';
@@ -55,15 +55,20 @@ export class ImagesService {
 
   // Drag
   isDragging: boolean = false;
-  mouseDownCurPos: { x: number, y: number } = { x: -1, y: -1 };
-  startPagePos: PagePosition = { xc: -1, yc: -1, left: -1, right: -1, top: -1, bottom: -1 };
-  increment: number = 0.001;
+  dragStartPage: Page | null = null;
+  dragStartMouse: MousePos | null = null;
   
   // Rotate
   isRotating: boolean = false;
   rotationStartPage: Page | null = null;
   rotationStartMouseAngle: number = 0;
-  incrementAngle: number = this.increment * 100;
+
+  // Resize
+  isResizing: boolean = false;
+  resizeStartPage: Page | null = null;
+  resizeStartMouse: MousePos | null = null;
+  resizeMode: HitInfo | null = null;
+  resizeCursor!: string;
   
   // Inputs
   lastLeftInput: number = 0;
@@ -71,6 +76,8 @@ export class ImagesService {
   lastWidthInput: number = 0;
   lastHeightInput: number = 0;
   lastAngleInput: number = 0;
+  increment: number = 0.001;
+  incrementAngle: number = this.increment * 100;
 
   pageOutlineWidth: number = 3;
   cornerSize: number = 6;
@@ -519,6 +526,19 @@ export class ImagesService {
   /* ------------------------------
     KEYBOARD SHORTCUTS
   ------------------------------ */
+  private isHandledKey(key: string): boolean {
+    return [
+      'Backspace', 'Delete',                                // remove page
+      'p',                                                  // add page
+      'ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown',    // drag page x, y
+      's', 'š', 'w',                                        // width (+ arrows)
+      'v', 'h',                                             // height (+ arrows)
+      'o', 'r',                                             // rotate (+ arrows)  NEBO bude 'o' na zobrazení/schování obrysu
+      'm', 'g',                                             // grid
+      'Shift', 'Control', 'Alt', 'Meta'                     // helpers
+    ].includes(key);
+  }
+
   onKeyDown(event: KeyboardEvent): void {
     const key = event.key;
     if (!this.isHandledKey(key) || (event.target as HTMLElement).tagName === 'INPUT') return;
@@ -530,16 +550,9 @@ export class ImagesService {
       case 'Delete':
         if (this.selectedPage) this.removePage();
         break;
-      case 'r':
+      case 'p':
         if (this.currentPages.length < this.maxPages) this.addPage();
         break;
     }
-  }
-
-  private isHandledKey(key: string): boolean {
-    return [
-      'Backspace', 'Delete',
-      'r'
-    ].includes(key);
   }
 }

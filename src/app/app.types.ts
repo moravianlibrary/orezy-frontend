@@ -1,12 +1,3 @@
-export interface PagePosition {
-  xc: number;
-  yc: number;
-  left: number;
-  right: number;
-  top: number;
-  bottom: number;
-}
-
 export interface Page {
   _id: string;
   xc: number;
@@ -21,11 +12,6 @@ export interface Page {
   top: number;
   bottom: number;
   edited: boolean;
-}
-
-export interface AvgPage {
-  width: number;
-  height: number;
 }
 
 export interface ImageItem { // = Instructions
@@ -45,19 +31,20 @@ export interface DialogButton {
 }
 
 export type InputType = 'left' | 'top' | 'width' | 'height' | 'angle';
-
 export type PageType = 'left' | 'right';
-
 export type ImgOrCanvas = 'image' | 'canvas';
 
 
 // Cursors
+export type MousePos = { x: number, y: number };
 export type HitArea = 'none' | 'inside' | 'edge' | 'corner' | 'rotate';
 export type EdgeLocalOrientation = 'vertical' | 'horizontal';
+export type EdgeSide = 'left' | 'right' | 'top' | 'bottom';
 export type CornerName = 'nw' | 'ne' | 'se' | 'sw';
 export interface HitInfo {
   area: HitArea;
   page?: Page;
   edgeOrientation?: EdgeLocalOrientation;
+  edgeSide?: EdgeSide;
   corner?: CornerName;
 }

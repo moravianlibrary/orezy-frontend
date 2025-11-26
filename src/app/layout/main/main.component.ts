@@ -1,7 +1,7 @@
 import { Component, inject } from '@angular/core';
 import { ImagesService } from '../../services/images.service';
 import { degreeToRadian, radianToDegree } from '../../utils/utils';
-import { CornerName, EdgeLocalOrientation, HitInfo, Page } from '../../app.types';
+import { CornerName, EdgeLocalOrientation, EdgeSide, HitInfo, Page } from '../../app.types';
 import { LoaderComponent } from '../../components/loader/loader.component';
 
 @Component({
@@ -51,6 +51,22 @@ export class MainComponent {
         imgSvc.dialogOpened = false;
         return;
       }
+      if (imgSvc.isDragging || imgSvc.isRotating || imgSvc.isResizing) {
+        imgSvc.isDragging = false;
+        imgSvc.dragStartPage = null;
+        imgSvc.dragStartMouse = null;
+        
+        imgSvc.isRotating = false;
+        imgSvc.rotationStartPage = null;
+        imgSvc.rotationStartMouseAngle = 0;
+      
+        imgSvc.isResizing = false;
+        imgSvc.resizeStartPage = null;
+        imgSvc.resizeStartMouse = null;
+        imgSvc.resizeMode = null;
+        
+        return;
+      } 
       if (imgSvc.pageWasEdited) imgSvc.updateCurrentPagesWithEdited();
       imgSvc.selectedPage = null;
       imgSvc.lastPageCursorIsInside = null;
@@ -140,12 +156,83 @@ export class MainComponent {
     return { area: 'none' };
   }
 
+  private localEdgeSideToUserSide(localSide: 'left' | 'right' | 'top' | 'bottom', angleDeg: number) {
+    const a = angleDeg;
+
+    if (a >= -45 && a <= 45) {
+      return localSide;
+    }
+
+    if (a > 45 && a <= 135) {
+      switch (localSide) {
+        case 'left': return 'top';
+        case 'right': return 'bottom';
+        case 'top': return 'right';
+        case 'bottom': return 'left';
+      }
+    }
+
+    if (a > 135 || a <= -135) {
+      switch (localSide) {
+        case 'left': return 'right';
+        case 'right': return 'left';
+        case 'top': return 'bottom';
+        case 'bottom': return 'top';
+      }
+    }
+
+    if (a > -135 && a < -45) {
+      switch (localSide) {
+        case 'left': return 'bottom';
+        case 'right': return 'top';
+        case 'top': return 'left';
+        case 'bottom': return 'right';
+      }
+    }
+
+    return localSide;
+  }
+
+  private localCornerToUserCorner(local: CornerName, angleDeg: number): CornerName {
+    const a = angleDeg;
+
+    if (a >= -45 && a <= 45) return local;
+
+    if (a > 45 && a <= 135) {
+      const map90: { [key: string]: CornerName } = { nw: 'ne', ne: 'se', se: 'sw', sw: 'nw' };
+      return map90[local];
+    }
+
+    if (a > 135 || a <= -135) {
+      const map180: { [key: string]: CornerName } = { nw: 'se', ne: 'sw', sw: 'ne', se: 'nw' };
+      return map180[local];
+    }
+
+    const map270: { [key: string]: CornerName } = { nw: 'sw', sw: 'se', se: 'ne', ne: 'nw' };
+    return map270[local];
+  }
+
+  private getEdgeCursor(angleDeg: number, local: EdgeLocalOrientation): string {
+    let a = angleDeg % 180;
+    if (a < 0) a += 180;
+
+    const mostlyHorizontal = a <= 45 || a >= 135;
+
+    if (local === 'vertical') {
+      return mostlyHorizontal ? 'ew-resize' : 'ns-resize';
+    } else {
+      return mostlyHorizontal ? 'ns-resize' : 'ew-resize';
+    }
+  }
+
   private getCornerCursor(angleDeg: number, corner: CornerName): string {
     let a = angleDeg % 180;
     if (a < 0) a += 180;
 
+    const userCorner = this.localCornerToUserCorner(corner, angleDeg);
+
     const baseForCorner =
-      corner === 'nw' || corner === 'se'
+      userCorner === 'nw' || userCorner === 'se'
         ? 'nwse-resize'
         : 'nesw-resize';
 
@@ -154,19 +241,6 @@ export class MainComponent {
 
     const flip = a >= 45 && a <= 135;
     return flip ? flippedForCorner : baseForCorner;
-  }
-
-  private getEdgeCursor(angleDeg: number, local: EdgeLocalOrientation): string {
-    let a = angleDeg % 180;
-    if (a < 0) a += 180;
-
-    const mostlyHorizontal = a < 45 || a > 135;
-
-    if (local === 'vertical') {
-      return mostlyHorizontal ? 'ew-resize' : 'ns-resize';
-    } else {
-      return mostlyHorizontal ? 'ns-resize' : 'ew-resize';
-    }
   }
 
   private hitTestPage(x: number, y: number, p: Page): HitInfo {
@@ -204,8 +278,10 @@ export class MainComponent {
       const dyC = localY - corner.y;
       const distCorner = Math.hypot(dxC, dyC);
 
+      // Corners
       if (distCorner <= this.cornerHitTolerance) {
-        return { area: 'corner', page: p, corner: corner.name };
+        const userCorner = this.localCornerToUserCorner(corner.name, p.angle);
+        return { area: 'corner', page: p, corner: userCorner };
       }
 
       const distToCorner = Math.hypot(localX - corner.x, localY - corner.y);
@@ -217,29 +293,41 @@ export class MainComponent {
         continue;
       }
 
-      return { area: 'rotate', page: p, corner: corner.name };
+      // Rotates
+      const userCorner = this.localCornerToUserCorner(corner.name, p.angle);
+      return { area: 'rotate', page: p, corner: userCorner };
     }
 
     if (!withinXWithTolerance || !withinYWithTolerance) {
       return { area: 'none' };
     }
 
-    // Edge detection in local space
+    // Edge detection in user space (not local)
     const nearLeftOrRight = Math.abs(Math.abs(localX) - (hw + 6)) <= this.edgeHitTolerance;
     const nearTopOrBottom = Math.abs(Math.abs(localY) - (hh + 6)) <= this.edgeHitTolerance;
 
     if (nearLeftOrRight && !nearTopOrBottom) {
-      return { area: 'edge', page: p, edgeOrientation: 'vertical' };
+      const localSide = localX > 0 ? 'right' : 'left';
+      const userSide = this.localEdgeSideToUserSide(localSide, p.angle);
+      return { area: 'edge', page: p, edgeOrientation: 'vertical', edgeSide: userSide };
+      // const isRight = localX > 0;
+      // return { area: 'edge', page: p, edgeOrientation: 'vertical', edgeSide: isRight ? 'right' : 'left' };
     }
 
     if (nearTopOrBottom && !nearLeftOrRight) {
-      return { area: 'edge', page: p, edgeOrientation: 'horizontal' };
+      const localSide = localY > 0 ? 'bottom' : 'top';
+      const userSide = this.localEdgeSideToUserSide(localSide, p.angle);
+      return { area: 'edge', page: p, edgeOrientation: 'horizontal', edgeSide: userSide };
+      // const isBottom = localY > 0;
+      // return { area: 'edge', page: p, edgeOrientation: 'horizontal', edgeSide: isBottom ? 'bottom' : 'top' };
     }
 
+    // Inside rect
     if (withinX && withinY) {
       return { area: 'inside', page: p };
     }
 
+    // Else
     return { area: 'none' };
   }
 
@@ -320,15 +408,8 @@ export class MainComponent {
     if (hit.area === 'inside' || imgSvc.isDragging) {
       if (ev.type === 'mousedown' && hitPage) {
         imgSvc.isDragging = true;
-        imgSvc.mouseDownCurPos = { x: ev.clientX, y: ev.clientY };
-        imgSvc.startPagePos = {
-          xc: hitPage.xc,
-          yc: hitPage.yc,
-          left: hitPage.left,
-          right: hitPage.right,
-          top: hitPage.top,
-          bottom: hitPage.bottom
-        };
+        imgSvc.dragStartMouse = { x: ev.clientX, y: ev.clientY };
+        imgSvc.dragStartPage = structuredClone(hitPage);
       }
 
       if (imgSvc.isDragging) {
@@ -341,7 +422,7 @@ export class MainComponent {
 
         if (ev.type === 'mouseup' && hitPage) {
           imgSvc.isDragging = false;
-          imgSvc.startPagePos = { xc: -1, yc: -1, left: -1, right: -1, top: -1, bottom: -1 };
+          imgSvc.dragStartPage = null;
 
           if (!imgSvc.imgWasEdited) return;
           this.hoveringPage(hitPage._id);
@@ -351,32 +432,56 @@ export class MainComponent {
     }
 
     // Rotate
-    if (ev.type === 'mousedown' && hit.area === 'rotate' && hitPage) {
-      imgSvc.startHit = hit;
+    {
+      if (ev.type === 'mousedown' && hit.area === 'rotate' && hitPage) {
+        imgSvc.startHit = hit;
 
-      const rect = el.getBoundingClientRect();
-      const cx = imgSvc.c.width * hitPage.xc;
-      const cy = imgSvc.c.height * hitPage.yc;
+        const rect = el.getBoundingClientRect();
+        const cx = imgSvc.c.width * hitPage.xc;
+        const cy = imgSvc.c.height * hitPage.yc;
 
-      const dx = ev.clientX - rect.left - cx;
-      const dy = ev.clientY - rect.top - cy;
-      imgSvc.rotationStartMouseAngle = Math.atan2(dy, dx);
+        const dx = ev.clientX - rect.left - cx;
+        const dy = ev.clientY - rect.top - cy;
+        imgSvc.rotationStartMouseAngle = Math.atan2(dy, dx);
 
-      if (!imgSvc.isRotating) {
         imgSvc.rotationStartPage = imgSvc.selectedPage;
         imgSvc.isRotating = true;
       }
+
+      if (imgSvc.isRotating) {
+        if (ev.type === 'mousemove') {
+          this.rotatePage(cursor, ev, el);
+        }
+
+        if (ev.type === 'mouseup') {
+          imgSvc.startHit = null;
+          imgSvc.isRotating = false;
+          imgSvc.rotationStartPage = null;
+          imgSvc.pageWasEdited = true;
+          imgSvc.updateMainImageItemAndImages();
+        }
+      }
     }
 
-    if (imgSvc.isRotating) {
-      if (ev.type === 'mousemove') {
-        this.rotatePage(cursor, ev, el);
+    // Resize
+    {
+      if (ev.type === 'mousedown' && (hit.area === 'edge' || hit.area === 'corner') && hitPage) {
+        imgSvc.resizeMode = hit;
+        imgSvc.resizeStartPage = imgSvc.selectedPage;
+        imgSvc.resizeStartMouse = this.getMousePosOnMain(ev);
+        imgSvc.resizeCursor = el.style.cursor;
       }
 
-      if (ev.type === 'mouseup') {
-        imgSvc.startHit = null;
-        imgSvc.isRotating = false;
-        imgSvc.rotationStartPage = null;
+      if (ev.type === 'mousemove' && imgSvc.resizeMode && imgSvc.resizeStartPage) {
+        imgSvc.isResizing = true;
+        this.resizePage(ev, el);
+      }
+
+      if (ev.type === 'mouseup' && imgSvc.resizeMode) {
+        imgSvc.isResizing = false;
+        imgSvc.resizeMode = null;
+        imgSvc.resizeStartPage = null;
+        imgSvc.resizeStartMouse = null;
         imgSvc.pageWasEdited = true;
         imgSvc.updateMainImageItemAndImages();
       }
@@ -388,14 +493,13 @@ export class MainComponent {
     if (!imgSvc.selectedPage) return;
 
     const { width, height } = imgSvc.c;
-    const start = imgSvc.startPagePos;
+    const start = imgSvc.dragStartPage;
+    if (!start || !imgSvc.dragStartMouse) return;
     const page = imgSvc.selectedPage;
 
-    // Normalized deltas
-    const dx = (e.clientX - imgSvc.mouseDownCurPos.x) / width;
-    const dy = (e.clientY - imgSvc.mouseDownCurPos.y) / height;
+    const dx = (e.clientX - imgSvc.dragStartMouse.x) / width;
+    const dy = (e.clientY - imgSvc.dragStartMouse.y) / height;
 
-    // Compute proposed new position
     let newCx = start.xc + dx;
     let newCy = start.yc + dy;
     let newLeft = start.left + dx;
@@ -403,7 +507,6 @@ export class MainComponent {
     let newTop = start.top + dy;
     let newBottom = start.bottom + dy;
 
-    // Adjust so all corners stay within [0,1]
     if (newLeft < 0) {
       newCx += -newLeft;
       newRight += -newLeft;
@@ -425,7 +528,6 @@ export class MainComponent {
       newBottom = 1;
     }
 
-    // Build updated page
     const updatedPage: Page = {
       ...page,
       xc: newCx,
@@ -436,14 +538,12 @@ export class MainComponent {
       bottom: newBottom,
     };
 
-    // Update state
     imgSvc.selectedPage = updatedPage;
     imgSvc.lastSelectedPage = updatedPage;
     imgSvc.currentPages = imgSvc.currentPages.map(p =>
       p._id === updatedPage._id ? updatedPage : p
     );
 
-    // Redraw
     imgSvc.redrawImage();
     imgSvc.currentPages.forEach(p => imgSvc.drawPage(p));
   }
@@ -510,5 +610,161 @@ export class MainComponent {
 
     imgSvc.redrawImage();
     imgSvc.currentPages.forEach(p => imgSvc.drawPage(p));
+  }
+
+  private resizePage(ev: MouseEvent, el: HTMLElement): void {
+    const imgSvc = this.imagesService;
+    const mode = imgSvc.resizeMode;
+    const startPage = imgSvc.resizeStartPage;
+    if (!mode || !startPage) return;
+
+    el.style.cursor = imgSvc.resizeCursor;
+
+    const page = imgSvc.selectedPage;
+    if (!page) return;
+
+    // Work on cloned page
+    const updated = structuredClone(startPage);
+
+    if (mode.area === 'edge') {
+      this.applyEdgeResize(updated, startPage, mode.edgeSide!, ev);
+    }
+
+    if (mode.area === 'corner') {
+      // this.applyCornerResize(updated, startPage, ndx, ndy, mode.corner!);
+    }
+
+    // Keep inside image bounds
+    const bounds = imgSvc.computeBounds(updated.xc, updated.yc, updated.width, updated.height, updated.angle);
+    if (bounds.left <= 0 || bounds.right >= 1 || bounds.top <= 0 || bounds.bottom >= 1) {
+      return;
+    }
+
+    imgSvc.selectedPage = updated;
+    imgSvc.currentPages = imgSvc.currentPages.map(p => p._id === updated._id ? updated : p);
+
+    imgSvc.redrawImage();
+    imgSvc.currentPages.forEach(p => imgSvc.drawPage(p));
+  }
+
+  private applyEdgeResize(p: Page, start: Page, userSide: EdgeSide, ev: MouseEvent) {
+    const c = this.imagesService.c;
+    const cw = c.width;
+    const ch = c.height;
+
+    const startMouse = this.imagesService.resizeStartMouse;
+    const mouse = this.getMousePosOnMain(ev);
+    if (!mouse || !startMouse) return;
+    const dx = (mouse.x - startMouse.x) / cw;
+    const dy = (mouse.y - startMouse.y) / ch;
+
+    if ([0, -180, 90, -90].includes(start.angle)) {
+      if (userSide === 'left' || userSide === 'right') {
+        let newLeft = start.left;
+        let newRight = start.right;
+
+        if (userSide === 'right') {
+          newRight = start.right + dx;
+          if (newRight < newLeft) newRight = start.left;
+        } else {
+          newLeft = start.left + dx;
+          if (newRight < newLeft) newLeft = start.right;
+        }
+
+        p.left = newLeft;
+        p.right = newRight;
+
+        [0, -180].includes(start.angle)
+          ? p.width = Math.max(0, p.right - p.left)
+          : p.height = Math.max(0, (p.right - p.left) * cw) / ch;
+        p.xc = (p.left + p.right) / 2;
+      }
+
+      if (userSide === 'top' || userSide === 'bottom') {
+        let newTop = start.top;
+        let newBottom = start.bottom;
+
+        if (userSide === 'bottom') {
+          newBottom = start.bottom + dy;
+          if (newBottom < newTop) newBottom = start.top;
+        } else {
+          newTop = start.top + dy;
+          if (newBottom < newTop) newTop = start.bottom;
+        }
+
+        p.top = newTop;
+        p.bottom = newBottom;
+
+        [0, -180].includes(start.angle)
+          ? p.height = Math.max(0, p.bottom - p.top)
+          : p.width = Math.max(0, (p.bottom - p.top) * ch) / cw;;
+        p.yc = (p.top + p.bottom) / 2;
+      }
+    }
+    
+    if (start.angle > 0 && start.angle < 90) {
+      // if (userSide === 'left' || userSide === 'right') {
+      //   let newLeft = start.left;
+      //   let newRight = start.right;
+
+      //   if (userSide === 'right') {
+      //     newRight = start.right + dx;
+      //     if (newRight < newLeft) newRight = start.left;
+      //   } else {
+      //     newLeft = start.left + dx;
+      //     if (newRight < newLeft) newLeft = start.right;
+      //   }
+
+      //   p.left = newLeft;
+      //   p.right = newRight;
+
+      //   [0, -180].includes(start.angle)
+      //     ? p.width = Math.max(0, p.right - p.left)
+      //     : p.height = Math.max(0, (p.right - p.left) * cw) / ch;
+      //   p.xc = (p.left + p.right) / 2;
+      // }
+
+    //   if (userSide === 'top' || userSide === 'bottom') {
+    //     let newTop = start.top;
+    //     let newBottom = start.bottom;
+
+    //     if (userSide === 'bottom') {
+    //       newBottom = start.bottom + dy;
+    //       if (newBottom < newTop) newBottom = start.top;
+    //     } else {
+    //       newTop = start.top + dy;
+    //       if (newBottom < newTop) newTop = start.bottom;
+    //     }
+
+    //     p.top = newTop;
+    //     p.bottom = newBottom;
+
+    //     [0, -180].includes(start.angle)
+    //       ? p.height = Math.max(0, p.bottom - p.top)
+    //       : p.width = Math.max(0, (p.bottom - p.top) * ch) / cw;;
+    //     p.yc = (p.top + p.bottom) / 2;
+    //   }
+    }
+  }
+
+  private applyCornerResize(p: Page, start: Page, ndx: number, ndy: number, corner: CornerName) {
+    // const signX = (corner === 'ne' || corner === 'se') ? +1 : -1;
+    // const signY = (corner === 'se' || corner === 'sw') ? +1 : -1;
+
+    // const newLeft = corner === 'nw' || corner === 'sw' ? start.left + ndx : start.left;
+    // const newRight = corner === 'ne' || corner === 'se' ? start.right + ndx : start.right;
+    // const newTop = corner === 'nw' || corner === 'ne' ? start.top + ndy : start.top;
+    // const newBottom = corner === 'se' || corner === 'sw' ? start.bottom + ndy : start.bottom;
+
+    // p.left = newLeft;
+    // p.right = newRight;
+    // p.top = newTop;
+    // p.bottom = newBottom;
+
+    // p.width = p.right - p.left;
+    // p.height = p.bottom - p.top;
+
+    // p.xc = (p.left + p.right) / 2;
+    // p.yc = (p.top + p.bottom) / 2;
   }
 }
