@@ -528,31 +528,59 @@ export class ImagesService {
   ------------------------------ */
   private isHandledKey(key: string): boolean {
     return [
-      'Backspace', 'Delete',                                // remove page
-      'p',                                                  // add page
-      'ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown',    // drag page x, y
-      's', 'š', 'w',                                        // width (+ arrows)
-      'v', 'h',                                             // height (+ arrows)
-      'o', 'r',                                             // rotate (+ arrows)  NEBO bude 'o' na zobrazení/schování obrysu
+      '+', 'ě', '1', '2',                                   // Select left / right page
+      'Escape',                                             // Unselect page
+      'Backspace', 'Delete',                                // Remove page
+      'p', 'a',                                             // Add page
+      'ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown',    // drag selected page x, y by 1; not selected prev/next scan (+ PageUp / PageDown)
       'm', 'g',                                             // grid
-      'Shift', 'Control', 'Alt', 'Meta'                     // helpers
+      'o',                                                  // obrys
+      'Enter',                                              // + control = dokončit
+      'r', 'z',                                             // + control = reset změn skenu; + control + shift + alt = reset změn dokumentu
+      'F1', 'F2', 'F3', 'F4', 'š', 'č', '3', '4',           // filters OR control + 1, 2, 3, 4 / +, ě, š, č
+      'Shift',                                              // 1 -> 10
+      'Control',                                            // + arrows = change width / height by 1
+      'Alt'                                                 // + arrows = rotate by 1
     ].includes(key);
   }
 
   onKeyDown(event: KeyboardEvent): void {
     const key = event.key;
+    console.log(key);
     if (!this.isHandledKey(key) || (event.target as HTMLElement).tagName === 'INPUT') return;
 
-    switch (key) {
-      case 'Backspace':
-        if (this.selectedPage) this.removePage();
-        break;
-      case 'Delete':
-        if (this.selectedPage) this.removePage();
-        break;
-      case 'p':
-        if (this.currentPages.length < this.maxPages) this.addPage();
-        break;
+    // Select left / right page
+    if ((key === '+' || key === 'ě' || key === '1' || key === '2') && !event.ctrlKey) {
+      if (this.pageWasEdited) this.updateCurrentPagesWithEdited();
+      this.lastSelectedPage = this.selectedPage;
+      this.selectedPage = this.currentPages.find(p => p.type === ((key === '+' || key === '1') ? 'left' : 'right')) ?? null;
+      this.clickedDiffPage = this.lastSelectedPage && this.selectedPage && this.lastSelectedPage !== this.selectedPage;
+      this.lastPageCursorIsInside = this.selectedPage;
+      this.editable.set(true);
+      this.redrawImage();
+      this.currentPages.forEach(p => this.drawPage(p));
+      this.toggleMainImageOrCanvas();
     }
+
+    // Unselect page
+    if (key === 'Escape') {
+      if (this.pageWasEdited) this.updateCurrentPagesWithEdited();
+      this.lastSelectedPage = this.selectedPage;
+      this.selectedPage = null;
+      this.lastPageCursorIsInside = null;
+      this.editable.set(false);
+      this.redrawImage();
+      this.currentPages.forEach(p => this.drawPage(p));
+      this.toggleMainImageOrCanvas();
+      this.updateMainImageItemAndImages();
+    }
+
+    // Remove selected page
+    if (key === 'Backspace' || key === 'Delete') if (this.selectedPage) this.removePage();
+    
+    // Add page
+    if (key === 'p' || key === 'a') if (this.currentPages.length < this.maxPages) this.addPage();
+
+    // Drag page
   }
 }
