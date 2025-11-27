@@ -43,7 +43,7 @@ export class MainComponent {
 
     el.onclick = (ev) => {
       const tagName = (ev.target as HTMLElement).tagName;
-      if (tagName === 'APP-RIGHT-PANEL') return;
+      if (tagName === 'APP-RIGHT-PANEL' || el.tagName === 'APP-RIGHT-PANEL') return;
       if (tagName !== 'APP-LEFT-PANEL' && tagName !== 'DIV' && tagName !== 'APP-RIGHT-PANEL' && tagName !== 'APP-BOTTOM-PANEL') return;
       if (el.tagName === 'DIV' && tagName !== 'DIV') return;
       if (!imgSvc.selectedPage) return;
@@ -67,6 +67,7 @@ export class MainComponent {
         
         return;
       } 
+
       if (imgSvc.pageWasEdited) imgSvc.updateCurrentPagesWithEdited();
       imgSvc.selectedPage = null;
       imgSvc.lastPageCursorIsInside = null;
@@ -633,36 +634,33 @@ export class MainComponent {
     if (mode.area === 'corner') {
       // this.applyCornerResize(updated, startPage, ndx, ndy, mode.corner!);
     }
-
-    // Keep inside image bounds
-    const bounds = imgSvc.computeBounds(updated.xc, updated.yc, updated.width, updated.height, updated.angle);
-    if (bounds.left <= 0 || bounds.right >= 1 || bounds.top <= 0 || bounds.bottom >= 1) {
-      return;
-    }
-
-    imgSvc.selectedPage = updated;
-    imgSvc.currentPages = imgSvc.currentPages.map(p => p._id === updated._id ? updated : p);
-
-    imgSvc.redrawImage();
-    imgSvc.currentPages.forEach(p => imgSvc.drawPage(p));
   }
 
   private applyEdgeResize(p: Page, start: Page, userSide: EdgeSide, ev: MouseEvent) {
     const c = this.imagesService.c;
     const cw = c.width;
     const ch = c.height;
+    const ratio = cw / ch;
+    const inverseRatio = ch / cw;
 
     const startMouse = this.imagesService.resizeStartMouse;
     const mouse = this.getMousePosOnMain(ev);
     if (!mouse || !startMouse) return;
-    const dx = (mouse.x - startMouse.x) / cw;
-    const dy = (mouse.y - startMouse.y) / ch;
+
+    let newWidth = start.width;
+    let newHeight = start.height;
+    let newLeft = start.left;
+    let newRight = start.right;
+    let newTop = start.top;
+    let newBottom = start.bottom;
+    let newXc = start.xc;
+    let newYc = start.yc;
 
     if ([0, -180, 90, -90].includes(start.angle)) {
+      const dx = (mouse.x - startMouse.x) / cw;
+      const dy = (mouse.y - startMouse.y) / ch;
+      
       if (userSide === 'left' || userSide === 'right') {
-        let newLeft = start.left;
-        let newRight = start.right;
-
         if (userSide === 'right') {
           newRight = start.right + dx;
           if (newRight < newLeft) newRight = start.left;
@@ -671,19 +669,49 @@ export class MainComponent {
           if (newRight < newLeft) newLeft = start.right;
         }
 
-        p.left = newLeft;
-        p.right = newRight;
-
-        [0, -180].includes(start.angle)
-          ? p.width = Math.max(0, p.right - p.left)
-          : p.height = Math.max(0, (p.right - p.left) * cw) / ch;
-        p.xc = (p.left + p.right) / 2;
+        if ([0, -180].includes(start.angle)) {
+          newWidth = newRight - newLeft;
+          if (newWidth < 0) newWidth = 0;
+          if (userSide === 'right' && start.angle === 0 && newWidth > 1 - start.left) {
+            newWidth = 1 - start.left;
+            newRight = 1;
+          }
+          if (userSide === 'left' && start.angle === 0 && newWidth > start.right) {
+            newWidth = start.right;
+            newLeft = 0;
+          }
+          if (userSide === 'left' && start.angle === -180 && newWidth > start.right) {
+            newWidth = start.right;
+            newLeft = 0;
+          }
+          if (userSide === 'right' && start.angle === -180 && newWidth > 1 - start.left) {
+            newWidth = 1 - start.left;
+            newRight = 1;
+          }
+        } else {
+          newHeight = (newRight - newLeft) * ratio;
+          if (newHeight < 0) newHeight = 0;
+          if (userSide === 'right' && start.angle === 90 && newHeight * inverseRatio > 1 - start.left) {
+            newHeight = (1 - start.left) * ratio;
+            newRight = 1;
+          }
+          if (userSide === 'left' && start.angle === 90 && newHeight * inverseRatio > start.right) {
+            newHeight = start.right * ratio;
+            newLeft = 0;
+          }
+          if (userSide === 'left' && start.angle === -90 && newHeight * inverseRatio > start.right) {
+            newHeight = start.right * ratio;
+            newLeft = 0;
+          }
+          if (userSide === 'right' && start.angle === -90 && newHeight * inverseRatio > 1 - start.left) {
+            newHeight = (1 - start.left) * ratio;
+            newRight = 1;
+          }
+        }
+        newXc = (newLeft + newRight) / 2;
       }
 
       if (userSide === 'top' || userSide === 'bottom') {
-        let newTop = start.top;
-        let newBottom = start.bottom;
-
         if (userSide === 'bottom') {
           newBottom = start.bottom + dy;
           if (newBottom < newTop) newBottom = start.top;
@@ -692,59 +720,134 @@ export class MainComponent {
           if (newBottom < newTop) newTop = start.bottom;
         }
 
-        p.top = newTop;
-        p.bottom = newBottom;
-
-        [0, -180].includes(start.angle)
-          ? p.height = Math.max(0, p.bottom - p.top)
-          : p.width = Math.max(0, (p.bottom - p.top) * ch) / cw;;
-        p.yc = (p.top + p.bottom) / 2;
+        if ([0, -180].includes(start.angle)) {
+          newHeight = newBottom - newTop;
+          if (newHeight < 0) newHeight = 0;
+          if (userSide === 'bottom' && start.angle === 0 && newHeight > 1 - start.top) {
+            newHeight = 1 - start.top;
+            newBottom = 1;
+          }
+          if (userSide === 'top' && start.angle === 0 && newHeight > start.bottom) {
+            newHeight = start.bottom;
+            newTop = 0;
+          }
+          if (userSide === 'top' && start.angle === -180 && newHeight > start.bottom) {
+            newHeight = start.bottom;
+            newTop = 0;
+          }
+          if (userSide === 'bottom' && start.angle === -180 && newHeight > 1 - start.top) {
+            newHeight = 1 - start.top;
+            newBottom = 1;
+          }
+        } else {
+          newWidth = (newBottom - newTop) * inverseRatio;
+          if (newWidth < 0) newWidth = 0;
+          if (userSide === 'bottom' && start.angle === 90 && newWidth * ratio > 1 - start.top) {
+            newWidth = (1 - start.top) * inverseRatio;
+            newBottom = 1;
+          }
+          if (userSide === 'top' && start.angle === 90 && newWidth * ratio > start.bottom) {
+            newWidth = start.bottom * inverseRatio;
+            newTop = 0;
+          }
+          if (userSide === 'top' && start.angle === -90 && newWidth * ratio > start.bottom) {
+            newWidth = start.bottom * inverseRatio;
+            newTop = 0;
+          }
+          if (userSide === 'bottom' && start.angle === -90 && newWidth * ratio > 1 - start.top) {
+            newWidth = (1 - start.top) * inverseRatio;
+            newBottom = 1;
+          }
+        }
+        newYc = (newTop + newBottom) / 2;
       }
     }
     
     if (start.angle > 0 && start.angle < 90) {
-      // if (userSide === 'left' || userSide === 'right') {
-      //   let newLeft = start.left;
-      //   let newRight = start.right;
+      if (
+        (start.angle > 0 && start.angle <= 45 && userSide === 'right')
+        || (start.angle > 45 && start.angle < 90 && userSide === 'bottom')
+      ) {
+        const rad = degreeToRadian(start.angle);
 
-      //   if (userSide === 'right') {
-      //     newRight = start.right + dx;
-      //     if (newRight < newLeft) newRight = start.left;
-      //   } else {
-      //     newLeft = start.left + dx;
-      //     if (newRight < newLeft) newLeft = start.right;
-      //   }
+        const cos = Math.cos(rad);
+        const sin = Math.sin(rad);
 
-      //   p.left = newLeft;
-      //   p.right = newRight;
+        const mx = mouse.x - startMouse.x;
+        const my = mouse.y - startMouse.y;
 
-      //   [0, -180].includes(start.angle)
-      //     ? p.width = Math.max(0, p.right - p.left)
-      //     : p.height = Math.max(0, (p.right - p.left) * cw) / ch;
-      //   p.xc = (p.left + p.right) / 2;
-      // }
+        const hypot = mx * cos + my * sin;
 
-    //   if (userSide === 'top' || userSide === 'bottom') {
-    //     let newTop = start.top;
-    //     let newBottom = start.bottom;
+        const dx = cos * hypot / cw;
+        const dy = sin * hypot / ch;
 
-    //     if (userSide === 'bottom') {
-    //       newBottom = start.bottom + dy;
-    //       if (newBottom < newTop) newBottom = start.top;
-    //     } else {
-    //       newTop = start.top + dy;
-    //       if (newBottom < newTop) newTop = start.bottom;
-    //     }
+        newWidth = start.width + hypot / cw;
+        newRight = start.right + dx;
+        newBottom = start.bottom + dy;
+        newXc = start.xc + dx / 2;
+        newYc = start.yc + dy / 2;
 
-    //     p.top = newTop;
-    //     p.bottom = newBottom;
+        if (newWidth < 0) {
+          newWidth = 0;
+          newRight = start.right - cos * start.width;
+          newBottom = start.bottom - sin * start.width * ratio;
+          newXc = (newRight - start.left) / 2 + start.left;
+          newYc = (newBottom - start.top) / 2 + start.top;
+        }
 
-    //     [0, -180].includes(start.angle)
-    //       ? p.height = Math.max(0, p.bottom - p.top)
-    //       : p.width = Math.max(0, (p.bottom - p.top) * ch) / cw;;
-    //     p.yc = (p.top + p.bottom) / 2;
-    //   }
+        if (newRight > 1) {
+          newRight = 1;
+          newWidth = start.width + (1 - start.right) / cos;
+          newBottom = start.bottom + (newWidth - start.width) * sin * ratio;
+          newXc = start.xc + (cos * (newWidth - start.width)) / 2;
+          newYc = start.yc + ((newWidth - start.width) * sin * ratio) / 2;
+        }
+
+        if (newBottom > 1) {
+          newBottom = 1;
+          newWidth = start.width + (1 - start.bottom) * inverseRatio / sin;
+          newRight = start.right + (newWidth - start.width) * cos;
+          newXc = start.xc + (cos * (newWidth - start.width)) / 2;
+          newYc = start.yc + ((newWidth - start.width) * sin * ratio) / 2;
+        }
+      }
+
+      if (
+        (start.angle > 0 && start.angle <= 45 && userSide === 'bottom')
+        || (start.angle > 45 && start.angle < 90 && userSide === 'left')
+      ) {
+
+      }
+
+      if (
+        (start.angle > 0 && start.angle <= 45 && userSide === 'left')
+        || (start.angle > 45 && start.angle < 90 && userSide === 'top')
+      ) {
+
+      }
+
+      if (
+        (start.angle > 0 && start.angle <= 45 && userSide === 'top')
+        || (start.angle > 45 && start.angle < 90 && userSide === 'right')
+      ) {
+
+      }
     }
+
+    p.width = newWidth;
+    p.height = newHeight;
+    p.left = newLeft;
+    p.right = newRight;
+    p.top = newTop;
+    p.bottom = newBottom;
+    p.xc = newXc;
+    p.yc = newYc;
+
+    const imgSvc = this.imagesService;
+    imgSvc.selectedPage = p;
+    imgSvc.currentPages = imgSvc.currentPages.map(page => page._id === p._id ? p : page);
+    imgSvc.redrawImage();
+    imgSvc.currentPages.forEach(p => imgSvc.drawPage(p));
   }
 
   private applyCornerResize(p: Page, start: Page, ndx: number, ndy: number, corner: CornerName) {

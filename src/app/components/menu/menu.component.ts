@@ -2,8 +2,7 @@ import { CdkConnectedOverlay, CdkOverlayOrigin, ConnectedPosition } from '@angul
 import { Component, ElementRef, HostListener, inject, input, signal, ViewChild } from '@angular/core';
 import { NgClass } from '../../../../node_modules/@angular/common';
 import { ImagesService } from '../../services/images.service';
-import { catchError, of } from 'rxjs';
-import { DialogButton, ImageItem } from '../../app.types';
+import { DialogButton } from '../../app.types';
 import { DialogComponent } from '../dialog/dialog.component';
 
 @Component({
@@ -71,21 +70,7 @@ export class MenuComponent {
         label: 'Resetovat celý dokument',
         primary: true,
         destructive: true,
-        action: () => {
-          const imgSvc = this.imagesService;
-          imgSvc.reset(imgSvc.book()).pipe(
-            catchError(err => {
-              console.error('Fetch error:', err);
-              return of([]);
-            })
-          ).subscribe((response: ImageItem[]) => {
-            imgSvc.images.set(response);
-            imgSvc.originalImages.set(response);
-            
-            imgSvc.setDisplayedImages();
-            imgSvc.setMainImage(imgSvc.displayedImages()[0]);
-          });
-        }
+        action: () => this.imagesService.resetDoc()
       }
     ]);
 
@@ -103,24 +88,7 @@ export class MenuComponent {
         label: 'Resetovat změny skenu',
         primary: true,
         destructive: true,
-        action: () => {
-          const imgSvc = this.imagesService;
-          if (!imgSvc.displayedImages().length) return;
-
-          const mainImageItemBefore = imgSvc.mainImageItem();
-          imgSvc.mainImageItem.set(imgSvc.originalImages().find(img => img._id === mainImageItemBefore._id) ?? mainImageItemBefore);
-          const mainImageItemAfter = imgSvc.mainImageItem();
-          imgSvc.images.update(prev =>
-            prev.map(img => img._id === mainImageItemAfter._id
-              ? mainImageItemAfter
-              : img
-            )
-          );
-
-          imgSvc.selectedFilter = mainImageItemAfter.edited ? 'edited' : (mainImageItemAfter.flags.length ? 'flagged' : 'ok');
-          imgSvc.setDisplayedImages();
-          imgSvc.setMainImage(mainImageItemAfter);
-        }
+        action: () => this.imagesService.resetScan()
       }
     ]);
 

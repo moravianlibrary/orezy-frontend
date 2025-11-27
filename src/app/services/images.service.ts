@@ -1,7 +1,7 @@
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { computed, inject, Injectable, signal } from '@angular/core';
 import { HitInfo, ImageItem, ImgOrCanvas, MousePos, Page } from '../app.types';
-import { Observable } from 'rxjs';
+import { catchError, Observable, of } from 'rxjs';
 import { defer, degreeToRadian, getColor } from '../utils/utils';
 import { EnvironmentService } from './environment.service';
 
@@ -136,6 +136,55 @@ export class ImagesService {
 
   reset(id: string): Observable<ImageItem[]> {
     return this.http.patch<ImageItem[]>(`${this.apiUrl}/${id}/reset`, {}, { headers: this.headers('json', false) });
+  }
+
+
+  /* ------------------------------
+    API ACTIONS
+  ------------------------------ */
+  finishEverything(): void {
+    if (this.imgWasEdited) this.updateImagesByEdited(this.mainImageItem()._id);
+    this.updatePages(this.book(), this.images().filter(img => img.edited))
+      .subscribe({
+        next: () => {
+          this.selectedFilter = 'edited';
+          this.setDisplayedImages();
+        },
+        error: (err: Error) => console.error(err)
+      })
+  }
+
+  resetScan(): void {
+    if (!this.displayedImages().length) return;
+
+    const mainImageItemBefore = this.mainImageItem();
+    this.mainImageItem.set(this.originalImages().find(img => img._id === mainImageItemBefore._id) ?? mainImageItemBefore);
+    const mainImageItemAfter = this.mainImageItem();
+    this.images.update(prev =>
+      prev.map(img => img._id === mainImageItemAfter._id
+        ? mainImageItemAfter
+        : img
+      )
+    );
+
+    this.selectedFilter = mainImageItemAfter.edited ? 'edited' : (mainImageItemAfter.flags.length ? 'flagged' : 'ok');
+    this.setDisplayedImages();
+    this.setMainImage(mainImageItemAfter);
+  }
+
+  resetDoc(): void {
+    this.reset(this.book()).pipe(
+      catchError(err => {
+        console.error('Fetch error:', err);
+        return of([]);
+      })
+    ).subscribe((response: ImageItem[]) => {
+      this.images.set(response);
+      this.originalImages.set(response);
+      
+      this.setDisplayedImages();
+      this.setMainImage(this.displayedImages()[0]);
+    });
   }
 
 
@@ -546,8 +595,11 @@ export class ImagesService {
 
   onKeyDown(event: KeyboardEvent): void {
     const key = event.key;
-    console.log(key);
+    // console.log(key);
+    // console.log(event.code);
     if (!this.isHandledKey(key) || (event.target as HTMLElement).tagName === 'INPUT') return;
+    // event.preventDefault();
+    // event.stopPropagation();
 
     // Select left / right page
     if ((key === '+' || key === 'ě' || key === '1' || key === '2') && !event.ctrlKey) {
@@ -582,5 +634,28 @@ export class ImagesService {
     if (key === 'p' || key === 'a') if (this.currentPages.length < this.maxPages) this.addPage();
 
     // Drag page
+
+
+    // Dokončit
+    if (key === 'Enter' && event.ctrlKey) this.finishEverything();
+
+    // Reset změn dokumentu a skenu
+    // console.log(key === 'Y');
+    if (
+      (key === 'r' && event.ctrlKey && event.metaKey && !event.shiftKey && !event.altKey)
+      // || (key === 'r' || key === 'z') && event.ctrlKey && event.shiftKey && event.altKey
+    ) {
+      // event.preventDefault();
+      // event.stopPropagation();
+      // console.log('resetdoc');
+      // this.resetDoc();
+    } else if (
+      (key === 'r' && event.metaKey && !event.ctrlKey && !event.shiftKey && !event.altKey)
+      || (key === 'y' && event.metaKey && !event.ctrlKey && !event.shiftKey && !event.altKey)
+    ) {
+      // event.preventDefault();
+      // event.stopPropagation();
+      // this.resetScan();
+    }
   }
 }
