@@ -1431,6 +1431,7 @@ export class MainComponent {
     imgSvc.currentPages.forEach(p => imgSvc.drawPage(p));
   }
 
+  // TO DO: REFACTOR!
   private applyCornerResize(p: Page, start: Page, userCorner: CornerName) {
     
   }
