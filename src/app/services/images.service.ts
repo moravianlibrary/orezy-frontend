@@ -628,12 +628,54 @@ export class ImagesService {
     }
 
     // Remove selected page
-    if (key === 'Backspace' || key === 'Delete') if (this.selectedPage) this.removePage();
+    if (['Backspace', 'Delete'].includes(key)) if (this.selectedPage) this.removePage();
     
     // Add page
-    if (key === 'p' || key === 'a') if (this.currentPages.length < this.maxPages) this.addPage();
+    if (['p', 'a'].includes(key)) if (this.currentPages.length < this.maxPages) this.addPage();
 
     // Drag page
+    if (['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].includes(key) && this.selectedPage) {
+      const start = this.selectedPage;
+      const isHorizontal = ['ArrowLeft', 'ArrowRight'].includes(key);
+      const sign = ['ArrowRight','ArrowDown'].includes(key) ? 1 : -1;
+
+      const delta = this.increment * sign * (event.shiftKey ? 10 : 1);
+
+      const axis = isHorizontal
+        ? { c: 'xc' as const, min: 'left' as const, max: 'right' as const }
+        : { c: 'yc' as const, min: 'top' as const, max: 'bottom' as const };
+
+      let newC = start[axis.c] + delta;
+      let newMin = start[axis.min] + delta;
+      let newMax = start[axis.max] + delta;
+
+      if (newMin < 0) {
+        const offset = -newMin;
+        newC += offset;
+        newMax += offset;
+        newMin = 0;
+      }
+      if (newMax > 1) {
+        const offset = newMax - 1;
+        newC -= offset;
+        newMin -= offset;
+        newMax = 1;
+      }
+
+      const updatedPage: Page = {
+        ...start,
+        [axis.c]: newC,
+        [axis.min]: newMin,
+        [axis.max]: newMax
+      };
+
+      this.selectedPage = updatedPage;
+      this.lastSelectedPage = updatedPage;
+      this.currentPages = this.currentPages.map(p =>p._id === updatedPage._id ? updatedPage : p);
+
+      this.redrawImage();
+      this.currentPages.forEach(p => this.drawPage(p));
+    }
 
 
     // Dokončit
