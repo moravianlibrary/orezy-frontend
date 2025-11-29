@@ -382,9 +382,9 @@ export class RightPanelComponent {
     const increment = (type === 'angle' ? this.imagesService.incrementAngle : this.imagesService.increment) * multiplier;
     const multiplicator = type === 'angle' ? 1 : 100;
     const currentValue = Number(input.value);
-    const newValue = Math.max(0, (currentValue / multiplicator + direction * increment) * multiplicator);
+    const newValue = (currentValue / multiplicator + direction * increment) * multiplicator;
 
-    this.changeInputValue(type, newValue);
+    this.changeInputValue(type, type === 'angle' ? newValue : Math.max(0, newValue));
     this.selectAll(type, input);
   }
 
