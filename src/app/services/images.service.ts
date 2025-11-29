@@ -2,7 +2,7 @@ import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { computed, inject, Injectable, signal } from '@angular/core';
 import { HitInfo, ImageItem, ImgOrCanvas, MousePos, Page } from '../app.types';
 import { catchError, Observable, of } from 'rxjs';
-import { defer, degreeToRadian, getColor } from '../utils/utils';
+import { defer, degreeToRadian, getColor, scrollToSelectedImage } from '../utils/utils';
 import { EnvironmentService } from './environment.service';
 
 @Injectable({
@@ -36,6 +36,7 @@ export class ImagesService {
   c!: HTMLCanvasElement;
   ctx!: CanvasRenderingContext2D;
 
+  currentIndex = computed<number>(() => this.displayedImages().findIndex(img => img._id === this.mainImageItem()._id));
   mainImage: HTMLImageElement | null = null;
   lastBook: string = '';
   lastMode: string = '';
@@ -402,6 +403,33 @@ export class ImagesService {
 
 
   /* ------------------------------
+    PREV / NEXT IMAGE
+  ------------------------------ */    
+  showPrevImage(): void {
+    if (this.currentIndex() === 0) return;
+    this.showImage(-1);
+    if (this.imgWasEdited) defer(() => this.setDisplayedImages(), 100);
+  }
+
+  showNextImage(): void {
+    if (this.currentIndex() === this.displayedImages().length - 1) return;
+    this.showImage(1);
+    if (this.imgWasEdited) defer(() => this.setDisplayedImages(), 100);
+  }
+
+  private showImage(offset: number): void {
+    const displayedImages = this.displayedImages();
+
+    if (displayedImages.length === 0) return;
+
+    const newIndex = (this.currentIndex() + offset + displayedImages.length) % displayedImages.length;
+    this.setMainImage(displayedImages[newIndex]);
+
+    scrollToSelectedImage();
+  }
+
+
+  /* ------------------------------
     PAGE LOGIC
   ------------------------------ */
   computeBounds(xc: number, yc: number, width: number, height: number, angle: number): { 
@@ -633,7 +661,7 @@ export class ImagesService {
     // Add page
     if (['p', 'a'].includes(key)) if (this.currentPages.length < this.maxPages) this.addPage();
 
-    // Drag page
+    // Drag/move page
     if (['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].includes(key) && this.selectedPage) {
       const start = this.selectedPage;
       const isHorizontal = ['ArrowLeft', 'ArrowRight'].includes(key);
@@ -677,6 +705,14 @@ export class ImagesService {
       this.currentPages.forEach(p => this.drawPage(p));
     }
 
+    // Prev/next scan
+    if (['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].includes(key) && !this.selectedPage) {      
+      if (['ArrowLeft', 'ArrowUp'].includes(key)) {
+        this.showPrevImage();
+      } else {
+        this.showNextImage();
+      }
+    }
 
     // Dokončit
     if (key === 'Enter' && event.ctrlKey) this.finishEverything();

@@ -1,8 +1,8 @@
 <div class="left-part button-group">
   <span
     class="button secondary"
-    [class.disabled]="this.currentIndex() === 0"
-    (click)="showPrevImage()"
+    [class.disabled]="this.imagesService.currentIndex() === 0"
+    (click)="this.imagesService.showPrevImage()"
   >
     <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
       <path fill-rule="evenodd" clip-rule="evenodd" d="M6.73347 3.59957C6.92873 3.79483 6.92873 4.11142 6.73347 4.30668L3.04036 7.99979L6.73347 11.6929C6.92873 11.8882 6.92873 12.2048 6.73347 12.4C6.53821 12.5953 6.22163 12.5953 6.02637 12.4L1.9797 8.35335C1.88593 8.25958 1.83325 8.1324 1.83325 7.99979C1.83325 7.86718 1.88593 7.74001 1.9797 7.64624L6.02637 3.59957C6.22163 3.40431 6.53821 3.40431 6.73347 3.59957Z" />
@@ -11,8 +11,8 @@
   </span>
   <span
     class="button secondary"
-    [class.disabled]="this.currentIndex() === this.imagesService.displayedImages().length - 1"
-    (click)="showNextImage()"
+    [class.disabled]="this.imagesService.currentIndex() === this.imagesService.displayedImages().length - 1"
+    (click)="this.imagesService.showNextImage()"
   >
     <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
       <path fill-rule="evenodd" clip-rule="evenodd" d="M9.26616 3.59957C9.46142 3.40431 9.778 3.40431 9.97326 3.59957L14.0199 7.64624C14.1137 7.74001 14.1664 7.86718 14.1664 7.99979C14.1664 8.1324 14.1137 8.25958 14.0199 8.35335L9.97326 12.4C9.778 12.5953 9.46142 12.5953 9.26616 12.4C9.0709 12.2048 9.0709 11.8882 9.26616 11.6929L12.9593 7.99979L9.26616 4.30668C9.0709 4.11142 9.0709 3.79483 9.26616 3.59957Z" />
