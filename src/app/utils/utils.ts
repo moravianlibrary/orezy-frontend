@@ -1,4 +1,4 @@
-import { defaultColor, editedColor, errorColor, warningColor } from '../app.config';
+import { defaultColor, editedColor, errorColor, transparentColor, warningColor } from '../app.config';
 import { Page } from '../app.types';
 
 /* ------------------------------

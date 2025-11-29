@@ -4,6 +4,7 @@ import { HitInfo, ImageItem, ImgOrCanvas, MousePos, Page } from '../app.types';
 import { catchError, Observable, of } from 'rxjs';
 import { defer, degreeToRadian, getColor, scrollToSelectedImage } from '../utils/utils';
 import { EnvironmentService } from './environment.service';
+import { transparentColor } from '../app.config';
 
 @Injectable({
   providedIn: 'root'
@@ -80,6 +81,7 @@ export class ImagesService {
   increment: number = 0.001;
   incrementAngle: number = this.increment * 100;
 
+  outlineTransparent: boolean = false;
   pageOutlineWidth: number = 3;
   cornerSize: number = 6;
   maxPages: number = 2;
@@ -478,7 +480,9 @@ export class ImagesService {
     ctx.translate(centerX, centerY);
     ctx.rotate(degreeToRadian(p.angle));
 
-    ctx.strokeStyle = color + 'B2';
+    ctx.strokeStyle = p._id === this.selectedPage?._id && this.outlineTransparent
+      ? transparentColor
+      : color + 'B2';
     ctx.lineWidth = this.pageOutlineWidth;
     ctx.strokeRect(-width / 2, -height / 2, width, height);
 
@@ -501,7 +505,9 @@ export class ImagesService {
       ];
 
       ctx.fillStyle = '#FFFFFF';
-      ctx.strokeStyle = color + 'B2';
+      ctx.strokeStyle = p._id === this.selectedPage?._id && this.outlineTransparent
+        ? transparentColor
+        : color + 'B2';
       ctx.lineWidth = this.pageOutlineWidth - 1;
 
       for (const c of corners) {
@@ -661,8 +667,24 @@ export class ImagesService {
     // Add page
     if (['p', 'a'].includes(key)) if (this.currentPages.length < this.maxPages) this.addPage();
 
+    // Outline transparency
+    if (key === 'o' && this.selectedPage) {
+      this.outlineTransparent = !this.outlineTransparent;
+      this.redrawImage();
+      this.currentPages.forEach(p => this.drawPage(p));
+    }
+
+    // Prev/next scan
+    if (['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].includes(key) && !this.selectedPage) {      
+      if (['ArrowLeft', 'ArrowUp'].includes(key)) {
+        this.showPrevImage();
+      } else {
+        this.showNextImage();
+      }
+    }
+
     // Drag/move page
-    if (['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].includes(key) && this.selectedPage) {
+    if (['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].includes(key) && this.selectedPage && !event.altKey && !event.ctrlKey) {
       const start = this.selectedPage;
       const isHorizontal = ['ArrowLeft', 'ArrowRight'].includes(key);
       const sign = ['ArrowRight','ArrowDown'].includes(key) ? 1 : -1;
@@ -705,17 +727,16 @@ export class ImagesService {
       this.currentPages.forEach(p => this.drawPage(p));
     }
 
-    // Prev/next scan
-    if (['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].includes(key) && !this.selectedPage) {      
-      if (['ArrowLeft', 'ArrowUp'].includes(key)) {
-        this.showPrevImage();
-      } else {
-        this.showNextImage();
-      }
+    // Change page width / height
+    if (['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].includes(key) && this.selectedPage && !event.altKey) {
+      // TO DO
     }
 
     // Dokončit
     if (key === 'Enter' && event.ctrlKey) this.finishEverything();
+
+
+
 
     // Reset změn dokumentu a skenu
     // console.log(key === 'Y');
