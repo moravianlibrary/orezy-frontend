@@ -628,7 +628,7 @@ export class MainComponent {
     }
 
     if (mode.area === 'corner') {
-      this.applyCornerResize(updated, startPage, mode.corner!);
+      this.applyCornerResize(updated, startPage, mode.corner!, ev);
     }
   }
 
@@ -1432,7 +1432,149 @@ export class MainComponent {
   }
 
   // TO DO: REFACTOR!
-  private applyCornerResize(p: Page, start: Page, userCorner: CornerName) {
+  private applyCornerResize(p: Page, start: Page, userCorner: CornerName, ev: MouseEvent) {
+    const c = this.imagesService.c;
+    const cw = c.width;
+    const ch = c.height;
+    const ratio = cw / ch;
+    const inverseRatio = ch / cw;
     
+    const startMouse = this.imagesService.resizeStartMouse;
+    const mouse = this.getMousePosOnMain(ev);
+    if (!mouse || !startMouse) return;
+
+    const mx = mouse.x - startMouse.x;
+    const my = mouse.y - startMouse.y;
+
+    let newWidth = start.width;
+    let newHeight = start.height;
+    let newLeft = start.left;
+    let newRight = start.right;
+    let newTop = start.top;
+    let newBottom = start.bottom;
+    let newXc = start.xc;
+    let newYc = start.yc;
+
+    if ([0, -180, 90, -90].includes(start.angle)) {
+      const dx = mx / cw;
+      const dy = my / ch;
+
+      if (userCorner.includes('e') || userCorner.includes('w')) {
+        if (userCorner.includes('e')) {
+          newRight = start.right + dx;
+          if (newRight < newLeft) newRight = start.left;
+        } else if (userCorner.includes('w')) {
+          newLeft = start.left + dx;
+          if (newRight < newLeft) newLeft = start.right;
+        }
+
+        if ([0, -180].includes(start.angle)) {
+          newWidth = newRight - newLeft;
+          if (newWidth < 0) newWidth = 0;
+          if (userCorner.includes('e') && start.angle === 0 && newWidth > 1 - start.left) {
+            newWidth = 1 - start.left;
+            newRight = 1;
+          }
+          if (userCorner.includes('w') && start.angle === 0 && newWidth > start.right) {
+            newWidth = start.right;
+            newLeft = 0;
+          }
+          if (userCorner.includes('w') && start.angle === -180 && newWidth > start.right) {
+            newWidth = start.right;
+            newLeft = 0;
+          }
+          if (userCorner.includes('e') && start.angle === -180 && newWidth > 1 - start.left) {
+            newWidth = 1 - start.left;
+            newRight = 1;
+          }
+        } else {
+          newHeight = (newRight - newLeft) * ratio;
+          if (newHeight < 0) newHeight = 0;
+          if (userCorner.includes('e') && start.angle === 90 && newHeight * inverseRatio > 1 - start.left) {
+            newHeight = (1 - start.left) * ratio;
+            newRight = 1;
+          }
+          if (userCorner.includes('w') && start.angle === 90 && newHeight * inverseRatio > start.right) {
+            newHeight = start.right * ratio;
+            newLeft = 0;
+          }
+          if (userCorner.includes('w') && start.angle === -90 && newHeight * inverseRatio > start.right) {
+            newHeight = start.right * ratio;
+            newLeft = 0;
+          }
+          if (userCorner.includes('e') && start.angle === -90 && newHeight * inverseRatio > 1 - start.left) {
+            newHeight = (1 - start.left) * ratio;
+            newRight = 1;
+          }
+        }
+        newXc = (newLeft + newRight) / 2;
+      }
+
+      if (userCorner.includes('n') || userCorner.includes('s')) {
+        if (userCorner.includes('s')) {
+          newBottom = start.bottom + dy;
+          if (newBottom < newTop) newBottom = start.top;
+        } else if (userCorner.includes('n')) {
+          newTop = start.top + dy;
+          if (newBottom < newTop) newTop = start.bottom;
+        }
+
+        if ([0, -180].includes(start.angle)) {
+          newHeight = newBottom - newTop;
+          if (newHeight < 0) newHeight = 0;
+          if (userCorner.includes('s') && start.angle === 0 && newHeight > 1 - start.top) {
+            newHeight = 1 - start.top;
+            newBottom = 1;
+          }
+          if (userCorner.includes('n') && start.angle === 0 && newHeight > start.bottom) {
+            newHeight = start.bottom;
+            newTop = 0;
+          }
+          if (userCorner.includes('n') && start.angle === -180 && newHeight > start.bottom) {
+            newHeight = start.bottom;
+            newTop = 0;
+          }
+          if (userCorner.includes('s') && start.angle === -180 && newHeight > 1 - start.top) {
+            newHeight = 1 - start.top;
+            newBottom = 1;
+          }
+        } else {
+          newWidth = (newBottom - newTop) * inverseRatio;
+          if (newWidth < 0) newWidth = 0;
+          if (userCorner.includes('s') && start.angle === 90 && newWidth * ratio > 1 - start.top) {
+            newWidth = (1 - start.top) * inverseRatio;
+            newBottom = 1;
+          }
+          if (userCorner.includes('n') && start.angle === 90 && newWidth * ratio > start.bottom) {
+            newWidth = start.bottom * inverseRatio;
+            newTop = 0;
+          }
+          if (userCorner.includes('n') && start.angle === -90 && newWidth * ratio > start.bottom) {
+            newWidth = start.bottom * inverseRatio;
+            newTop = 0;
+          }
+          if (userCorner.includes('s') && start.angle === -90 && newWidth * ratio > 1 - start.top) {
+            newWidth = (1 - start.top) * inverseRatio;
+            newBottom = 1;
+          }
+        }
+        newYc = (newTop + newBottom) / 2;
+      }
+    }
+
+    p.width = newWidth;
+    p.height = newHeight;
+    p.left = newLeft;
+    p.right = newRight;
+    p.top = newTop;
+    p.bottom = newBottom;
+    p.xc = newXc;
+    p.yc = newYc;
+
+    const imgSvc = this.imagesService;
+    imgSvc.selectedPage = p;
+    imgSvc.currentPages = imgSvc.currentPages.map(page => page._id === p._id ? p : page);
+    imgSvc.redrawImage();
+    imgSvc.currentPages.forEach(p => imgSvc.drawPage(p));
   }
 }
