@@ -671,6 +671,9 @@ export class ImagesService {
       'Shift',                                              // 1 -> 10
       'Control',                                            // + arrows = change width / height by 1
       'Alt'                                                 // + arrows = rotate by 1
+      // Figma
+      // width height = ctrl / cmd + arrows
+      // rotate = ctrl + alt / cmd + option + arrows
     ].includes(key);
   }
 
