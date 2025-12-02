@@ -14,10 +14,10 @@ export class MainComponent {
   imagesService = inject(ImagesService);
 
   private moveCursor: string = "url('/assets/move-cursor.png'), auto";
-  private rotateCursorTopRight: string = "url('/assets/rotate-cursor-top-right.png'), auto";
-  private rotateCursorTopLeft: string = "url('/assets/rotate-cursor-top-left.png'), auto";
-  private rotateCursorBottomRight: string = "url('/assets/rotate-cursor-bottom-right.png'), auto";
-  private rotateCursorBottomLeft: string = "url('/assets/rotate-cursor-bototm-left.png'), auto";
+  private rotateCursorTopRight: string = "url('/assets/rotate-cursor-top-right.png') 9.5 9.5, auto";
+  private rotateCursorTopLeft: string = "url('/assets/rotate-cursor-top-left.png') 9.5 9.5, auto";
+  private rotateCursorBottomRight: string = "url('/assets/rotate-cursor-bottom-right.png') 9.5 9.5, auto";
+  private rotateCursorBottomLeft: string = "url('/assets/rotate-cursor-bototm-left.png') 9.5 9.5, auto";
 
   private edgeHitTolerance = 14;
   private cornerHitTolerance = 14;
