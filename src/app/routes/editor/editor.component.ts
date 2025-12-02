@@ -1,4 +1,4 @@
-import { Component, inject } from '@angular/core';
+import { Component, ElementRef, inject, ViewChild } from '@angular/core';
 import { ImagesService } from '../../services/images.service';
 import { MainComponent } from '../../layout/main/main.component';
 import { BottomPanelComponent } from '../../layout/bottom-panel/bottom-panel.component';
@@ -19,6 +19,8 @@ export class EditorComponent {
   imagesService = inject(ImagesService);
   private activatedRoute = inject(ActivatedRoute);
   private queryParamsOnBookId = new Subscription();
+
+  @ViewChild('mainWrapper', { static: true }) mainWrapper!: ElementRef<HTMLElement>;
 
   ngOnInit() {
     const imgSvc = this.imagesService;
@@ -68,6 +70,10 @@ export class EditorComponent {
         const [firstFlagged] = imgSvc.flaggedImages();
         if (firstFlagged) imgSvc.setMainImage(firstFlagged);
       });
+  }
+
+  ngAfterViewInit(): void {
+    queueMicrotask(() => this.mainWrapper.nativeElement.focus());
   }
 
   ngOnDestroy(): void {
