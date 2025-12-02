@@ -356,10 +356,18 @@ export class RightPanelComponent {
 
   onFocus(type: InputType, input: HTMLInputElement): void {
     if (this.firstFocus[type]) this.selectAll(type, input);
+
+    if (type === 'angle') {
+      const imgSvc = this.imagesService;
+      imgSvc.isRotating = true;
+      imgSvc.redrawImage();
+      imgSvc.currentPages.forEach(p => imgSvc.drawPage(p));
+    }
   }
 
   onInputBlur(type: InputType, input: HTMLInputElement): void { 
-    const page = this.imagesService.selectedPage;
+    const imgSvc = this.imagesService;
+    const page = imgSvc.selectedPage;
     if (!page) return;
 
     const factor = type === 'angle' ? 1 : 100;
@@ -373,6 +381,12 @@ export class RightPanelComponent {
     this.cdr.detectChanges();
 
     this.firstFocus[type] = true;
+
+    if (type === 'angle') {
+      imgSvc.isRotating = false;
+      imgSvc.redrawImage();
+      imgSvc.currentPages.forEach(p => imgSvc.drawPage(p));
+    }
   }
 
   private adjustValue(type: InputType, input: HTMLInputElement, direction: 1 | -1,  multiplier: number = 1): void {

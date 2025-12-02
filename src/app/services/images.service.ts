@@ -4,7 +4,7 @@ import { HitInfo, ImageItem, ImgOrCanvas, MousePos, Page } from '../app.types';
 import { catchError, Observable, of } from 'rxjs';
 import { defer, degreeToRadian, getColor, scrollToSelectedImage } from '../utils/utils';
 import { EnvironmentService } from './environment.service';
-import { transparentColor } from '../app.config';
+import { gridColor, transparentColor } from '../app.config';
 
 @Injectable({
   providedIn: 'root'
@@ -64,6 +64,7 @@ export class ImagesService {
   isRotating: boolean = false;
   rotationStartPage: Page | null = null;
   rotationStartMouseAngle: number = 0;
+  gridMode: 'always' | 'never' | 'when rotating' = 'when rotating';
 
   // Resize
   isResizing: boolean = false;
@@ -490,6 +491,50 @@ export class ImagesService {
     if (p._id === hoveredId && this.selectedPage?._id !== p._id) {
       ctx.fillStyle = color + '10';
       ctx.fillRect(-width / 2, -height / 2, width, height);
+    }
+
+    // Grid
+    if (this.selectedPage?._id === p._id && (
+      (this.gridMode === 'when rotating' && this.isRotating)
+      || this.gridMode === 'always'
+    )) {
+      const hw = width / 2;
+      const hh = height / 2;
+      const left = -hw;
+      const top = -hh;
+      const right = hw;
+      const bottom = hh;
+
+      const spacing = 40;
+
+      ctx.save();
+      ctx.beginPath();
+
+      // 1px lines that stay 1px even if you scaled elsewhere (optional, harmless if not scaled)
+      const sx = Math.hypot(ctx.getTransform().a, ctx.getTransform().b) || 1;
+      ctx.lineWidth = 1 / sx;
+
+      ctx.strokeStyle = gridColor;
+
+      // To make 1px lines crisp on canvas, align to half-pixel in local space.
+      // Also ensure the first line starts exactly at the top-left corner.
+      const xStart = left + spacing + 0.5;
+      const yStart = top + spacing + 0.5;
+
+      // Vertical lines
+      for (let x = xStart; x <= right; x += spacing) {
+        ctx.moveTo(x, top);
+        ctx.lineTo(x, bottom);
+      }
+
+      // Horizontal lines
+      for (let y = yStart; y <= bottom; y += spacing) {
+        ctx.moveTo(left, y);
+        ctx.lineTo(right, y);
+      }
+
+      ctx.stroke();
+      ctx.restore();
     }
 
     // Corner squares

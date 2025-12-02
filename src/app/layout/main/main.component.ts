@@ -459,6 +459,8 @@ export class MainComponent {
           imgSvc.isRotating = false;
           imgSvc.rotationStartPage = null;
           imgSvc.pageWasEdited = true;
+          imgSvc.redrawImage();
+          imgSvc.currentPages.forEach(p => imgSvc.drawPage(p));
           imgSvc.updateMainImageItemAndImages();
         }
       }
