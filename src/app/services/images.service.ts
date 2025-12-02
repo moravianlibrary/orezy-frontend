@@ -665,9 +665,9 @@ export class ImagesService {
       'ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown',    // drag selected page x, y by 1; not selected prev/next scan (+ PageUp / PageDown)
       'm', 'g',                                             // grid
       'o',                                                  // obrys
-      'Enter',                                              // + control = dokončit
-      'r', 'z',                                             // + control = reset změn skenu; + control + shift + alt = reset změn dokumentu
-      'F1', 'F2', 'F3', 'F4', 'š', 'č', '3', '4',           // filters OR control + 1, 2, 3, 4 / +, ě, š, č
+      'Enter',                                              // + control/cmd = dokončit
+      'r', 'z',                                             // + control/cmd = reset změn skenu; + control + shift + alt/cmd = reset změn dokumentu
+      'F1', 'F2', 'F3', 'F4', 'š', 'č', '3', '4',           // filters OR control/cmd + 1, 2, 3, 4 / +, ě, š, č
       'Shift',                                              // 1 -> 10
       'Control',                                            // + arrows = change width / height by 1
       'Alt'                                                 // + arrows = rotate by 1
@@ -696,6 +696,7 @@ export class ImagesService {
       this.redrawImage();
       this.currentPages.forEach(p => this.drawPage(p));
       this.toggleMainImageOrCanvas();
+      this.updateMainImageItemAndImages();
     }
 
     // Unselect page
