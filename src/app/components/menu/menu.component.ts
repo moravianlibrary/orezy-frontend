@@ -15,6 +15,7 @@ export class MenuComponent {
   imagesService = inject(ImagesService);
   type = input('menu-primary');
 
+
   /* ------------------------------
     TOGGLE BEHAVIOR
   ------------------------------ */
@@ -58,6 +59,31 @@ export class MenuComponent {
   ------------------------------ */
   upload(): void {
     console.log('should upload');
+  }
+
+  toggleSettings(): void {
+    const imgSvc = this.imagesService;
+    this.dialogTitle.set('Nastavení');
+    this.dialogContent.set(true);
+    this.dialogButtons.set([
+      { 
+        label: 'Reset',
+        action: () => {
+          imgSvc.gridMode = 'when rotating';
+        }
+      },
+      {
+        label: 'Uložit',
+        primary: true,
+        action: () => {
+          const selectedGridMode = 'when rotating';
+          imgSvc.gridMode = selectedGridMode;
+        }
+      }
+    ]);
+
+    this.dialogOpen.set(true);
+    imgSvc.dialogOpened = true;
   }
 
   resetDoc(): void {

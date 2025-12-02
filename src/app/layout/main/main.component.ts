@@ -395,6 +395,7 @@ export class MainComponent {
       if (imgSvc.pageWasEdited && (cursor === 'initial' || cursor === 'pointer')) {
         imgSvc.updateCurrentPagesWithEdited();
       }
+      imgSvc.isRotating = false;
       imgSvc.lastSelectedPage = imgSvc.selectedPage;
       imgSvc.selectedPage = hitPage;
       imgSvc.clickedDiffPage = imgSvc.lastSelectedPage && imgSvc.selectedPage && imgSvc.lastSelectedPage !== imgSvc.selectedPage;

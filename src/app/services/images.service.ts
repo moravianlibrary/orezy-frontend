@@ -397,9 +397,10 @@ export class ImagesService {
     ctx.translate(centerX, centerY);
     ctx.rotate(degreeToRadian(p.angle));
 
+    // Outline
     ctx.strokeStyle = getColor(p) + 'B2';
     ctx.lineWidth = this.pageOutlineWidth;
-    ctx.strokeRect(-width / 2, -height / 2, width, height);
+    ctx.strokeRect(-width / 2 - this.pageOutlineWidth / 2, -height / 2 - this.pageOutlineWidth / 2, width + this.pageOutlineWidth, height + this.pageOutlineWidth);
 
     ctx.restore();
   }
@@ -481,11 +482,12 @@ export class ImagesService {
     ctx.translate(centerX, centerY);
     ctx.rotate(degreeToRadian(p.angle));
 
+    // Outline
     ctx.strokeStyle = p._id === this.selectedPage?._id && this.outlineTransparent
       ? transparentColor
       : color + 'B2';
     ctx.lineWidth = this.pageOutlineWidth;
-    ctx.strokeRect(-width / 2, -height / 2, width, height);
+    ctx.strokeRect(-width / 2 - this.pageOutlineWidth / 2, -height / 2 - this.pageOutlineWidth / 2, width + this.pageOutlineWidth, height + this.pageOutlineWidth);
 
     // Hover
     if (p._id === hoveredId && this.selectedPage?._id !== p._id) {
