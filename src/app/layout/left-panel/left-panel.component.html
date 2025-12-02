@@ -7,22 +7,22 @@
     <span
       class="filter"
       [class.selected-filter]="imagesService.selectedFilter === 'all'"
-      (click)="clickFilter('all')"
+      (click)="imagesService.switchFilter('all')"
     >Vše <span class="filter-number">({{ imagesService.images().length }})</span></span>
     <span
       class="filter"
       [class.selected-filter]="imagesService.selectedFilter === 'flagged'"
-      (click)="clickFilter('flagged')"
+      (click)="imagesService.switchFilter('flagged')"
     >Podezřelé <span class="filter-number">({{ imagesService.flaggedImages().length }})</span></span>
     <span
       class="filter"
       [class.selected-filter]="imagesService.selectedFilter === 'edited'"
-      (click)="clickFilter('edited')"
+      (click)="imagesService.switchFilter('edited')"
     >Upravené <span class="filter-number">({{ imagesService.editedImages().length }})</span></span>
     <span
       class="filter"
       [class.selected-filter]="imagesService.selectedFilter === 'ok'"
-      (click)="clickFilter('ok')"
+      (click)="imagesService.switchFilter('ok')"
     >OK <span class="filter-number">({{ imagesService.notFlaggedImages().length }})</span></span>
   </div>
 </div>

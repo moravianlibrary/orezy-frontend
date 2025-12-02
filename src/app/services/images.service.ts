@@ -155,7 +155,8 @@ export class ImagesService {
           this.setDisplayedImages();
         },
         error: (err: Error) => console.error(err)
-      })
+      });
+    
   }
 
   resetScan(): void {
@@ -193,7 +194,7 @@ export class ImagesService {
 
 
   /* ------------------------------
-    DISPLAYED IMAGES (left panel)
+    LEFT PANEL
   ------------------------------ */
   setDisplayedImages(): void {
     switch (this.selectedFilter) {
@@ -210,6 +211,24 @@ export class ImagesService {
         this.displayedImages.set(this.notFlaggedImages());
         break;
     }
+  }
+
+  switchFilter(filter: string): void {
+    this.selectedFilter = filter;
+    
+    const mainImageItemName = this.mainImageItem()._id;
+    if (this.imgWasEdited) {
+      this.updateImagesByEdited(mainImageItemName ?? '');
+    }
+
+    this.setDisplayedImages();
+
+    const newImage = this.displayedImages().find(img => img._id === mainImageItemName)
+      || this.displayedImages()[0]
+      || { url: '' };
+    this.setMainImage(newImage);
+
+    scrollToSelectedImage();
   }
 
 
@@ -662,13 +681,17 @@ export class ImagesService {
       'Escape',                                             // Unselect page
       'Backspace', 'Delete',                                // Remove page
       'p', 'a',                                             // Add page
-      'ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown',    // drag selected page x, y by 1; not selected prev/next scan (+ PageUp / PageDown)
+      'ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown',    // drag selected page x, y by 1; not selected prev/next scan
+      'PageDown', 'PageUp',                                 // (+ PageUp / PageDown)
       'm', 'g',                                             // grid
       'o',                                                  // obrys
       'Enter',                                              // + control/cmd = dokončit
+
       'r', 'z',                                             // + control/cmd = reset změn skenu; + control + shift + alt/cmd = reset změn dokumentu
-      'F1', 'F2', 'F3', 'F4', 'š', 'č', '3', '4',           // filters OR control/cmd + 1, 2, 3, 4 / +, ě, š, č
+      
+      'F1', 'F2', 'F3', 'F4',                               // filters
       'Shift',                                              // 1 -> 10
+      
       'Control',                                            // + arrows = change width / height by 1
       'Alt'                                                 // + arrows = rotate by 1
       // Figma
@@ -679,8 +702,8 @@ export class ImagesService {
 
   onKeyDown(event: KeyboardEvent): void {
     const key = event.key;
-    // console.log(key);
-    // console.log(event.code);
+    console.log(key);
+    console.log(event.code);
     if (!this.isHandledKey(key) || (event.target as HTMLElement).tagName === 'INPUT') return;
     // event.preventDefault();
     // event.stopPropagation();
@@ -735,12 +758,14 @@ export class ImagesService {
     }
 
     // Prev/next scan
-    if (['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].includes(key) && !this.selectedPage) {      
-      if (['ArrowLeft', 'ArrowUp'].includes(key)) {
-        this.showPrevImage();
-      } else {
-        this.showNextImage();
-      }
+    if ((['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].includes(key) && !this.selectedPage) || ['PageDown', 'PageUp'].includes(key)) {
+      const prevKeys = new Set(['PageUp', 'ArrowLeft', 'ArrowUp']);
+      const nextKeys = new Set(['PageDown', 'ArrowRight', 'ArrowDown']);
+
+      const isAllowedArrow = !this.selectedPage && (prevKeys.has(key) || nextKeys.has(key));
+      const isPageKey = key === 'PageUp' || key === 'PageDown';
+
+      if (isPageKey || isAllowedArrow) prevKeys.has(key) ? this.showPrevImage() : this.showNextImage();
     }
 
     // Drag/move page
@@ -781,6 +806,7 @@ export class ImagesService {
       };
 
       this.pageWasEdited = true;
+      this.imgWasEdited = true;
       this.selectedPage = updatedPage;
       this.lastSelectedPage = updatedPage;
       this.currentPages = this.currentPages.map(p =>p._id === updatedPage._id ? updatedPage : p);
@@ -795,7 +821,7 @@ export class ImagesService {
     }
 
     // Dokončit
-    if (key === 'Enter' && event.ctrlKey) this.finishEverything();
+    if (key === 'Enter' && (event.ctrlKey || event.metaKey)) this.finishEverything();
 
 
 
@@ -817,6 +843,22 @@ export class ImagesService {
       // event.preventDefault();
       // event.stopPropagation();
       // this.resetScan();
+    }
+
+    // Switch filter
+    if (['F1', 'F2', 'F3', 'F4'].includes(key)) {
+      const filterByKey: { [filter: string]: string } = {
+        F1: 'all',
+        F2: 'flagged',
+        F3: 'edited',
+        F4: 'ok',
+      };
+
+      const filter = filterByKey[key];
+      if (filter) {
+        this.selectedFilter = filter;
+        this.switchFilter(this.selectedFilter);
+      }
     }
   }
 }

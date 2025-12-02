@@ -40,10 +40,12 @@
 }
 
 .dialog-body {
-  .dialog-description {
-    margin-bottom: var(--spacing-x2);
-    @include font(350, var(--font-size-x2), var(--spacing-x6), var(--text-base));
-  }
+  
+}
+
+.dialog-description {
+  margin-bottom: var(--spacing-x2);
+  @include font(350, var(--font-size-x2), var(--spacing-x6), var(--text-base));
 }
 
 .dialog-close {

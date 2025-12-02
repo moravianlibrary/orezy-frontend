@@ -88,7 +88,7 @@ export class MenuComponent {
 
   resetDoc(): void {
     this.dialogTitle.set('Opravdu chcete resetovat změny?');
-    this.dialogContent.set(true);
+    // this.dialogContent.set(true);
     this.dialogDescription.set('Reset změn se týká celého dokumentu.');
     this.dialogButtons.set([
       { label: 'Zrušit' },
@@ -106,7 +106,7 @@ export class MenuComponent {
 
   resetScan(): void {
     this.dialogTitle.set('Opravdu chcete resetovat změny?');
-    this.dialogContent.set(true);
+    // this.dialogContent.set(true);
     this.dialogDescription.set('Reset změn se týká aktuálního skenu.');
     this.dialogButtons.set([
       { label: 'Zrušit' },

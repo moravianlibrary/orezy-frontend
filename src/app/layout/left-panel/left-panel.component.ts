@@ -75,25 +75,6 @@ export class LeftPanelComponent {
   /* ------------------------------
     CLICKS
   ------------------------------ */
-  clickFilter(filter: string): void {
-    const imgSvc = this.imagesService;
-    imgSvc.selectedFilter = filter;
-    
-    const mainImageItemName = imgSvc.mainImageItem()._id;
-    if (imgSvc.imgWasEdited) {
-      imgSvc.updateImagesByEdited(mainImageItemName ?? '');
-    }
-
-    imgSvc.setDisplayedImages();
-
-    const newImage = imgSvc.displayedImages().find(img => img._id === mainImageItemName)
-      || imgSvc.displayedImages()[0]
-      || { url: '' };
-    imgSvc.setMainImage(newImage);
-
-    scrollToSelectedImage();
-  }
-
   clickThumbnail(image: ImageItem): void {
     this.imagesService.setMainImage(image);
   }

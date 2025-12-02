@@ -22,6 +22,8 @@
 
       <ng-content></ng-content>
     </section>
+  } @else if (description()) {
+    <p class="dialog-description">{{ description() }}</p>
   }
 
   <footer class="dialog-footer">
