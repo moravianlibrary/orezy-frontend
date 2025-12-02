@@ -714,6 +714,15 @@ export class ImagesService {
     // Add page
     if (['p', 'a'].includes(key)) if (this.currentPages.length < this.maxPages) this.addPage();
 
+    // Change grid mode
+    if (['m', 'g'].includes(key) && this.selectedPage) {
+      this.gridMode = !this.isRotating
+        ? this.gridMode === 'always' ? 'when rotating' : 'always'
+        : this.gridMode === 'never' ? 'when rotating' : 'never';
+      this.redrawImage();
+      this.currentPages.forEach(p => this.drawPage(p));
+    };
+
     // Outline transparency
     if (key === 'o' && this.selectedPage) {
       this.outlineTransparent = !this.outlineTransparent;
@@ -732,6 +741,7 @@ export class ImagesService {
 
     // Drag/move page
     if (['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].includes(key) && this.selectedPage && !event.altKey && !event.ctrlKey) {
+      
       const start = this.selectedPage;
       const isHorizontal = ['ArrowLeft', 'ArrowRight'].includes(key);
       const sign = ['ArrowRight','ArrowDown'].includes(key) ? 1 : -1;
@@ -766,6 +776,7 @@ export class ImagesService {
         [axis.max]: newMax
       };
 
+      this.pageWasEdited = true;
       this.selectedPage = updatedPage;
       this.lastSelectedPage = updatedPage;
       this.currentPages = this.currentPages.map(p =>p._id === updatedPage._id ? updatedPage : p);
