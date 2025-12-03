@@ -81,6 +81,8 @@ export class ImagesService {
   lastAngleInput: number = 0;
   increment: number = 0.001;
   incrementAngle: number = this.increment * 100;
+  decimals: number = 2;
+  rotationDirection: number = 1;
 
   outlineTransparent: boolean = false;
   pageOutlineWidth: number = 3;
@@ -698,7 +700,7 @@ export class ImagesService {
 
   onKeyDown(event: KeyboardEvent): void {
     const key = event.key;
-    console.log(key);
+    // console.log(key);
     // console.log(event.code);
     
     if (!this.isHandledKey(key) || (event.target as HTMLElement).tagName === 'INPUT') return;
@@ -1066,7 +1068,45 @@ export class ImagesService {
       ['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].includes(key) && this.selectedPage
       && (event.ctrlKey || event.metaKey) && event.altKey
     ) {
-      
+      const page = this.selectedPage;
+      const sign = ['ArrowRight', 'ArrowUp'].includes(key) ? 1 : -1;
+      const delta = this.incrementAngle * sign * (event.shiftKey ? 10 : 1);
+      const value = page.angle + delta;
+      const newAngle = clamp(value, -45, 45);
+
+      const canRotatePage = (page: Page, newAngle: number): boolean => {
+        const bounds = this.computeBounds(page.xc, page.yc, page.width, page.height, newAngle);
+        return (
+          bounds.left >= 0 &&
+          bounds.right <= 1 &&
+          bounds.top >= 0 &&
+          bounds.bottom <= 1
+        );
+      }
+
+      this.rotationDirection = Math.sign((newAngle - page.angle) || newAngle);
+      if (canRotatePage(page, newAngle)) {
+        page.angle = newAngle;
+      } else {
+        const step = this.rotationDirection * (0.1 ** this.decimals);
+        let tempAngle = page.angle;
+        while (canRotatePage(page, tempAngle + step)) {
+          tempAngle += step;
+        }
+        page.angle = tempAngle;
+      }
+
+      const bounds = this.computeBounds(page.xc, page.yc, page.width, page.height, page.angle);
+
+      page.left = bounds.left;
+      page.right = bounds.right;
+      page.top = bounds.top;
+      page.bottom = bounds.bottom;
+
+      this.pageWasEdited = true;
+      this.imgWasEdited = true;
+      this.redrawImage();
+      this.currentPages.forEach(p => this.drawPage(p));
     }
 
     // Dokončit

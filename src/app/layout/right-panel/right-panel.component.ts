@@ -18,9 +18,6 @@ export class RightPanelComponent {
   imagesService = inject(ImagesService);
   private cdr = inject(ChangeDetectorRef);
 
-  rotationDirection: number = 1;
-  private decimals: number = 2;
-
   private firstFocus = { left: true, top: true, width: true, height: true, angle: true };
   private holdInterval: any;
 
@@ -44,7 +41,7 @@ export class RightPanelComponent {
     let value = type === 'angle' ? raw : raw / 100;
     if (isNaN(value)) value = 0;
 
-    value = parseFloat(value.toFixed(this.decimals + 2));
+    value = parseFloat(value.toFixed(imgSvc.decimals + 2));
 
     const cw = imgSvc.c.width;
     const ch = imgSvc.c.height;
@@ -301,11 +298,11 @@ export class RightPanelComponent {
           );
         }
 
+        imgSvc.rotationDirection = Math.sign((newAngle - page.angle) || newAngle);
         if (canRotatePage(page, newAngle)) {
           page.angle = newAngle;
         } else {
-          this.rotationDirection = Math.sign(newAngle - page.angle);
-          const step = this.rotationDirection * (0.1 ** this.decimals);
+          const step = imgSvc.rotationDirection * (0.1 ** imgSvc.decimals);
           let tempAngle = page.angle;
           while (canRotatePage(page, tempAngle + step)) {
             tempAngle += step;
@@ -375,7 +372,7 @@ export class RightPanelComponent {
     const factor = type === 'angle' ? 1 : 100;
 
     input.value = page[type]
-      ? ((page[type] * factor).toFixed(this.decimals))
+      ? ((page[type] * factor).toFixed(imgSvc.decimals))
           .replace(/([.,]\d*?[1-9])0+$/, '$1') // Remove unnecessary trailing zeros, but keep the decimal if needed
           .replace(/([.,]0+)$/, '') // Remove trailing decimal if it becomes redundant (e.g., "10." → "10")
       : '0';

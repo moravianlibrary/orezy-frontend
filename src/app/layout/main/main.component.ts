@@ -577,6 +577,7 @@ export class MainComponent {
 
     let proposedAngle = startPage.angle + radianToDegree(delta);
     proposedAngle = clamp(proposedAngle, -45, 45);
+    imgSvc.rotationDirection = Math.sign((proposedAngle - startPage.angle) || proposedAngle);
 
     const canRotate = (angle: number) => {
       const bounds = imgSvc.computeBounds(startPage.xc, startPage.yc, startPage.width, startPage.height, angle);
