@@ -5,7 +5,7 @@ import { DecimalPipe } from '@angular/common';
 import { ChangeDetectorRef } from '@angular/core';
 import { DialogButton, InputType, Page } from '../../app.types';
 import { DialogComponent } from '../../components/dialog/dialog.component';
-import { defer, degreeToRadian } from '../../utils/utils';
+import { clamp, defer, degreeToRadian } from '../../utils/utils';
 import { MenuComponent } from '../../components/menu/menu.component';
 
 @Component({
@@ -54,7 +54,7 @@ export class RightPanelComponent {
     switch (type) {
       case 'left':
         const boundWidth = Math.abs(page.left - page.right);
-        value = this.clamp(value, 0, 1 - boundWidth);
+        value = clamp(value, 0, 1 - boundWidth);
         const deltaX = -(imgSvc.lastLeftInput - value)
         page.xc = page.xc + deltaX;
         page.right = page.right + deltaX;
@@ -63,7 +63,7 @@ export class RightPanelComponent {
         break;
       case 'top':
         const boundHeight = Math.abs(page.top - page.bottom);
-        value = this.clamp(value, 0, 1 - boundHeight);
+        value = clamp(value, 0, 1 - boundHeight);
         const deltaY = -(imgSvc.lastTopInput - value)
         page.yc = page.yc + deltaY;
         page.bottom = page.bottom + deltaY;
@@ -72,7 +72,7 @@ export class RightPanelComponent {
         break;
       case 'width':
         const handleAligned = (isHorizontal: boolean, reverse: boolean) => {
-          value = this.clamp(value, 0, isHorizontal
+          value = clamp(value, 0, isHorizontal
             ? reverse ? page.right : 1 - page.left
             : (reverse ? page.bottom : (1 - page.top)) * inverseRatio);
           const delta = (imgSvc.lastWidthInput - value) * (reverse ? 1 : -1);
@@ -80,13 +80,13 @@ export class RightPanelComponent {
           if (isHorizontal) {
             page.xc += delta / 2;
             reverse
-              ? page.left = this.clamp(page.left + delta)
-              : page.right = this.clamp(page.right + delta);
+              ? page.left = clamp(page.left + delta)
+              : page.right = clamp(page.right + delta);
           } else {
             page.yc += (delta / 2) * ratio;
             reverse
-              ? page.top = this.clamp(value * ratio >= page.bottom ? 0 : page.top + delta * ratio)
-              : page.bottom = this.clamp(page.bottom + delta * ratio);
+              ? page.top = clamp(value * ratio >= page.bottom ? 0 : page.top + delta * ratio)
+              : page.bottom = clamp(page.bottom + delta * ratio);
           }
 
           page.width = value;
@@ -180,7 +180,7 @@ export class RightPanelComponent {
         break;
       case 'height':
         const handleAlignedHeight = (isHorizontal: boolean, reverse: boolean) => {
-          value = this.clamp(value, 0, isHorizontal
+          value = clamp(value, 0, isHorizontal
             ? reverse ? page.bottom : 1 - page.top
             : (reverse ? page.right : (1 - page.left)) * ratio);
           const delta = (imgSvc.lastHeightInput - value) * (reverse ? 1 : -1);
@@ -188,13 +188,13 @@ export class RightPanelComponent {
           if (isHorizontal) {
             page.yc += delta / 2;
             reverse
-              ? page.top = this.clamp(page.top + delta)
-              : page.bottom = this.clamp(page.bottom + delta);
+              ? page.top = clamp(page.top + delta)
+              : page.bottom = clamp(page.bottom + delta);
           } else {
             page.xc += (delta / 2) * inverseRatio;
             reverse
-              ? page.left = this.clamp(value * inverseRatio >= page.right ? 0 : page.left + delta * inverseRatio)
-              : page.right = this.clamp(page.right + delta * inverseRatio);
+              ? page.left = clamp(value * inverseRatio >= page.right ? 0 : page.left + delta * inverseRatio)
+              : page.right = clamp(page.right + delta * inverseRatio);
           }
 
           page.height = value;
@@ -287,7 +287,7 @@ export class RightPanelComponent {
 
         break;
       case 'angle':
-        const newAngle = ((value + 180) % 360 + 360) % 360 - 180;
+        const newAngle = clamp(value, -45, 45);
 
         const canRotatePage = (page: Page, newAngle: number): boolean => {
           const bounds = imgSvc.computeBounds(page.xc, page.yc, page.width, page.height, newAngle);
@@ -420,10 +420,6 @@ export class RightPanelComponent {
       case 'height': return page.height * 100;
       case 'angle': return page.angle;
     }
-  }
-
-  private clamp(value: number, min: number = 0, max: number = 1): number {
-    return Math.min(Math.max(value, min), max);
   }
 
   private updateAndRedraw(page: Page): void {

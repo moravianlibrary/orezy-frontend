@@ -250,7 +250,8 @@
                 (
                   rotationDirection > 0
                   && (
-                    imagesService.selectedPage.bottom >= 0.999946
+                    imagesService.selectedPage.angle === 45
+                    || imagesService.selectedPage.bottom >= 0.999946
                     || imagesService.selectedPage.top <= 0.000045
                     || imagesService.selectedPage.right >= 0.999946
                     || imagesService.selectedPage.left <= 0.000045
@@ -269,7 +270,8 @@
                 (
                   rotationDirection < 0
                   && (
-                    imagesService.selectedPage.bottom >= 0.999946
+                    imagesService.selectedPage.angle === -45
+                    || imagesService.selectedPage.bottom >= 0.999946
                     || imagesService.selectedPage.top <= 0.000045
                     || imagesService.selectedPage.right >= 0.999946
                     || imagesService.selectedPage.left <= 0.000045

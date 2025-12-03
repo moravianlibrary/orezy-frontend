@@ -1,4 +1,4 @@
-import { defaultColor, editedColor, errorColor, transparentColor, warningColor } from '../app.config';
+import { defaultColor, editedColor, errorColor, warningColor } from '../app.config';
 import { Page } from '../app.types';
 
 /* ------------------------------
@@ -14,6 +14,10 @@ export function radianToDegree(angle: number): number {
 
 export function roundToDecimals(value: number, decimals: number = 2): number {
   return Number(value.toFixed(decimals));
+}
+
+export function clamp(value: number, min: number = 0, max: number = 1): number {
+  return Math.min(max, Math.max(min, value));
 }
 
 

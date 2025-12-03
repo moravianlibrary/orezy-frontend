@@ -1,6 +1,6 @@
 import { Component, inject } from '@angular/core';
 import { ImagesService } from '../../services/images.service';
-import { degreeToRadian, radianToDegree } from '../../utils/utils';
+import { clamp, degreeToRadian, radianToDegree } from '../../utils/utils';
 import { CornerName, EdgeLocalOrientation, EdgeSide, HitInfo, Page } from '../../app.types';
 import { LoaderComponent } from '../../components/loader/loader.component';
 
@@ -576,7 +576,7 @@ export class MainComponent {
     let delta = currentMouseAngle - imgSvc.rotationStartMouseAngle;
 
     let proposedAngle = startPage.angle + radianToDegree(delta);
-    proposedAngle = ((proposedAngle + 180) % 360 + 360) % 360 - 180;
+    proposedAngle = clamp(proposedAngle, -45, 45);
 
     const canRotate = (angle: number) => {
       const bounds = imgSvc.computeBounds(startPage.xc, startPage.yc, startPage.width, startPage.height, angle);
