@@ -1,8 +1,8 @@
 <div class="left-part button-group">
   <span
     class="button secondary"
-    [class.disabled]="this.imagesService.currentIndex() === 0"
-    (click)="this.imagesService.showPrevImage()"
+    [class.disabled]="imagesService.currentIndex() === 0"
+    (click)="imagesService.showPrevImage()"
   >
     <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
       <path fill-rule="evenodd" clip-rule="evenodd" d="M6.73347 3.59957C6.92873 3.79483 6.92873 4.11142 6.73347 4.30668L3.04036 7.99979L6.73347 11.6929C6.92873 11.8882 6.92873 12.2048 6.73347 12.4C6.53821 12.5953 6.22163 12.5953 6.02637 12.4L1.9797 8.35335C1.88593 8.25958 1.83325 8.1324 1.83325 7.99979C1.83325 7.86718 1.88593 7.74001 1.9797 7.64624L6.02637 3.59957C6.22163 3.40431 6.53821 3.40431 6.73347 3.59957Z" />
@@ -11,7 +11,7 @@
   </span>
   <span
     class="button secondary"
-    [class.disabled]="this.imagesService.currentIndex() === this.imagesService.displayedImages().length - 1"
+    [class.disabled]="imagesService.currentIndex() === imagesService.displayedImages().length - 1"
     (click)="this.imagesService.showNextImage()"
   >
     <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -19,6 +19,19 @@
       <path fill-rule="evenodd" clip-rule="evenodd" d="M1.83325 8C1.83325 7.72386 2.05711 7.5 2.33325 7.5H13.5533C13.8294 7.5 14.0533 7.72386 14.0533 8C14.0533 8.27614 13.8294 8.5 13.5533 8.5H2.33325C2.05711 8.5 1.83325 8.27614 1.83325 8Z" />
     </svg>
   </span>
+  @if (imagesService.selectedFilter === 'flagged') {
+    <span
+      class="button secondary mark-ok"
+      [class.disabled]="wasAnyPageEdited"
+      (click)="imagesService.markImageOK()"
+      title="Přesune sken do OK. Použijte v případě, že by sken neměl být podezřelý. Sken je možné přesunout pouze bez jakýchkoliv uživatelských úprav."
+    >
+      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+        <path d="M13.78 4.72a.75.75 0 0 1 0 1.06l-6 6a.75.75 0 0 1-1.06 0l-3-3a.75.75 0 1 1 1.06-1.06l2.47 2.47 5.47-5.47a.75.75 0 0 1 1.06 0Z" />
+      </svg>
+      Sken je OK
+    </span>
+  }
 </div>
 
 <!-- <div class="middle-part button-group">

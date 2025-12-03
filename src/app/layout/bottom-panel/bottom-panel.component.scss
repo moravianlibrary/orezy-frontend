@@ -15,7 +15,14 @@
 }
 
 .disabled { 
+  color: var(--text-disabled);
+
   svg {
     fill: var(--icon-disabled);
   }
+}
+
+.mark-ok {
+  gap: var(--spacing-x2);
+  margin-left: var(--spacing-x3);
 }

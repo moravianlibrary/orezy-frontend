@@ -10,6 +10,10 @@ import { ImagesService } from '../../services/images.service';
 export class BottomPanelComponent {
   imagesService = inject(ImagesService);
 
+  get wasAnyPageEdited(): boolean {
+    return Boolean(this.imagesService.currentPages.find(p => p.edited));
+  }
+
   /* ------------------------------
     ZOOMS & FIT TO SCREEN
   ------------------------------ */

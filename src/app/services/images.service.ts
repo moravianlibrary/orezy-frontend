@@ -442,6 +442,29 @@ export class ImagesService {
     if (this.imgWasEdited) defer(() => this.setDisplayedImages(), 100);
   }
 
+  markImageOK(): void {
+    if (this.currentIndex() === this.displayedImages().length - 1) return;
+    if (this.currentPages.find(p => p.edited)) return;
+    
+    this.imgWasEdited = false;
+    this.images.update(prev =>
+      prev.map(img => img._id === this.mainImageItem()._id
+        ? { 
+            ...img,
+            flags: [],
+            pages: this.currentPages.map(p => ({
+              ...p,
+              flags: []
+            }))
+          }
+        : img
+      )
+    );
+
+    this.showImage(1);
+    defer(() => this.setDisplayedImages(), 100);
+  }
+
   private showImage(offset: number): void {
     const displayedImages = this.displayedImages();
 

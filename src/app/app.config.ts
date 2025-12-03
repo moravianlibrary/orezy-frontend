@@ -13,7 +13,7 @@ export const gridColor = '#FF000050';
 
 export const flagMessages: Record<string, string> = {
   prediction_overlap: 'Výřezy se překrývají',
-  page_count_mismatch: 'Chybějící strana',
+  page_count_mismatch: 'Chybějící výřez',
   no_prediction: 'Neúspěšná predikce',
   low_confidence: 'Nejistota',
   odd_dimensions: 'Podezřelý rozměr'

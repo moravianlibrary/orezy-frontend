@@ -1,9 +1,7 @@
 import { Component, ElementRef, inject, QueryList, ViewChildren } from '@angular/core';
 import { ImagesService } from '../../services/images.service';
 import { ImageItem } from '../../app.types';
-import { scrollToSelectedImage } from '../../utils/utils';
 import { LoaderComponent } from '../../components/loader/loader.component';
-import { forkJoin } from 'rxjs';
 import { NgClass } from '../../../../node_modules/@angular/common';
 import { MenuComponent } from "../../components/menu/menu.component";
 import { flagMessages } from '../../app.config';
@@ -37,13 +35,8 @@ export class LeftPanelComponent {
         return;
       }
 
-      // forkJoin({
-      //   thumbnail: this.imagesService.fetchThumbnail(id),
-      //   full: this.imagesService.fetchImage(id)
-      // }).subscribe(({ thumbnail, full }) => {
       this.imagesService.fetchThumbnail(id).subscribe(thumbnail => {
         const thumbnailUrl = URL.createObjectURL(thumbnail);
-        // const imageUrl = URL.createObjectURL(full);
 
         img.src = thumbnailUrl;
 
@@ -52,8 +45,7 @@ export class LeftPanelComponent {
             img._id === id
               ? {
                   ...img,
-                  thumbnailUrl: thumbnailUrl,
-                  // url: imageUrl
+                  thumbnailUrl: thumbnailUrl
                 }
               : img
           )
