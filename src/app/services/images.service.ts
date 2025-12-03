@@ -711,7 +711,9 @@ export class ImagesService {
     if ((key === '+' || key === 'ě' || key === '1' || key === '2') && !event.ctrlKey) {
       if (this.pageWasEdited) this.updateCurrentPagesWithEdited();
       this.lastSelectedPage = this.selectedPage;
-      this.selectedPage = this.currentPages.find(p => p.type === ((key === '+' || key === '1') ? 'left' : 'right')) ?? null;
+      const isLeftKey = key === '+' || key === '1';
+      const targetTypes = isLeftKey ? new Set(['left', 'single']) : new Set(['right']);
+      this.selectedPage = this.currentPages.find(p => targetTypes.has(p.type)) ?? null;
       this.clickedDiffPage = this.lastSelectedPage && this.selectedPage && this.lastSelectedPage !== this.selectedPage;
       this.lastPageCursorIsInside = this.selectedPage;
       this.editable.set(true);

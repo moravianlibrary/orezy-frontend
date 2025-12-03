@@ -42,8 +42,8 @@ export function getColor(page: Page): string {
   if (page.edited) return editedColor;
 
   const errorFlags = [
-    'page_count_mismatch',
-    'no_prediction',
+    // 'page_count_mismatch',
+    // 'no_prediction',
     'prediction_overlap',
   ];
   if (page.flags.some(f => errorFlags.includes(f))) {
