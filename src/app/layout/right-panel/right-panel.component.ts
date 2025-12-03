@@ -105,6 +105,7 @@ export class RightPanelComponent {
           const o = getOrientation(angle);
           if (!o) return;
 
+          value = clamp(value);
           const rad = degreeToRadian(o.baseAngle);
           const cos = Math.cos(rad);
           const sin = Math.sin(rad);
@@ -213,6 +214,7 @@ export class RightPanelComponent {
           const o = getOrientation(angle);
           if (!o) return; 
 
+          value = clamp(value);
           const rad = degreeToRadian(o.baseAngle);
           const cos = Math.cos(rad);
           const sin = Math.sin(rad);
@@ -387,6 +389,11 @@ export class RightPanelComponent {
       imgSvc.redrawImage();
       imgSvc.currentPages.forEach(p => imgSvc.drawPage(p));
     }
+  }
+
+  onEscape(input: HTMLInputElement): void {
+    input.blur();
+    (document.querySelector('.main-wrapper') as HTMLElement).focus();
   }
 
   private adjustValue(type: InputType, input: HTMLInputElement, direction: 1 | -1,  multiplier: number = 1): void {

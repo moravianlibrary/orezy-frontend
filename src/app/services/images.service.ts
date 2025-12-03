@@ -2,7 +2,7 @@ import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { computed, inject, Injectable, signal } from '@angular/core';
 import { HitInfo, ImageItem, ImgOrCanvas, MousePos, Page } from '../app.types';
 import { catchError, Observable, of } from 'rxjs';
-import { defer, degreeToRadian, getColor, scrollToSelectedImage } from '../utils/utils';
+import { clamp, defer, degreeToRadian, getColor, scrollToSelectedImage } from '../utils/utils';
 import { EnvironmentService } from './environment.service';
 import { gridColor, transparentColor } from '../app.config';
 
@@ -672,6 +672,7 @@ export class ImagesService {
     this.imgWasEdited = false;
   }
 
+  // TO DO: REFACTOR!
   /* ------------------------------
     KEYBOARD SHORTCUTS
   ------------------------------ */
@@ -680,33 +681,29 @@ export class ImagesService {
       '+', 'ě', '1', '2',                                   // Select left / right page
       'Escape',                                             // Unselect page
       'Backspace', 'Delete',                                // Remove page
-      'p', 'a',                                             // Add page
-      'ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown',    // drag selected page x, y by 1; not selected prev/next scan
+      'p', 'P', 'a', 'A',                                   // Add page
+      'ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown',    // Drag selected page x, y by 1; not selected prev/next scan
       'PageDown', 'PageUp',                                 // (+ PageUp / PageDown)
-      'm', 'g',                                             // grid
-      'o',                                                  // obrys
+      'm', 'M', 'g', 'G',                                   // Mřížka / grid
+      'o', 'O',                                             // Obrys / outline
       'Enter',                                              // + control/cmd = dokončit
-
-      'r', 'z',                                             // + control/cmd = reset změn skenu; + control + shift + alt/cmd = reset změn dokumentu
-      
+      'r', 'R',                                             // + control/cmd = reset změn skenu; + control/cmd + shift = reset změn dokumentu
       'F1', 'F2', 'F3', 'F4',                               // filters
       'Shift',                                              // 1 -> 10
-      
-      'Control',                                            // + arrows = change width / height by 1
-      'Alt'                                                 // + arrows = rotate by 1
-      // Figma
-      // width height = ctrl / cmd + arrows
-      // rotate = ctrl + alt / cmd + option + arrows
+
+      'Control', 'Meta',                                    // + arrows = change width / height by 1
+      'Alt'                                                 // + control/cmd + arrows = rotate by 1
     ].includes(key);
   }
 
   onKeyDown(event: KeyboardEvent): void {
     const key = event.key;
     console.log(key);
-    console.log(event.code);
+    // console.log(event.code);
+    
     if (!this.isHandledKey(key) || (event.target as HTMLElement).tagName === 'INPUT') return;
-    // event.preventDefault();
-    // event.stopPropagation();
+    event.preventDefault();
+    event.stopPropagation();
 
     // Select left / right page
     if ((key === '+' || key === 'ě' || key === '1' || key === '2') && !event.ctrlKey) {
@@ -769,8 +766,7 @@ export class ImagesService {
     }
 
     // Drag/move page
-    if (['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].includes(key) && this.selectedPage && !event.altKey && !event.ctrlKey) {
-      
+    if (['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].includes(key) && this.selectedPage && !event.altKey && !event.ctrlKey && !event.metaKey) {
       const start = this.selectedPage;
       const isHorizontal = ['ArrowLeft', 'ArrowRight'].includes(key);
       const sign = ['ArrowRight','ArrowDown'].includes(key) ? 1 : -1;
@@ -816,33 +812,277 @@ export class ImagesService {
     }
 
     // Change page width / height
-    if (['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].includes(key) && this.selectedPage && !event.altKey) {
-      // TO DO
+    if (
+      ['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].includes(key) && this.selectedPage
+      && (event.ctrlKey || event.metaKey) && !event.altKey
+    ) {
+      if (['ArrowLeft', 'ArrowRight'].includes(key)) {
+        const cw = this.c.width;
+        const ch = this.c.height;
+        const ratio = cw / ch;
+        const inverseRatio = ch / cw;
+        
+        const page = this.selectedPage;
+        const lastWidth = page.width;
+        const sign = key === 'ArrowRight' ? 1 : -1;
+        const delta = this.increment * sign * (event.shiftKey ? 10 : 1);
+        let value = lastWidth + delta;
+
+        const handleAligned = (isHorizontal: boolean, reverse: boolean) => {
+          value = clamp(value, 0, isHorizontal
+            ? reverse ? page.right : 1 - page.left
+            : (reverse ? page.bottom : (1 - page.top)) * inverseRatio);
+          
+          if (isHorizontal) {
+            page.xc = value === 0 ? page.left : page.xc + delta / 2;
+            reverse
+              ? page.left = clamp(value === 0 ? page.right : page.left + delta)
+              : page.right = clamp(value === 0 ? page.left : page.right + delta);
+          } else {
+            page.yc = value === 0 ? page.top : page.yc + (delta / 2) * ratio;
+            reverse
+              ? page.top = clamp(value * ratio >= page.bottom ? 0 : page.top + delta * ratio)
+              : page.bottom = clamp(page.bottom + delta * ratio);
+          }
+
+          page.width = value;
+        };
+
+        const handleRotated = (angle: number) => {
+          const getOrientation = (angle: number) => {
+            if (angle > 0 && angle < 90)  return { signX: +1, signY: +1, ref: 'bottom-right', baseAngle: angle };
+            if (angle > 90)               return { signX: -1, signY: +1, ref: 'bottom-left',  baseAngle: angle - 90 };
+            if (angle < -90)              return { signX: -1, signY: -1, ref: 'top-left',     baseAngle: -angle - 90 };
+            if (angle < 0 && angle > -90) return { signX: +1, signY: -1, ref: 'top-right',    baseAngle: -angle };
+            return null;
+          };
+
+          const o = getOrientation(angle);
+          if (!o) return;
+
+          value = clamp(value);
+          const rad = degreeToRadian(o.baseAngle);
+          const cos = Math.cos(rad);
+          const sin = Math.sin(rad);
+          const toRight = o.signX > 0;
+          const toBottom = o.signY > 0;
+          const goniom = toRight ? cos : sin;
+          const inverseGoniom = toRight ? sin : cos;
+
+          const pageWidthOriginal = page.width;
+          const pageLeftOriginal = page.left;
+          const pageRightOriginal = page.right;
+          const pageTopOriginal = page.top;
+          const pageBottomOriginal = page.bottom;
+
+          const dW = delta;
+          const limitSide = toRight ? 'right' : 'left';
+          const reverseLimitSide = toRight ? 'left' : 'right';
+          let newSide = page[limitSide] + dW * (toRight ? cos : -sin);
+          page[limitSide] = value === 0 ? page[reverseLimitSide] + Math.sin(degreeToRadian(Math.abs(page.angle))) * page.height * inverseRatio * (toRight ? 1 : -1) : newSide;
+          let dX = (dW / 2) * goniom;
+          
+          page.width = value;
+          let adjustedDeltaWidth = dW;
+          let adjustedDeltaX = dX;
+
+          if (toRight ? newSide > 1 : newSide < 0) {
+            page.width = pageWidthOriginal + ((toRight ? 1 - pageRightOriginal : pageLeftOriginal) / goniom);
+            page[limitSide] = toRight ? 1 : 0;
+            adjustedDeltaWidth = page.width - lastWidth;
+            adjustedDeltaX = (adjustedDeltaWidth / 2) * goniom;
+          }
+
+          let deltaY = (adjustedDeltaWidth / 2) * inverseGoniom;
+          let adjustedDeltaY = deltaY;
+          const secondLimitSide = toBottom ? 'bottom' : 'top';
+          const secondReverseLimitSide = toBottom ? 'top' : 'bottom';
+          let secondNewSide = page[secondLimitSide] + adjustedDeltaWidth * inverseGoniom * ratio * o.signY;
+          page[secondLimitSide] = value === 0 ? page[secondReverseLimitSide] + Math.cos(degreeToRadian(Math.abs(page.angle))) * page.height * (toBottom ? 1 : -1) : secondNewSide;
+
+          if (toBottom ? secondNewSide > 1 : secondNewSide < 0) {
+            page.width = pageWidthOriginal + ((toBottom ? (1 - pageBottomOriginal) : pageTopOriginal) / inverseGoniom) * inverseRatio;
+            page[secondLimitSide] = toBottom ? 1 : 0;
+            adjustedDeltaWidth = page.width - lastWidth;
+            adjustedDeltaX = (adjustedDeltaWidth / 2) * goniom;
+            adjustedDeltaY = (adjustedDeltaWidth / 2) * inverseGoniom;
+            toRight
+              ? page.right = pageRightOriginal + adjustedDeltaWidth * cos
+              : page.left = pageLeftOriginal - adjustedDeltaWidth * sin;
+          }
+
+          page.xc = (page.left + page.right) / 2;
+          page.yc = (page.top + page.bottom) / 2;
+          
+        };
+
+        // --- Dispatch by angle ---
+        switch (page.angle) {
+          case 0:
+            handleAligned(true, false);
+            break;
+          case -180:
+            handleAligned(true, true);
+            break;
+          case 90:
+            handleAligned(false, false);
+            break;
+          case -90:
+            handleAligned(false, true);
+            break;
+          default:
+            handleRotated(page.angle);
+            break;
+        }
+      }
+
+      if (['ArrowUp', 'ArrowDown'].includes(key)) {
+        const cw = this.c.width;
+        const ch = this.c.height;
+        const ratio = cw / ch;
+        const inverseRatio = ch / cw;
+        
+        const page = this.selectedPage;
+        const lastHeight = page.height;
+        const sign = key === 'ArrowDown' ? 1 : -1;
+        const delta = this.increment * sign * (event.shiftKey ? 10 : 1);
+        let value = lastHeight + delta;
+
+        const handleAlignedHeight = (isHorizontal: boolean, reverse: boolean) => {
+          value = clamp(value, 0, isHorizontal
+            ? reverse ? page.bottom : 1 - page.top
+            : (reverse ? page.right : (1 - page.left)) * ratio);
+          
+          if (isHorizontal) {
+            page.yc = value === 0 ? page.top : page.yc + delta / 2;
+            reverse
+              ? page.top = clamp(value === 0 ? page.bottom : page.top + delta)
+              : page.bottom = clamp(value === 0 ? page.top : page.bottom + delta);
+          } else {
+            page.xc = value === 0 ? page.left : page.xc + (delta / 2) * inverseRatio;
+            reverse
+              ? page.left = clamp(value * inverseRatio >= page.right ? 0 : page.left + delta * inverseRatio)
+              : page.right = clamp(page.right + delta * inverseRatio);
+          }
+
+          page.height = value;
+        };
+
+        const handleRotatedHeight = (angle: number) => {
+          const getOrientation = (angle: number) => {
+            if (angle > 0 && angle < 90)  return { signX: -1, signY: +1, ref: 'bottom-left', baseAngle: 90 - angle };
+            if (angle > 90)               return { signX: -1, signY: -1, ref: 'top-left',  baseAngle: angle - 90 };
+            if (angle < -90)              return { signX: +1, signY: -1, ref: 'top-right', baseAngle: 180 + angle };
+            if (angle < 0 && angle > -90) return { signX: +1, signY: +1, ref: 'bottom-right',    baseAngle: -angle };
+            return null;
+          };
+
+          const o = getOrientation(angle);
+          if (!o) return; 
+
+          value = clamp(value);
+          const rad = degreeToRadian(o.baseAngle);
+          const cos = Math.cos(rad);
+          const sin = Math.sin(rad);
+          const toRight = o.signX > 0;
+          const toBottom = o.signY > 0;
+          const goniom = toRight ? cos : sin;
+          const inverseGoniom = toRight ? sin : cos;
+
+          const pageHeightOriginal = page.height;
+          const pageLeftOriginal = page.left;
+          const pageRightOriginal = page.right;
+          const pageTopOriginal = page.top;
+          const pageBottomOriginal = page.bottom;
+
+          const dH = delta;
+          const limitSide = toBottom ? 'bottom' : 'top';
+          const reverseLimitSide = toBottom ? 'top' : 'bottom';
+          let newSide = page[limitSide] + dH * goniom * o.signY;
+          page[limitSide] = value === 0 ? page[reverseLimitSide] + Math.sin(degreeToRadian(Math.abs(page.angle))) * page.width * ratio * (toBottom ? 1 : -1) : newSide;
+          let dY = (dH / 2) * goniom;
+          
+          page.height = value;
+          let adjustedDeltaHeight = dH;
+          let adjustedDeltaY = dY;
+
+          if (toBottom ? newSide > 1 : newSide < 0) {
+            page.height = pageHeightOriginal + ((toBottom ? 1 - pageBottomOriginal : pageTopOriginal) / goniom);
+            page[limitSide] = toBottom ? 1 : 0;
+            adjustedDeltaHeight = page.height - lastHeight;
+            adjustedDeltaY = (adjustedDeltaHeight / 2) * goniom;
+          }
+
+          let deltaX = (adjustedDeltaHeight / 2) * inverseGoniom;
+          let adjustedDeltaX = deltaX;
+          const secondLimitSide = toRight ? 'right' : 'left';
+          const secondReverseLimitSide = toRight ? 'left' : 'right';
+          let secondNewSide = page[secondLimitSide] + adjustedDeltaHeight * inverseGoniom * inverseRatio * o.signX;
+          page[secondLimitSide] = value === 0 ? page[secondReverseLimitSide] + Math.cos(degreeToRadian(Math.abs(page.angle))) * page.width * (toRight ? 1 : -1) : secondNewSide;
+
+          if (toRight ? secondNewSide > 1 : secondNewSide < 0) {
+            page.height = pageHeightOriginal + ((toRight ? (1 - pageRightOriginal) : pageLeftOriginal) / inverseGoniom) * ratio;
+            page[secondLimitSide] = toRight ? 1 : 0;
+            adjustedDeltaHeight = page.height - lastHeight;
+            adjustedDeltaY = (adjustedDeltaHeight / 2) * goniom;
+            adjustedDeltaX = (adjustedDeltaHeight / 2) * inverseGoniom;
+            toBottom
+              ? page.bottom = pageBottomOriginal + adjustedDeltaHeight * cos
+              : page.top = pageTopOriginal - adjustedDeltaHeight * sin;
+          }
+
+          page.xc = (page.left + page.right) / 2;
+          page.yc = (page.top + page.bottom) / 2;
+        };
+
+        // --- Dispatch by angle ---
+        switch (page.angle) {
+          case 0:
+            handleAlignedHeight(true, false);
+            break;
+          case -180:
+            handleAlignedHeight(true, true);
+            break;
+          case 90:
+            handleAlignedHeight(false, true);
+            break;
+          case -90:
+            handleAlignedHeight(false, false);
+            break;
+          default:
+            handleRotatedHeight(page.angle);
+            break;
+        }
+      }
+
+      this.pageWasEdited = true;
+      this.imgWasEdited = true;
+      this.redrawImage();
+      this.currentPages.forEach(p => this.drawPage(p));
+    }
+
+    // Rotate
+    if (
+      ['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].includes(key) && this.selectedPage
+      && (event.ctrlKey || event.metaKey) && event.altKey
+    ) {
+      
     }
 
     // Dokončit
     if (key === 'Enter' && (event.ctrlKey || event.metaKey)) this.finishEverything();
 
-
-
-
     // Reset změn dokumentu a skenu
-    // console.log(key === 'Y');
     if (
-      (key === 'r' && event.ctrlKey && event.metaKey && !event.shiftKey && !event.altKey)
-      // || (key === 'r' || key === 'z') && event.ctrlKey && event.shiftKey && event.altKey
+      (key === 'R' && event.ctrlKey && event.shiftKey && !event.metaKey && !event.altKey)
+      || (key === 'R' && event.metaKey && event.shiftKey && !event.ctrlKey && !event.altKey)
     ) {
-      // event.preventDefault();
-      // event.stopPropagation();
-      // console.log('resetdoc');
-      // this.resetDoc();
+      this.resetDoc();
     } else if (
       (key === 'r' && event.metaKey && !event.ctrlKey && !event.shiftKey && !event.altKey)
-      || (key === 'y' && event.metaKey && !event.ctrlKey && !event.shiftKey && !event.altKey)
+      || (key === 'r' && event.ctrlKey && !event.metaKey && !event.shiftKey && !event.altKey)
     ) {
-      // event.preventDefault();
-      // event.stopPropagation();
-      // this.resetScan();
+      this.resetScan();
     }
 
     // Switch filter
