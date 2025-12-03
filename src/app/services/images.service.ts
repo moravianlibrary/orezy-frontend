@@ -692,7 +692,6 @@ export class ImagesService {
       'r', 'R',                                             // + control/cmd = reset změn skenu; + control/cmd + shift = reset změn dokumentu
       'F1', 'F2', 'F3', 'F4',                               // filters
       'Shift',                                              // 1 -> 10
-
       'Control', 'Meta',                                    // + arrows = change width / height by 1
       'Alt'                                                 // + control/cmd + arrows = rotate by 1
     ].includes(key);
@@ -700,8 +699,6 @@ export class ImagesService {
 
   onKeyDown(event: KeyboardEvent): void {
     const key = event.key;
-    // console.log(key);
-    // console.log(event.code);
     
     if (!this.isHandledKey(key) || (event.target as HTMLElement).tagName === 'INPUT') return;
     event.preventDefault();

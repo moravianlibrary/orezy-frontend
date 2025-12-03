@@ -11,6 +11,14 @@ export const editedColor = '#FFCC00';
 export const transparentColor = '#00000000';
 export const gridColor = '#FF000050';
 
+export const flagMessages: Record<string, string> = {
+  prediction_overlap: 'Výřezy se překrývají',
+  page_count_mismatch: 'Chybějící strana',
+  no_prediction: 'Neúspěšná predikce',
+  low_confidence: 'Nejistota',
+  odd_dimensions: 'Podezřelý rozměr'
+};
+
 export const appConfig: ApplicationConfig = {
   providers: [
     provideZoneChangeDetection({ eventCoalescing: true }),

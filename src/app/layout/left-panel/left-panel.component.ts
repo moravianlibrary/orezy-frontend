@@ -6,6 +6,7 @@ import { LoaderComponent } from '../../components/loader/loader.component';
 import { forkJoin } from 'rxjs';
 import { NgClass } from '../../../../node_modules/@angular/common';
 import { MenuComponent } from "../../components/menu/menu.component";
+import { flagMessages } from '../../app.config';
 
 @Component({
   selector: 'app-left-panel',
@@ -109,13 +110,6 @@ export class LeftPanelComponent {
     }
 
     const flags = image.flags;
-    const flagMessages: Record<string, string> = {
-      prediction_overlap: 'Výřezy se překrývají',
-      page_count_mismatch: 'Chybějící strana',
-      no_prediction: 'Neúspěšná predikce',
-      low_confidence: 'Nejistota',
-      odd_dimensions: 'Podezřelý rozměr'
-    };
 
     let matchedMessages = Object.entries(flagMessages)
       .filter(([flag]) => flags.includes(flag))

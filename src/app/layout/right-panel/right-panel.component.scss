@@ -44,6 +44,35 @@
     }
   }
 
+  .flag {
+    padding: var(--spacing-x3-5) var(--spacing-x3);
+    border-radius: var(--spacing-x1);
+    @include font(500, var(--font-size-x1-5), var(--spacing-x5));
+    color: var(--text-secondary);
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-x2);
+
+    svg {
+      fill: var(--icon-black);
+    }
+  }
+
+  .warning {
+    border: 1px solid var(--status-icon-warning);
+    background-color: var(--bg-color-warning);
+  }
+
+  .error {
+    border: 1px solid var(--status-icon-error);
+    background-color: var(--bg-color-error);
+  }
+
+  .edited {
+    border: 1px solid var(--status-icon-edited);
+    background-color: var(--bg-color-edited);
+  }
+
   .actions {
     display: flex;
     flex-wrap: wrap;

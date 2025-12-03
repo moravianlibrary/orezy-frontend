@@ -7,6 +7,7 @@ import { DialogButton, InputType, Page } from '../../app.types';
 import { DialogComponent } from '../../components/dialog/dialog.component';
 import { clamp, defer, degreeToRadian } from '../../utils/utils';
 import { MenuComponent } from '../../components/menu/menu.component';
+import { flagMessages } from '../../app.config';
 
 @Component({
   selector: 'app-right-panel',
@@ -21,12 +22,24 @@ export class RightPanelComponent {
   private firstFocus = { left: true, top: true, width: true, height: true, angle: true };
   private holdInterval: any;
 
+
+  /* ------------------------------
+    HEADER
+  ------------------------------ */
   getCurrentIndexImage(): number {
     const images = this.imagesService.displayedImages();
     const current = this.imagesService.mainImageItem();
     return images.findIndex(img => img._id === current._id) + 1;
   }
 
+  getFlagLabel(flag: string): string {
+    return flagMessages[flag];
+  }
+
+
+  /* ------------------------------
+    INPUTS
+  ------------------------------ */
   changeInputValue(type: InputType, event: any): void {
     const imgSvc = this.imagesService;
     const page = imgSvc.clickedDiffPage ? imgSvc.lastSelectedPage : imgSvc.selectedPage;
