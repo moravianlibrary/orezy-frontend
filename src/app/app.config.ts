@@ -3,6 +3,7 @@ import { provideRouter } from '@angular/router';
 import { routes } from './app.routes';
 import { provideHttpClient } from '@angular/common/http';
 import { EnvironmentService } from './services/environment.service';
+import { GridMode } from './app.types';
 
 export const defaultColor = '#00DDFF';
 export const warningColor = '#FF9500';
@@ -17,6 +18,12 @@ export const flagMessages: Record<string, string> = {
   no_prediction: 'Neúspěšná predikce',
   low_confidence: 'Nejistota',
   odd_dimensions: 'Podezřelý rozměr'
+};
+
+export const gridModeDict: Record<GridMode, string> = {
+  'when rotating': 'Při otáčení',
+  'always': 'Vždy',
+  'never': 'Nikdy'
 };
 
 export const appConfig: ApplicationConfig = {

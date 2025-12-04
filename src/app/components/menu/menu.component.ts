@@ -1,13 +1,14 @@
 import { CdkConnectedOverlay, CdkOverlayOrigin, ConnectedPosition } from '@angular/cdk/overlay';
 import { Component, ElementRef, HostListener, inject, input, signal, ViewChild } from '@angular/core';
-import { NgClass } from '../../../../node_modules/@angular/common';
+import { NgClass, NgTemplateOutlet } from '../../../../node_modules/@angular/common';
 import { ImagesService } from '../../services/images.service';
-import { DialogButton } from '../../app.types';
+import { DialogButton, GridMode } from '../../app.types';
 import { DialogComponent } from '../dialog/dialog.component';
+import { gridModeDict } from '../../app.config';
 
 @Component({
   selector: 'app-menu',
-  imports: [CdkConnectedOverlay, CdkOverlayOrigin, NgClass, DialogComponent],
+  imports: [CdkConnectedOverlay, CdkOverlayOrigin, NgClass, DialogComponent, NgTemplateOutlet],
   templateUrl: './menu.component.html',
   styleUrl: './menu.component.scss'
 })
@@ -61,10 +62,13 @@ export class MenuComponent {
     console.log('should upload');
   }
 
-  toggleSettings(): void {
+  gridModeDict: Record<GridMode, string> = gridModeDict;
+  gridModeDictKeys = Object.keys(gridModeDict) as GridMode[];
+  openSettings(): void {
     const imgSvc = this.imagesService;
     this.dialogTitle.set('Nastavení');
     this.dialogContent.set(true);
+    this.dialogDescription.set(null);
     this.dialogButtons.set([
       { 
         label: 'Reset',
@@ -76,8 +80,7 @@ export class MenuComponent {
         label: 'Uložit',
         primary: true,
         action: () => {
-          const selectedGridMode = 'when rotating';
-          imgSvc.gridMode = selectedGridMode;
+          imgSvc.gridMode = imgSvc.gridRadio;
         }
       }
     ]);
@@ -88,7 +91,6 @@ export class MenuComponent {
 
   resetDoc(): void {
     this.dialogTitle.set('Opravdu chcete resetovat změny?');
-    // this.dialogContent.set(true);
     this.dialogDescription.set('Reset změn se týká celého dokumentu.');
     this.dialogButtons.set([
       { label: 'Zrušit' },
@@ -106,7 +108,6 @@ export class MenuComponent {
 
   resetScan(): void {
     this.dialogTitle.set('Opravdu chcete resetovat změny?');
-    // this.dialogContent.set(true);
     this.dialogDescription.set('Reset změn se týká aktuálního skenu.');
     this.dialogButtons.set([
       { label: 'Zrušit' },

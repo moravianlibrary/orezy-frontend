@@ -1,10 +1,10 @@
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { computed, inject, Injectable, signal } from '@angular/core';
-import { HitInfo, ImageItem, ImgOrCanvas, MousePos, Page } from '../app.types';
+import { GridMode, HitInfo, ImageItem, ImgOrCanvas, MousePos, Page } from '../app.types';
 import { catchError, Observable, of } from 'rxjs';
 import { clamp, defer, degreeToRadian, getColor, scrollToSelectedImage } from '../utils/utils';
 import { EnvironmentService } from './environment.service';
-import { gridColor, transparentColor } from '../app.config';
+import { gridColor, gridModeDict, transparentColor } from '../app.config';
 
 @Injectable({
   providedIn: 'root'
@@ -64,7 +64,8 @@ export class ImagesService {
   isRotating: boolean = false;
   rotationStartPage: Page | null = null;
   rotationStartMouseAngle: number = 0;
-  gridMode: 'always' | 'never' | 'when rotating' = 'when rotating';
+  gridMode: GridMode = 'when rotating';
+  gridRadio: GridMode = 'when rotating';
 
   // Resize
   isResizing: boolean = false;
@@ -766,6 +767,9 @@ export class ImagesService {
       this.gridMode = !this.isRotating
         ? this.gridMode === 'always' ? 'when rotating' : 'always'
         : this.gridMode === 'never' ? 'when rotating' : 'never';
+      this.gridRadio = this.gridMode;
+      console.log(this.gridRadio);
+      console.log(this.gridMode);
       this.redrawImage();
       this.currentPages.forEach(p => this.drawPage(p));
     };

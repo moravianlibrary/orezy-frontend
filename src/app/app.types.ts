@@ -48,3 +48,5 @@ export interface HitInfo {
   edgeSide?: EdgeSide;
   corner?: CornerName;
 }
+
+export type GridMode = 'always' | 'never' | 'when rotating';

@@ -20,7 +20,7 @@
   left: 50%;
   transform: translate(-50%, -50%);
   background: var(--bg-base);
-  padding: var(--spacing-x5) var(--spacing-x6) var(--spacing-x4);
+  padding-block: var(--spacing-x5) var(--spacing-x4);
   width: min(90dvw, 680px);
   border-radius: var(--spacing-x1);
   z-index: 6000;
@@ -33,6 +33,7 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
+  padding-inline: var(--spacing-x6);
 
   h2 {
     @include font(450, var(--font-size-x3), var(--spacing-x8), var(--text-base));
@@ -40,7 +41,9 @@
 }
 
 .dialog-body {
-  
+  padding: var(--spacing-x4) var(--spacing-x6);
+  border-top: 1px solid var(--border-color);
+  border-bottom: 1px solid var(--border-color);
 }
 
 .dialog-description {
