@@ -21,7 +21,7 @@ export const flagMessages: Record<string, string> = {
 };
 
 export const gridModeDict: Record<GridMode, string> = {
-  'when rotating': 'Při otáčení',
+  'when-rotating': 'Při otáčení',
   'always': 'Vždy',
   'never': 'Nikdy'
 };

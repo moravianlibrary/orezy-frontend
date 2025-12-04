@@ -4,7 +4,8 @@ import { GridMode, HitInfo, ImageItem, ImgOrCanvas, MousePos, Page } from '../ap
 import { catchError, Observable, of } from 'rxjs';
 import { clamp, defer, degreeToRadian, getColor, scrollToSelectedImage } from '../utils/utils';
 import { EnvironmentService } from './environment.service';
-import { gridColor, gridModeDict, transparentColor } from '../app.config';
+import { gridColor, transparentColor } from '../app.config';
+import { DialogService } from './dialog.service';
 
 @Injectable({
   providedIn: 'root'
@@ -12,6 +13,7 @@ import { gridColor, gridModeDict, transparentColor } from '../app.config';
 export class ImagesService {
   private http = inject(HttpClient);
   private envService = inject(EnvironmentService);
+  private dialogService = inject(DialogService);
   
   private get serverBaseUrl(): string {
     // Because envService might not be initialized at construction time
@@ -25,7 +27,6 @@ export class ImagesService {
   book = signal<string>('');
   selectedFilter: string = 'flagged';
   editable = signal<boolean>(false);
-  dialogOpened: boolean = false;
 
   images = signal<ImageItem[]>([]);
   originalImages = signal<ImageItem[]>([]);
@@ -64,8 +65,8 @@ export class ImagesService {
   isRotating: boolean = false;
   rotationStartPage: Page | null = null;
   rotationStartMouseAngle: number = 0;
-  gridMode: GridMode = 'when rotating';
-  gridRadio: GridMode = 'when rotating';
+  gridMode = signal<GridMode>('when-rotating');
+  gridRadio = signal<GridMode>('when-rotating');
 
   // Resize
   isResizing: boolean = false;
@@ -542,8 +543,8 @@ export class ImagesService {
 
     // Grid
     if (this.selectedPage?._id === p._id && (
-      (this.gridMode === 'when rotating' && this.isRotating)
-      || this.gridMode === 'always'
+      (this.gridMode() === 'when-rotating' && this.isRotating)
+      || this.gridMode() === 'always'
     )) {
       const hw = width / 2;
       const hh = height / 2;
@@ -704,7 +705,7 @@ export class ImagesService {
   ------------------------------ */
   private isHandledKey(key: string): boolean {
     return [
-      '+', 'ě', '1', '2',                                   // Select left / right page
+      '+', 'ě', 'Ě', '1', '2',                                   // Select left / right page
       'Escape',                                             // Unselect page
       'Backspace', 'Delete',                                // Remove page
       'p', 'P', 'a', 'A',                                   // Add page
@@ -714,10 +715,11 @@ export class ImagesService {
       'o', 'O',                                             // Obrys / outline
       'Enter',                                              // Sken je OK, + control/cmd = dokončit
       'r', 'R',                                             // + control/cmd = reset změn skenu; + control/cmd + shift = reset změn dokumentu
-      'F1', 'F2', 'F3', 'F4',                               // filters
+      'F1', 'F2', 'F3', 'F4',                               // Filters
       'Shift',                                              // 1 -> 10
       'Control', 'Meta',                                    // + arrows = change width / height by 1
-      'Alt'                                                 // + control/cmd + arrows = rotate by 1
+      'Alt',                                                // + control/cmd + arrows = rotate by 1
+      'k', 'K'                                              // Shortcuts
     ].includes(key);
   }
 
@@ -728,7 +730,7 @@ export class ImagesService {
     event.stopPropagation();
 
     // Select left / right page
-    if ((key === '+' || key === 'ě' || key === '1' || key === '2') && !event.ctrlKey) {
+    if ((key === '+' || key === 'ě' || key === 'Ě' || key === '1' || key === '2') && !event.ctrlKey) {
       if (this.pageWasEdited) this.updateCurrentPagesWithEdited();
       this.lastSelectedPage = this.selectedPage;
       const isLeftKey = key === '+' || key === '1';
@@ -745,6 +747,12 @@ export class ImagesService {
 
     // Unselect page
     if (key === 'Escape') {
+      if (this.dialogService.dialogOpen()) {
+        this.dialogService.dialogOpen.set(false);
+        this.dialogService.dialogOpened = false;
+        return;
+      }
+      
       if (this.pageWasEdited) this.updateCurrentPagesWithEdited();
       this.lastSelectedPage = this.selectedPage;
       this.selectedPage = null;
@@ -760,13 +768,13 @@ export class ImagesService {
     if (['Backspace', 'Delete'].includes(key)) if (this.selectedPage) this.removePage();
     
     // Add page
-    if (['p', 'a'].includes(key)) if (this.currentPages.length < this.maxPages) this.addPage();
+    if (['p', 'P', 'a', 'A'].includes(key)) if (this.currentPages.length < this.maxPages) this.addPage();
 
     // Change grid mode
-    if (['m', 'g'].includes(key) && this.selectedPage) {
-      this.gridMode = !this.isRotating
-        ? this.gridMode === 'always' ? 'when rotating' : 'always'
-        : this.gridMode === 'never' ? 'when rotating' : 'never';
+    if (['m', 'M', 'g', 'G'].includes(key) && this.selectedPage) {
+      this.gridMode.set(!this.isRotating
+        ? this.gridMode() === 'always' ? 'when-rotating' : 'always'
+        : this.gridMode() === 'never' ? 'when-rotating' : 'never');
       this.gridRadio = this.gridMode;
       console.log(this.gridRadio);
       console.log(this.gridMode);
@@ -775,7 +783,7 @@ export class ImagesService {
     };
 
     // Outline transparency
-    if (key === 'o' && this.selectedPage) {
+    if (['o', 'O'].includes(key) && this.selectedPage) {
       this.outlineTransparent = !this.outlineTransparent;
       this.redrawImage();
       this.currentPages.forEach(p => this.drawPage(p));
@@ -1168,5 +1176,33 @@ export class ImagesService {
         this.switchFilter(this.selectedFilter);
       }
     }
+
+    // Toggle shortcuts
+    if (['k', 'K'].includes(key)) {
+      const diaSvc = this.dialogService;
+
+      if (diaSvc.dialogOpen()) {
+        diaSvc.dialogOpen.set(false);
+        diaSvc.dialogOpened = false;
+        return;
+      }
+
+      diaSvc.dialogTitle.set('Klávesové zkratky');
+      diaSvc.dialogContent.set(true);
+      diaSvc.dialogContentType.set('shortcuts');
+      diaSvc.dialogDescription.set(null);
+      diaSvc.dialogButtons.set([
+        { 
+          label: 'Zrušit'
+        },
+        {
+          label: 'Rozumím',
+          primary: true
+        }
+      ]);
+
+      diaSvc.dialogOpen.set(true);
+      diaSvc.dialogOpened = true;
+    };
   }
 }

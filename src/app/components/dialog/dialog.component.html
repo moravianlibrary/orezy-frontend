@@ -2,7 +2,7 @@
 
 <div class="dialog-container">
   <header class="dialog-header">
-    <h2>{{ title() }}</h2>
+    <h2>{{ dialogService.dialogTitle() }}</h2>
 
     <svg
       width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"
@@ -14,20 +14,59 @@
     </svg>
   </header>
 
-  @if (isContent()) {
+  @if (dialogService.dialogContent()) {
     <section class="dialog-body">
-      @if (description()) {
-        <p class="dialog-description">{{ description() }}</p>
+
+      <!-- Setting -->
+      @if (dialogService.dialogContentType() === 'settings') {
+        <div class="settings-content-wrapper">
+          <div class="settings-block-label">Zobrazení mřížky</div>
+          <span class="radios-wrapper">
+            @for (gridMode of gridModeDictKeys; track gridMode) {
+              <label class="radio">
+                <input
+                  type="radio"
+                  name="grid-mode"
+                  [checked]="gridMode === imagesService.gridRadio()"
+                  (change)="imagesService.gridRadio.set(gridMode)"
+                />
+                <span class="grid-value">{{ gridModeDict[gridMode] }}</span>
+              </label>
+            }
+          </span>
+        </div>
       }
 
-      <ng-content></ng-content>
+      <!-- Shortcuts -->
+      @if (dialogService.dialogContentType() === 'shortcuts') {
+        <div class="shortcuts-content-wrapper">
+          <table cellspacing="0" cellpadding="0">
+            <tr class="bg-grey"><th>Vybrat výřez</th><td>+, Ě, 1, 2</td></tr>
+            <tr><th>Zrušit výběr výřezu</th><td>Esc</td></tr>
+            <tr class="bg-grey"><th>Smazat výřez</th><td>Backspace, Delete</td></tr>
+            <tr><th>Přidat výřez</th><td>P</td></tr>
+            <tr class="bg-grey"><th>Změnit pozici výřezu (X, Y)</th><td>←, →, ↑, ↓</td></tr>
+            <tr><th>Změnit šířku / výšku výřezu</th><td>Ctrl / Cmd + ←, →, ↑, ↓</td></tr>
+            <tr class="bg-grey"><th>Otočit výřez</th><td>Ctrl / Cmd + Alt / Option + ←, →, ↑, ↓</td></tr>
+            <tr><th>Změna o 10x víc (pozice, rozměr, otáčení)</th><td>Shift</td></tr>
+            <tr class="bg-grey"><th>Přepnout zobrazení mřížky</th><td>M</td></tr>
+            <tr><th>Přepnout zobrazení obrysu výřezu</th><td>O</td></tr>
+            <tr class="bg-grey"><th>Předchozí / další sken</th><td>←, →, ↑, ↓, PageUp, PageDown</td></tr>
+            <tr><th>Sken je OK</th><td>Enter</td></tr>
+            <tr class="bg-grey"><th>Reset mých změn ve skenu</th><td>Ctrl / Cmd + R</td></tr>
+            <tr><th>Dokončit</th><td>Ctrl / Cmd + Enter</td></tr>
+            <tr class="bg-grey"><th>Reset změn v dokumentu</th><td>Ctrl / Cmd + Shift + R</td></tr>
+            <tr><th>Otevřít klávesové zkratky</th><td>K</td></tr>
+          </table>
+        </div>
+      }
     </section>
-  } @else if (description()) {
-    <p class="dialog-description">{{ description() }}</p>
+  } @else if (dialogService.dialogDescription()) {
+    <p class="dialog-description single">{{ dialogService.dialogDescription() }}</p>
   }
 
   <footer class="dialog-footer">
-    @for (btn of buttons(); track $index) {
+    @for (btn of dialogService.dialogButtons(); track $index) {
       <span
         (click)="btn.action ? btn.action() : null; close()"
         class="button real-button"

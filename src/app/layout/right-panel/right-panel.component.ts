@@ -1,22 +1,23 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { ImagesService } from '../../services/images.service';
 import { FormsModule } from '@angular/forms';
 import { DecimalPipe } from '@angular/common';
 import { ChangeDetectorRef } from '@angular/core';
-import { DialogButton, InputType, Page } from '../../app.types';
-import { DialogComponent } from '../../components/dialog/dialog.component';
+import { InputType, Page } from '../../app.types';
 import { clamp, defer, degreeToRadian } from '../../utils/utils';
 import { MenuComponent } from '../../components/menu/menu.component';
 import { flagMessages } from '../../app.config';
+import { DialogService } from '../../services/dialog.service';
 
 @Component({
   selector: 'app-right-panel',
-  imports: [MenuComponent, DecimalPipe, FormsModule, DialogComponent],
+  imports: [MenuComponent, DecimalPipe, FormsModule],
   templateUrl: './right-panel.component.html',
   styleUrl: './right-panel.component.scss'
 })
 export class RightPanelComponent {
   imagesService = inject(ImagesService);
+  dialogService = inject(DialogService);
   private cdr = inject(ChangeDetectorRef);
 
   private firstFocus = { left: true, top: true, width: true, height: true, angle: true };
@@ -453,15 +454,15 @@ export class RightPanelComponent {
   /* ------------------------------
     DOKONČIT
   ------------------------------ */
-  dialogOpen = signal(false);
-  dialogTitle = signal('');
-  dialogButtons = signal<DialogButton[]>([]);
-
-  openDialog(): void {
+  openFinish(): void {
     const imgSvc = this.imagesService;
+    const diaSvc = this.dialogService;
 
-    this.dialogTitle.set('Opravdu chcete dokončit proces?');
-    this.dialogButtons.set([
+    diaSvc.dialogTitle.set('Opravdu chcete dokončit proces?');
+    diaSvc.dialogContent.set(false);
+    diaSvc.dialogContentType.set(null);
+    diaSvc.dialogDescription.set(null);
+    diaSvc.dialogButtons.set([
       { label: 'Ne, zrušit' },
       {
         label: 'Ano, dokončit',
@@ -470,11 +471,7 @@ export class RightPanelComponent {
       }
     ]);
 
-    this.dialogOpen.set(true);
-    imgSvc.dialogOpened = true;
-  }
-
-  closeDialog(): void {
-    this.dialogOpen.set(false);
+    diaSvc.dialogOpen.set(true);
+    diaSvc.dialogOpened = true;
   }
 }

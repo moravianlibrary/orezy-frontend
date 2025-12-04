@@ -3,6 +3,7 @@ import { ImagesService } from '../../services/images.service';
 import { clamp, degreeToRadian, radianToDegree } from '../../utils/utils';
 import { CornerName, EdgeLocalOrientation, EdgeSide, HitInfo, Page } from '../../app.types';
 import { LoaderComponent } from '../../components/loader/loader.component';
+import { DialogService } from '../../services/dialog.service';
 
 @Component({
   selector: 'app-main',
@@ -12,6 +13,7 @@ import { LoaderComponent } from '../../components/loader/loader.component';
 })
 export class MainComponent {
   imagesService = inject(ImagesService);
+  private dialogService = inject(DialogService);
 
   private moveCursor: string = "url('/assets/move-cursor.png'), auto";
   private rotateCursorTopRight: string = "url('/assets/rotate-cursor-top-right.png') 9.5 9.5, auto";
@@ -47,8 +49,8 @@ export class MainComponent {
       if (tagName !== 'APP-LEFT-PANEL' && tagName !== 'DIV' && tagName !== 'APP-RIGHT-PANEL' && tagName !== 'APP-BOTTOM-PANEL') return;
       if (el.tagName === 'DIV' && tagName !== 'DIV') return;
       if (!imgSvc.selectedPage) return;
-      if (imgSvc.dialogOpened) {
-        imgSvc.dialogOpened = false;
+      if (this.dialogService.dialogOpened) {
+        this.dialogService.dialogOpened = false;
         return;
       }
       if (imgSvc.isDragging || imgSvc.isRotating || imgSvc.isResizing) {

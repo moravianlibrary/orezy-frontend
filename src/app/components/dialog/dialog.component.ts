@@ -1,5 +1,8 @@
-import { Component, HostListener, input, output } from '@angular/core';
-import { DialogButton } from '../../app.types';
+import { Component, HostListener, inject, output } from '@angular/core';
+import { GridMode } from '../../app.types';
+import { DialogService } from '../../services/dialog.service';
+import { ImagesService } from '../../services/images.service';
+import { gridModeDict } from '../../app.config';
 
 @Component({
   selector: 'app-dialog',
@@ -8,21 +11,17 @@ import { DialogButton } from '../../app.types';
   styleUrl: './dialog.component.scss'
 })
 export class DialogComponent {
-  title = input<string>('');
-  description = input<string | null>(null);
-  isContent = input<boolean>(false);
-  buttons = input<DialogButton[]>([]);
-
+  imagesService = inject(ImagesService);
+  dialogService = inject(DialogService);
+  
   closed = output<void>();
   backdropClick = output<void>();
 
+  gridModeDict: Record<GridMode, string> = gridModeDict;
+  gridModeDictKeys = Object.keys(gridModeDict) as GridMode[];
+
   close() {
     this.closed.emit();
-  }
-
-  @HostListener('document:keydown.escape')
-  onEsc() {
-    this.close();
   }
 
   onBackdropClick() {

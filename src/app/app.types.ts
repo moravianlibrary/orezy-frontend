@@ -49,4 +49,7 @@ export interface HitInfo {
   corner?: CornerName;
 }
 
-export type GridMode = 'always' | 'never' | 'when rotating';
+
+// Dialog
+export type GridMode = 'always' | 'never' | 'when-rotating';
+export type DialogContentType = 'settings' | 'shortcuts';

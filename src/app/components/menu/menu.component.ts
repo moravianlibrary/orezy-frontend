@@ -1,19 +1,19 @@
 import { CdkConnectedOverlay, CdkOverlayOrigin, ConnectedPosition } from '@angular/cdk/overlay';
-import { Component, ElementRef, HostListener, inject, input, signal, ViewChild } from '@angular/core';
-import { NgClass, NgTemplateOutlet } from '../../../../node_modules/@angular/common';
+import { Component, ElementRef, HostListener, inject, input, ViewChild } from '@angular/core';
+import { NgClass } from '../../../../node_modules/@angular/common';
 import { ImagesService } from '../../services/images.service';
-import { DialogButton, GridMode } from '../../app.types';
 import { DialogComponent } from '../dialog/dialog.component';
-import { gridModeDict } from '../../app.config';
+import { DialogService } from '../../services/dialog.service';
 
 @Component({
   selector: 'app-menu',
-  imports: [CdkConnectedOverlay, CdkOverlayOrigin, NgClass, DialogComponent, NgTemplateOutlet],
+  imports: [CdkConnectedOverlay, CdkOverlayOrigin, NgClass, DialogComponent],
   templateUrl: './menu.component.html',
   styleUrl: './menu.component.scss'
 })
 export class MenuComponent {
   imagesService = inject(ImagesService);
+  dialogService = inject(DialogService);
   type = input('menu-primary');
 
 
@@ -42,57 +42,66 @@ export class MenuComponent {
 
 
   /* ------------------------------
-    DIALOGS
-  ------------------------------ */
-  dialogOpen = signal<boolean>(false);
-  dialogTitle = signal<string>('');
-  dialogContent = signal<boolean>(false);
-  dialogDescription = signal<string | null>(null);
-  dialogButtons = signal<DialogButton[]>([]);
-
-  closeDialog(): void {
-    this.dialogOpen.set(false);
-  }
-
-
-  /* ------------------------------
     ACTIONS
   ------------------------------ */
   upload(): void {
     console.log('should upload');
   }
 
-  gridModeDict: Record<GridMode, string> = gridModeDict;
-  gridModeDictKeys = Object.keys(gridModeDict) as GridMode[];
   openSettings(): void {
     const imgSvc = this.imagesService;
-    this.dialogTitle.set('Nastavení');
-    this.dialogContent.set(true);
-    this.dialogDescription.set(null);
-    this.dialogButtons.set([
+    const diaSvc = this.dialogService;
+    diaSvc.dialogTitle.set('Nastavení');
+    diaSvc.dialogContent.set(true);
+    diaSvc.dialogContentType.set('settings');
+    diaSvc.dialogDescription.set(null);
+    diaSvc.dialogButtons.set([
       { 
         label: 'Reset',
         action: () => {
-          imgSvc.gridMode = 'when rotating';
+          imgSvc.gridMode.set('when-rotating');
         }
       },
       {
         label: 'Uložit',
         primary: true,
         action: () => {
-          imgSvc.gridMode = imgSvc.gridRadio;
+          imgSvc.gridMode.set(imgSvc.gridRadio());
         }
       }
     ]);
 
-    this.dialogOpen.set(true);
-    imgSvc.dialogOpened = true;
+    diaSvc.dialogOpen.set(true);
+    diaSvc.dialogOpened = true;
+  }
+
+  openShortcuts(): void {
+    const diaSvc = this.dialogService;
+    diaSvc.dialogTitle.set('Klávesové zkratky');
+    diaSvc.dialogContent.set(true);
+    diaSvc.dialogContentType.set('shortcuts');
+    diaSvc.dialogDescription.set(null);
+    diaSvc.dialogButtons.set([
+      { 
+        label: 'Zrušit'
+      },
+      {
+        label: 'Rozumím',
+        primary: true
+      }
+    ]);
+
+    diaSvc.dialogOpen.set(true);
+    diaSvc.dialogOpened = true;
   }
 
   resetDoc(): void {
-    this.dialogTitle.set('Opravdu chcete resetovat změny?');
-    this.dialogDescription.set('Reset změn se týká celého dokumentu.');
-    this.dialogButtons.set([
+    const diaSvc = this.dialogService;
+    diaSvc.dialogTitle.set('Opravdu chcete resetovat změny?');
+    diaSvc.dialogContent.set(false);
+    diaSvc.dialogContentType.set(null);
+    diaSvc.dialogDescription.set('Reset změn se týká celého dokumentu.');
+    diaSvc.dialogButtons.set([
       { label: 'Zrušit' },
       {
         label: 'Resetovat celý dokument',
@@ -102,14 +111,17 @@ export class MenuComponent {
       }
     ]);
 
-    this.dialogOpen.set(true);
-    this.imagesService.dialogOpened = true;
+    diaSvc.dialogOpen.set(true);
+    diaSvc.dialogOpened = true;
   }
 
   resetScan(): void {
-    this.dialogTitle.set('Opravdu chcete resetovat změny?');
-    this.dialogDescription.set('Reset změn se týká aktuálního skenu.');
-    this.dialogButtons.set([
+    const diaSvc = this.dialogService;
+    diaSvc.dialogTitle.set('Opravdu chcete resetovat změny?');
+    diaSvc.dialogContent.set(false);
+    diaSvc.dialogContentType.set(null);
+    diaSvc.dialogDescription.set('Reset změn se týká aktuálního skenu.');
+    diaSvc.dialogButtons.set([
       { label: 'Zrušit' },
       {
         label: 'Resetovat změny skenu',
@@ -119,7 +131,7 @@ export class MenuComponent {
       }
     ]);
 
-    this.dialogOpen.set(true);
-    this.imagesService.dialogOpened = true;
+    diaSvc.dialogOpen.set(true);
+    diaSvc.dialogOpened = true;
   }
 }
