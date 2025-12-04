@@ -752,15 +752,16 @@ export class ImagesService {
     this.dialogContent.set(true);
     this.dialogContentType.set('shortcuts');
     this.dialogDescription.set(null);
-    this.dialogButtons.set([
-      { 
-        label: 'Zrušit'
-      },
-      {
-        label: 'Rozumím',
-        primary: true
-      }
-    ]);
+    this.dialogButtons.set([]);
+    // this.dialogButtons.set([
+    //   { 
+    //     label: 'Zrušit'
+    //   },
+    //   {
+    //     label: 'Rozumím',
+    //     primary: true
+    //   }
+    // ]);
 
     this.dialogOpen.set(true);
     this.dialogOpened = true;
@@ -829,7 +830,7 @@ export class ImagesService {
   ------------------------------ */
   private isHandledKey(key: string): boolean {
     return [
-      '+', 'ě', 'Ě', '1', '2',                                   // Select left / right page
+      '+', 'ě', 'Ě', '1', '2',                              // Select left / right page
       'Escape',                                             // Unselect page
       'Backspace', 'Delete',                                // Remove page
       'p', 'P', 'a', 'A',                                   // Add page
@@ -1333,22 +1334,7 @@ export class ImagesService {
         return;
       }
 
-      this.dialogTitle.set('Klávesové zkratky');
-      this.dialogContent.set(true);
-      this.dialogContentType.set('shortcuts');
-      this.dialogDescription.set(null);
-      this.dialogButtons.set([
-        { 
-          label: 'Zrušit'
-        },
-        {
-          label: 'Rozumím',
-          primary: true
-        }
-      ]);
-
-      this.dialogOpen.set(true);
-      this.dialogOpened = true;
+      this.openShortcuts();
     };
   }
 }
