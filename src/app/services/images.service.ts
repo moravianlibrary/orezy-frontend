@@ -711,7 +711,7 @@ export class ImagesService {
       'PageDown', 'PageUp',                                 // (+ PageUp / PageDown)
       'm', 'M', 'g', 'G',                                   // Mřížka / grid
       'o', 'O',                                             // Obrys / outline
-      'Enter',                                              // + control/cmd = dokončit
+      'Enter',                                              // Sken je OK, + control/cmd = dokončit
       'r', 'R',                                             // + control/cmd = reset změn skenu; + control/cmd + shift = reset změn dokumentu
       'F1', 'F2', 'F3', 'F4',                               // filters
       'Shift',                                              // 1 -> 10
@@ -722,7 +722,6 @@ export class ImagesService {
 
   onKeyDown(event: KeyboardEvent): void {
     const key = event.key;
-    
     if (!this.isHandledKey(key) || (event.target as HTMLElement).tagName === 'INPUT') return;
     event.preventDefault();
     event.stopPropagation();
@@ -1130,6 +1129,9 @@ export class ImagesService {
       this.redrawImage();
       this.currentPages.forEach(p => this.drawPage(p));
     }
+
+    // Sken je OK
+    if (key === 'Enter' && !event.ctrlKey && !event.metaKey) this.markImageOK();
 
     // Dokončit
     if (key === 'Enter' && (event.ctrlKey || event.metaKey)) this.finishEverything();
