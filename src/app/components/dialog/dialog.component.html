@@ -2,7 +2,7 @@
 
 <div class="dialog-container">
   <header class="dialog-header">
-    <h2>{{ dialogService.dialogTitle() }}</h2>
+    <h2>{{ imagesService.dialogTitle() }}</h2>
 
     <svg
       width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"
@@ -14,11 +14,11 @@
     </svg>
   </header>
 
-  @if (dialogService.dialogContent()) {
+  @if (imagesService.dialogContent()) {
     <section class="dialog-body">
 
       <!-- Setting -->
-      @if (dialogService.dialogContentType() === 'settings') {
+      @if (imagesService.dialogContentType() === 'settings') {
         <div class="settings-content-wrapper">
           <div class="settings-block-label">Zobrazení mřížky</div>
           <span class="radios-wrapper">
@@ -38,7 +38,7 @@
       }
 
       <!-- Shortcuts -->
-      @if (dialogService.dialogContentType() === 'shortcuts') {
+      @if (imagesService.dialogContentType() === 'shortcuts') {
         <div class="shortcuts-content-wrapper">
           <table cellspacing="0" cellpadding="0">
             <tr class="bg-grey"><th>Vybrat výřez</th><td>+, Ě, 1, 2</td></tr>
@@ -61,12 +61,12 @@
         </div>
       }
     </section>
-  } @else if (dialogService.dialogDescription()) {
-    <p class="dialog-description single">{{ dialogService.dialogDescription() }}</p>
+  } @else if (imagesService.dialogDescription()) {
+    <p class="dialog-description single">{{ imagesService.dialogDescription() }}</p>
   }
 
   <footer class="dialog-footer">
-    @for (btn of dialogService.dialogButtons(); track $index) {
+    @for (btn of imagesService.dialogButtons(); track $index) {
       <span
         (click)="btn.action ? btn.action() : null; close()"
         class="button real-button"

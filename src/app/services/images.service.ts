@@ -1,11 +1,10 @@
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { computed, inject, Injectable, signal } from '@angular/core';
-import { GridMode, HitInfo, ImageItem, ImgOrCanvas, MousePos, Page } from '../app.types';
+import { DialogButton, DialogContentType, GridMode, HitInfo, ImageItem, ImgOrCanvas, MousePos, Page } from '../app.types';
 import { catchError, Observable, of } from 'rxjs';
 import { clamp, defer, degreeToRadian, getColor, scrollToSelectedImage } from '../utils/utils';
 import { EnvironmentService } from './environment.service';
 import { gridColor, transparentColor } from '../app.config';
-import { DialogService } from './dialog.service';
 
 @Injectable({
   providedIn: 'root'
@@ -13,7 +12,6 @@ import { DialogService } from './dialog.service';
 export class ImagesService {
   private http = inject(HttpClient);
   private envService = inject(EnvironmentService);
-  private dialogService = inject(DialogService);
   
   private get serverBaseUrl(): string {
     // Because envService might not be initialized at construction time
@@ -161,6 +159,12 @@ export class ImagesService {
         error: (err: Error) => console.error(err)
       });
     
+    if (this.pageWasEdited) this.updateCurrentPagesWithEdited();
+    this.selectedPage = null;
+    this.redrawImage();
+    this.currentPages.forEach(p => this.drawPage(p));
+    this.updateMainImageItemAndImages();
+    this.imgWasEdited = true;
   }
 
   resetScan(): void {
@@ -699,6 +703,126 @@ export class ImagesService {
     this.imgWasEdited = false;
   }
 
+
+  /* ------------------------------
+    DIALOG ACTIONS
+  ------------------------------ */
+  dialogOpened: boolean = false;
+  dialogOpen = signal<boolean>(false);
+  dialogTitle = signal<string>('');
+  dialogContent = signal<boolean>(false);
+  dialogContentType = signal<DialogContentType | null>(null);
+  dialogDescription = signal<string | null>(null);
+  dialogButtons = signal<DialogButton[]>([]);
+
+  closeDialog(): void {
+    this.dialogOpen.set(false);
+    this.dialogOpened = false;
+  }
+
+  upload(): void {
+    console.log('should upload');
+  }
+
+  openSettings(): void {
+    this.dialogTitle.set('Nastavení');
+    this.dialogContent.set(true);
+    this.dialogContentType.set('settings');
+    this.dialogDescription.set(null);
+    this.dialogButtons.set([
+      { 
+        label: 'Reset',
+        action: () => {
+          this.gridMode.set('when-rotating');
+        }
+      },
+      {
+        label: 'Uložit',
+        primary: true,
+        action: () => this.gridMode.set(this.gridRadio())
+      }
+    ]);
+
+    this.dialogOpen.set(true);
+    this.dialogOpened = true;
+  }
+
+  openShortcuts(): void {
+    this.dialogTitle.set('Klávesové zkratky');
+    this.dialogContent.set(true);
+    this.dialogContentType.set('shortcuts');
+    this.dialogDescription.set(null);
+    this.dialogButtons.set([
+      { 
+        label: 'Zrušit'
+      },
+      {
+        label: 'Rozumím',
+        primary: true
+      }
+    ]);
+
+    this.dialogOpen.set(true);
+    this.dialogOpened = true;
+  }
+
+  openResetDoc(): void {
+    this.dialogTitle.set('Opravdu chcete resetovat změny dokumentu?');
+    this.dialogContent.set(false);
+    this.dialogContentType.set(null);
+    this.dialogDescription.set('Reset změn se týká celého dokumentu.');
+    this.dialogButtons.set([
+      { label: 'Zrušit' },
+      {
+        label: 'Resetovat celý dokument',
+        primary: true,
+        destructive: true,
+        action: () => this.resetDoc()
+      }
+    ]);
+
+    this.dialogOpen.set(true);
+    this.dialogOpened = true;
+  }
+
+  openResetScan(): void {
+    this.dialogTitle.set('Opravdu chcete resetovat změny skenu?');
+    this.dialogContent.set(false);
+    this.dialogContentType.set(null);
+    this.dialogDescription.set('Reset změn se týká aktuálního skenu.');
+    this.dialogButtons.set([
+      { label: 'Zrušit' },
+      {
+        label: 'Resetovat změny skenu',
+        primary: true,
+        destructive: true,
+        action: () => this.resetScan()
+      }
+    ]);
+
+    this.dialogOpen.set(true);
+    this.dialogOpened = true;
+  }
+
+  openFinish(): void {
+    this.dialogTitle.set('Opravdu chcete dokončit proces?');
+    this.dialogContent.set(false);
+    this.dialogContentType.set(null);
+    this.dialogDescription.set(null);
+    this.dialogButtons.set([
+      { label: 'Ne, zrušit' },
+      {
+        label: 'Ano, dokončit',
+        primary: true,
+        action: () => this.finishEverything()
+      }
+    ]);
+
+    this.dialogOpen.set(true);
+    this.dialogOpened = true;
+  }
+
+
   // TO DO: REFACTOR!
   /* ------------------------------
     KEYBOARD SHORTCUTS
@@ -730,7 +854,7 @@ export class ImagesService {
     event.stopPropagation();
 
     // Select left / right page
-    if ((key === '+' || key === 'ě' || key === 'Ě' || key === '1' || key === '2') && !event.ctrlKey) {
+    if ((key === '+' || key === 'ě' || key === 'Ě' || key === '1' || key === '2') && !event.ctrlKey && !this.dialogOpen()) {
       if (this.pageWasEdited) this.updateCurrentPagesWithEdited();
       this.lastSelectedPage = this.selectedPage;
       const isLeftKey = key === '+' || key === '1';
@@ -747,9 +871,9 @@ export class ImagesService {
 
     // Unselect page
     if (key === 'Escape') {
-      if (this.dialogService.dialogOpen()) {
-        this.dialogService.dialogOpen.set(false);
-        this.dialogService.dialogOpened = false;
+      if (this.dialogOpen()) {
+        this.dialogOpen.set(false);
+        this.dialogOpened = false;
         return;
       }
       
@@ -765,13 +889,13 @@ export class ImagesService {
     }
 
     // Remove selected page
-    if (['Backspace', 'Delete'].includes(key)) if (this.selectedPage) this.removePage();
+    if (['Backspace', 'Delete'].includes(key) && !this.dialogOpen()) if (this.selectedPage) this.removePage();
     
     // Add page
-    if (['p', 'P', 'a', 'A'].includes(key)) if (this.currentPages.length < this.maxPages) this.addPage();
+    if (['p', 'P', 'a', 'A'].includes(key) && !this.dialogOpen()) if (this.currentPages.length < this.maxPages) this.addPage();
 
     // Change grid mode
-    if (['m', 'M', 'g', 'G'].includes(key) && this.selectedPage) {
+    if (['m', 'M', 'g', 'G'].includes(key) && this.selectedPage &&!this.dialogOpen()) {
       this.gridMode.set(!this.isRotating
         ? this.gridMode() === 'always' ? 'when-rotating' : 'always'
         : this.gridMode() === 'never' ? 'when-rotating' : 'never');
@@ -783,14 +907,14 @@ export class ImagesService {
     };
 
     // Outline transparency
-    if (['o', 'O'].includes(key) && this.selectedPage) {
+    if (['o', 'O'].includes(key) && this.selectedPage && !this.dialogOpen()) {
       this.outlineTransparent = !this.outlineTransparent;
       this.redrawImage();
       this.currentPages.forEach(p => this.drawPage(p));
     }
 
     // Prev/next scan
-    if ((['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].includes(key) && !this.selectedPage) || ['PageDown', 'PageUp'].includes(key)) {
+    if (((['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].includes(key) && !this.selectedPage) || ['PageDown', 'PageUp'].includes(key)) && !this.dialogOpen()) {
       const prevKeys = new Set(['PageUp', 'ArrowLeft', 'ArrowUp']);
       const nextKeys = new Set(['PageDown', 'ArrowRight', 'ArrowDown']);
 
@@ -801,7 +925,7 @@ export class ImagesService {
     }
 
     // Drag/move page
-    if (['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].includes(key) && this.selectedPage && !event.altKey && !event.ctrlKey && !event.metaKey) {
+    if (['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].includes(key) && this.selectedPage && !event.altKey && !event.ctrlKey && !event.metaKey &&!this.dialogOpen()) {
       const start = this.selectedPage;
       const isHorizontal = ['ArrowLeft', 'ArrowRight'].includes(key);
       const sign = ['ArrowRight','ArrowDown'].includes(key) ? 1 : -1;
@@ -848,7 +972,7 @@ export class ImagesService {
 
     // Change page width / height
     if (
-      ['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].includes(key) && this.selectedPage
+      ['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].includes(key) && this.selectedPage && !this.dialogOpen()
       && (event.ctrlKey || event.metaKey) && !event.altKey
     ) {
       if (['ArrowLeft', 'ArrowRight'].includes(key)) {
@@ -1098,7 +1222,7 @@ export class ImagesService {
 
     // Rotate
     if (
-      ['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].includes(key) && this.selectedPage
+      ['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].includes(key) && this.selectedPage && !this.dialogOpen()
       && (event.ctrlKey || event.metaKey) && event.altKey
     ) {
       const page = this.selectedPage;
@@ -1143,26 +1267,50 @@ export class ImagesService {
     }
 
     // Sken je OK
-    if (key === 'Enter' && !event.ctrlKey && !event.metaKey) this.markImageOK();
+    if (key === 'Enter' && !event.ctrlKey && !event.metaKey && !this.dialogOpen()) this.markImageOK();
 
     // Dokončit
-    if (key === 'Enter' && (event.ctrlKey || event.metaKey)) this.finishEverything();
+    if (key === 'Enter' && (event.ctrlKey || event.metaKey)) {
+      if (!this.dialogOpen()) {
+        this.openFinish();
+        return;
+      }
+      
+      switch (this.dialogTitle()) {
+        case 'Nastavení':
+          this.gridMode.set(this.gridRadio());
+          break;
+        case 'Opravdu chcete resetovat změny dokumentu?':
+          this.resetDoc();
+          break;
+        case 'Opravdu chcete resetovat změny skenu?':
+          this.resetScan();
+          break;
+        case 'Opravdu chcete dokončit proces?':
+          this.finishEverything();
+          break;
+      }
+
+      this.closeDialog();
+    };
 
     // Reset změn dokumentu a skenu
     if (
-      (key === 'R' && event.ctrlKey && event.shiftKey && !event.metaKey && !event.altKey)
-      || (key === 'R' && event.metaKey && event.shiftKey && !event.ctrlKey && !event.altKey)
+      !this.dialogOpen() &&
+      ((key === 'R' && event.ctrlKey && event.shiftKey && !event.metaKey && !event.altKey)
+      || (key === 'R' && event.metaKey && event.shiftKey && !event.ctrlKey && !event.altKey))
     ) {
-      this.resetDoc();
+      this.openResetDoc();
     } else if (
-      (key === 'r' && event.metaKey && !event.ctrlKey && !event.shiftKey && !event.altKey)
-      || (key === 'r' && event.ctrlKey && !event.metaKey && !event.shiftKey && !event.altKey)
+      !this.dialogOpen() &&
+      ((key === 'r' && event.metaKey && !event.ctrlKey && !event.shiftKey && !event.altKey)
+      || (key === 'r' && event.ctrlKey && !event.metaKey && !event.shiftKey && !event.altKey))
     ) {
-      this.resetScan();
+      this.openResetScan();
     }
 
     // Switch filter
-    if (['F1', 'F2', 'F3', 'F4'].includes(key)) {
+    if (['F1', 'F2', 'F3', 'F4'].includes(key) && !this.dialogOpen()) {
       const filterByKey: { [filter: string]: string } = {
         F1: 'all',
         F2: 'flagged',
@@ -1179,19 +1327,17 @@ export class ImagesService {
 
     // Toggle shortcuts
     if (['k', 'K'].includes(key)) {
-      const diaSvc = this.dialogService;
-
-      if (diaSvc.dialogOpen()) {
-        diaSvc.dialogOpen.set(false);
-        diaSvc.dialogOpened = false;
+      if (this.dialogOpen() && this.dialogTitle() === 'Klávesové zkratky') {
+        this.dialogOpen.set(false);
+        this.dialogOpened = false;
         return;
       }
 
-      diaSvc.dialogTitle.set('Klávesové zkratky');
-      diaSvc.dialogContent.set(true);
-      diaSvc.dialogContentType.set('shortcuts');
-      diaSvc.dialogDescription.set(null);
-      diaSvc.dialogButtons.set([
+      this.dialogTitle.set('Klávesové zkratky');
+      this.dialogContent.set(true);
+      this.dialogContentType.set('shortcuts');
+      this.dialogDescription.set(null);
+      this.dialogButtons.set([
         { 
           label: 'Zrušit'
         },
@@ -1201,8 +1347,8 @@ export class ImagesService {
         }
       ]);
 
-      diaSvc.dialogOpen.set(true);
-      diaSvc.dialogOpened = true;
+      this.dialogOpen.set(true);
+      this.dialogOpened = true;
     };
   }
 }

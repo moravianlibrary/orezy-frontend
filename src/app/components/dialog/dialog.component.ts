@@ -1,6 +1,5 @@
 import { Component, HostListener, inject, output } from '@angular/core';
 import { GridMode } from '../../app.types';
-import { DialogService } from '../../services/dialog.service';
 import { ImagesService } from '../../services/images.service';
 import { gridModeDict } from '../../app.config';
 
@@ -12,7 +11,6 @@ import { gridModeDict } from '../../app.config';
 })
 export class DialogComponent {
   imagesService = inject(ImagesService);
-  dialogService = inject(DialogService);
   
   closed = output<void>();
   backdropClick = output<void>();

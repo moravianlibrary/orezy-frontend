@@ -7,7 +7,6 @@ import { InputType, Page } from '../../app.types';
 import { clamp, defer, degreeToRadian } from '../../utils/utils';
 import { MenuComponent } from '../../components/menu/menu.component';
 import { flagMessages } from '../../app.config';
-import { DialogService } from '../../services/dialog.service';
 
 @Component({
   selector: 'app-right-panel',
@@ -17,7 +16,6 @@ import { DialogService } from '../../services/dialog.service';
 })
 export class RightPanelComponent {
   imagesService = inject(ImagesService);
-  dialogService = inject(DialogService);
   private cdr = inject(ChangeDetectorRef);
 
   private firstFocus = { left: true, top: true, width: true, height: true, angle: true };
@@ -448,30 +446,5 @@ export class RightPanelComponent {
 
     imgSvc.redrawImage();
     imgSvc.currentPages.forEach(p => imgSvc.drawPage(p));
-  }
-
-
-  /* ------------------------------
-    DOKONČIT
-  ------------------------------ */
-  openFinish(): void {
-    const imgSvc = this.imagesService;
-    const diaSvc = this.dialogService;
-
-    diaSvc.dialogTitle.set('Opravdu chcete dokončit proces?');
-    diaSvc.dialogContent.set(false);
-    diaSvc.dialogContentType.set(null);
-    diaSvc.dialogDescription.set(null);
-    diaSvc.dialogButtons.set([
-      { label: 'Ne, zrušit' },
-      {
-        label: 'Ano, dokončit',
-        primary: true,
-        action: () => imgSvc.finishEverything()
-      }
-    ]);
-
-    diaSvc.dialogOpen.set(true);
-    diaSvc.dialogOpened = true;
   }
 }
