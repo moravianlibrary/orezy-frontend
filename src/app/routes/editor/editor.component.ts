@@ -6,7 +6,7 @@ import { LeftPanelComponent } from '../../layout/left-panel/left-panel.component
 import { RightPanelComponent } from '../../layout/right-panel/right-panel.component';
 import { ActivatedRoute } from '@angular/router';
 import { catchError, map, of, Subscription, switchMap, tap } from 'rxjs';
-import { ImageItem, Page } from '../../app.types';
+import { GridMode, ImageItem, Page } from '../../app.types';
 import { roundToDecimals } from '../../utils/utils';
 
 @Component({
@@ -66,6 +66,8 @@ export class EditorComponent {
         imgSvc.images.set(imgItems);
         imgSvc.originalImages.set(imgItems);
 
+        imgSvc.gridMode.set(localStorage.getItem('gridMode') as GridMode ?? 'when-rotating');
+        imgSvc.gridRadio.set(imgSvc.gridMode());
         imgSvc.selectedFilter = localStorage.getItem('filter') ?? 'flagged';
         imgSvc.setDisplayedImages();
         if (!imgSvc.displayedImages().length) imgSvc.loadingMain = false;;

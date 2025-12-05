@@ -717,6 +717,16 @@ export class ImagesService {
   dialogDescription = signal<string | null>(null);
   dialogButtons = signal<DialogButton[]>([]);
 
+  focusMainWrapper(): void {
+    defer(() => (document.querySelector('.main-wrapper') as HTMLElement).focus());
+  }
+  
+  openDialog(): void {
+    this.dialogOpen.set(true);
+    this.dialogOpened = true;
+    if (document.activeElement?.className !== 'main-wrapper') this.focusMainWrapper();
+  }
+
   closeDialog(): void {
     this.dialogOpen.set(false);
     this.dialogOpened = false;
@@ -741,12 +751,15 @@ export class ImagesService {
       {
         label: 'Uložit',
         primary: true,
-        action: () => this.gridMode.set(this.gridRadio())
+        action: () => {
+          const gridRadio = this.gridRadio();
+          this.gridMode.set(gridRadio);
+          localStorage.setItem('gridMode', gridRadio);
+        }
       }
     ]);
 
-    this.dialogOpen.set(true);
-    this.dialogOpened = true;
+    this.openDialog();
   }
 
   openShortcuts(): void {
@@ -755,18 +768,8 @@ export class ImagesService {
     this.dialogContentType.set('shortcuts');
     this.dialogDescription.set(null);
     this.dialogButtons.set([]);
-    // this.dialogButtons.set([
-    //   { 
-    //     label: 'Zrušit'
-    //   },
-    //   {
-    //     label: 'Rozumím',
-    //     primary: true
-    //   }
-    // ]);
 
-    this.dialogOpen.set(true);
-    this.dialogOpened = true;
+    this.openDialog();
   }
 
   openResetDoc(): void {
@@ -784,8 +787,7 @@ export class ImagesService {
       }
     ]);
 
-    this.dialogOpen.set(true);
-    this.dialogOpened = true;
+    this.openDialog();
   }
 
   openResetScan(): void {
@@ -803,8 +805,7 @@ export class ImagesService {
       }
     ]);
 
-    this.dialogOpen.set(true);
-    this.dialogOpened = true;
+    this.openDialog();
   }
 
   openFinish(): void {
@@ -821,8 +822,7 @@ export class ImagesService {
       }
     ]);
 
-    this.dialogOpen.set(true);
-    this.dialogOpened = true;
+    this.openDialog();
   }
 
 
@@ -902,9 +902,8 @@ export class ImagesService {
       this.gridMode.set(!this.isRotating
         ? this.gridMode() === 'always' ? 'when-rotating' : 'always'
         : this.gridMode() === 'never' ? 'when-rotating' : 'never');
-      this.gridRadio = this.gridMode;
-      console.log(this.gridRadio);
-      console.log(this.gridMode);
+      this.gridRadio.set(this.gridMode());
+      localStorage.setItem('gridMode', this.gridMode());
       this.redrawImage();
       this.currentPages.forEach(p => this.drawPage(p));
     };
@@ -1281,7 +1280,9 @@ export class ImagesService {
       
       switch (this.dialogTitle()) {
         case 'Nastavení':
-          this.gridMode.set(this.gridRadio());
+          const gridRadio = this.gridRadio();  
+          this.gridMode.set(gridRadio);
+          localStorage.setItem('gridMode', gridRadio);
           break;
         case 'Opravdu chcete resetovat změny dokumentu?':
           this.resetDoc();
