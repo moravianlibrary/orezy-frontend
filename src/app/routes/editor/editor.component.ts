@@ -65,10 +65,12 @@ export class EditorComponent {
         imgSvc.loadingLeft = false;
         imgSvc.images.set(imgItems);
         imgSvc.originalImages.set(imgItems);
-        imgSvc.displayedImages.set(imgSvc.flaggedImages());
+
+        imgSvc.selectedFilter = localStorage.getItem('filter') ?? 'flagged';
+        imgSvc.setDisplayedImages();
         if (!imgSvc.displayedImages().length) imgSvc.loadingMain = false;;
-        const [firstFlagged] = imgSvc.flaggedImages();
-        if (firstFlagged) imgSvc.setMainImage(firstFlagged);
+        const [firstImage] = imgSvc.displayedImages();
+        if (firstImage) imgSvc.setMainImage(firstImage);
       });
   }
 

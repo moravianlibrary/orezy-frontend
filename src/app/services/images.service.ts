@@ -23,7 +23,7 @@ export class ImagesService {
     STATE
   ------------------------------ */
   book = signal<string>('');
-  selectedFilter: string = 'flagged';
+  selectedFilter: string | null = null;
   editable = signal<boolean>(false);
 
   images = signal<ImageItem[]>([]);
@@ -149,22 +149,21 @@ export class ImagesService {
     API ACTIONS
   ------------------------------ */
   finishEverything(): void {
+    if (this.pageWasEdited) this.updateCurrentPagesWithEdited();
     if (this.imgWasEdited) this.updateImagesByEdited(this.mainImageItem()._id);
+    this.updateMainImageItemAndImages();
+    this.selectedPage = null;
+    this.redrawImage();
+    this.currentPages.forEach(p => this.drawPage(p));
     this.updatePages(this.book(), this.images().filter(img => img.edited))
       .subscribe({
         next: () => {
           this.selectedFilter = 'edited';
+          localStorage.setItem('filter', this.selectedFilter);
           this.setDisplayedImages();
         },
         error: (err: Error) => console.error(err)
       });
-    
-    if (this.pageWasEdited) this.updateCurrentPagesWithEdited();
-    this.selectedPage = null;
-    this.redrawImage();
-    this.currentPages.forEach(p => this.drawPage(p));
-    this.updateMainImageItemAndImages();
-    this.imgWasEdited = true;
   }
 
   resetScan(): void {
@@ -181,6 +180,7 @@ export class ImagesService {
     );
 
     this.selectedFilter = mainImageItemAfter.edited ? 'edited' : (mainImageItemAfter.flags.length ? 'flagged' : 'ok');
+    localStorage.setItem('filter', this.selectedFilter);
     this.setDisplayedImages();
     this.setMainImage(mainImageItemAfter);
   }
@@ -195,6 +195,7 @@ export class ImagesService {
       this.images.set(response);
       this.originalImages.set(response);
       
+      if (this.selectedFilter === 'edited') this.selectedFilter = 'flagged';
       this.setDisplayedImages();
       this.setMainImage(this.displayedImages()[0]);
     });
@@ -223,6 +224,7 @@ export class ImagesService {
 
   switchFilter(filter: string): void {
     this.selectedFilter = filter;
+    localStorage.setItem('filter', this.selectedFilter);
     
     const mainImageItemName = this.mainImageItem()._id;
     if (this.imgWasEdited) {
@@ -1322,6 +1324,7 @@ export class ImagesService {
       const filter = filterByKey[key];
       if (filter) {
         this.selectedFilter = filter;
+        localStorage.setItem('filter', this.selectedFilter);
         this.switchFilter(this.selectedFilter);
       }
     }
