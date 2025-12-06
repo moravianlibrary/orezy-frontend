@@ -96,6 +96,8 @@ export class ImagesService {
   flaggedImages = computed<ImageItem[]>(() => this.images().filter(img => !img.edited && img.flags.length));
   notFlaggedImages = computed<ImageItem[]>(() => this.images().filter(img => !img.edited && !img.flags.length));
   editedImages = computed<ImageItem[]>(() => this.images().filter(img => img.edited));
+  singlePagesImages = computed<ImageItem[]>(() => this.images().filter(img => img.pages.length === 1));
+  doublePagesImages = computed<ImageItem[]>(() => this.images().filter(img => img.pages.length === 2));
 
 
   /* ------------------------------
@@ -151,8 +153,8 @@ export class ImagesService {
   finishEverything(): void {
     if (this.pageWasEdited) this.updateCurrentPagesWithEdited();
     if (this.imgWasEdited) this.updateImagesByEdited(this.mainImageItem()._id);
-    this.updateMainImageItemAndImages();
     this.selectedPage = null;
+    this.updateMainImageItemAndImages();
     this.redrawImage();
     this.currentPages.forEach(p => this.drawPage(p));
     this.updatePages(this.book(), this.images().filter(img => img.edited))
@@ -179,10 +181,19 @@ export class ImagesService {
       )
     );
 
-    this.selectedFilter = mainImageItemAfter.edited ? 'edited' : (mainImageItemAfter.flags.length ? 'flagged' : 'ok');
-    localStorage.setItem('filter', this.selectedFilter);
+    if (['single', 'double'].includes(this.selectedFilter ?? '')) {
+      if (this.selectedFilter === 'single' && mainImageItemAfter.pages.length === 2) this.selectedFilter = 'double';
+      if (this.selectedFilter === 'double' && mainImageItemAfter.pages.length === 1) this.selectedFilter = 'single';
+    } else {
+      this.selectedFilter = mainImageItemAfter.edited && this.editedImages().length
+        ? 'edited'
+        : (mainImageItemAfter.flags.length ? 'flagged' : 'ok');
+    }
+    localStorage.setItem('filter', this.selectedFilter ?? 'flagged');
     this.setDisplayedImages();
     this.setMainImage(mainImageItemAfter);
+
+    this.imgWasEdited = false;
   }
 
   resetDoc(): void {
@@ -219,10 +230,18 @@ export class ImagesService {
       case 'ok':
         this.displayedImages.set(this.notFlaggedImages());
         break;
+      case 'double':
+        this.displayedImages.set(this.doublePagesImages());
+        break;
+      case 'single':
+        this.displayedImages.set(this.singlePagesImages());
+        break;
     }
   }
 
   switchFilter(filter: string): void {
+    this.updateImagesByCurrentPages();
+    
     this.selectedFilter = filter;
     localStorage.setItem('filter', this.selectedFilter);
     
@@ -440,19 +459,21 @@ export class ImagesService {
   ------------------------------ */    
   showPrevImage(): void {
     if (this.currentIndex() === 0) return;
+    this.updateImagesByCurrentPages();
     this.showImage(-1);
     if (this.imgWasEdited) defer(() => this.setDisplayedImages(), 100);
   }
 
   showNextImage(): void {
     if (this.currentIndex() === this.displayedImages().length - 1) return;
+    this.updateImagesByCurrentPages();
     this.showImage(1);
     if (this.imgWasEdited) defer(() => this.setDisplayedImages(), 100);
   }
 
   markImageOK(): void {
     if (this.currentIndex() === this.displayedImages().length - 1) return;
-    if (this.currentPages.find(p => p.edited)) return;
+    if (this.currentPages.find(p => p.edited) || this.imgWasEdited) return;
     
     this.imgWasEdited = false;
     this.images.update(prev =>
@@ -626,7 +647,8 @@ export class ImagesService {
 
     if (this.pageWasEdited) this.updateCurrentPagesWithEdited();
     
-    const type = this.currentPages.length && this.currentPages[0].type === 'left' ? 'right' : 'left';
+    const type = this.currentPages.length && (this.currentPages[0].type === 'left' || this.currentPages[0].type === 'single')
+      ? 'right' : 'left';
     const addedPage: Page = {
       _id: `${this.mainImageItem()._id}-${type}`,
       xc: .5,
@@ -645,10 +667,10 @@ export class ImagesService {
     this.currentPages.push(addedPage);
     
     this.selectedPage = this.currentPages[this.currentPages.length - 1];
+    this.imgWasEdited = true;
     this.redrawImage();
     this.currentPages.forEach(p => this.drawPage(p));
-    this.updateMainImageItemAndImages();
-    this.imgWasEdited = true;
+    this.toggleMainImageOrCanvas();
   }
 
   removePage(): void {
@@ -656,7 +678,7 @@ export class ImagesService {
     this.selectedPage = null;
     this.redrawImage();
     this.currentPages.forEach(p => this.drawPage(p));
-    this.updateMainImageItemAndImages();
+    this.mainImageItem.set({ ...this.mainImageItem(), url: this.c.toDataURL('image/jpeg') });
     this.imgWasEdited = true;
   }
 
@@ -681,6 +703,18 @@ export class ImagesService {
 
   updateMainImageItemAndImages(): void {
     this.mainImageItem.set({ ...this.mainImageItem(), url: this.c.toDataURL('image/jpeg') });
+    this.images.update(prev =>
+      prev.map(img => img._id === this.mainImageItem()._id
+        ? { 
+            ...img,
+            pages: this.currentPages
+          }
+        : img
+      )
+    );
+  }
+
+  updateImagesByCurrentPages(): void {
     this.images.update(prev =>
       prev.map(img => img._id === this.mainImageItem()._id
         ? { 
@@ -745,7 +779,9 @@ export class ImagesService {
       { 
         label: 'Reset',
         action: () => {
+          this.gridRadio.set('when-rotating');
           this.gridMode.set('when-rotating');
+          localStorage.setItem('gridMode', 'when-rotating');
         }
       },
       {
@@ -832,7 +868,7 @@ export class ImagesService {
   ------------------------------ */
   private isHandledKey(key: string): boolean {
     return [
-      '+', 'ě', 'Ě', '1', '2',                              // Select left / right page
+      '+', 'ě', 'Ě', '1', '2',                              // Select left / right page OR + Alt / Cmd = filters number of pages
       'Escape',                                             // Unselect page
       'Backspace', 'Delete',                                // Remove page
       'p', 'P', 'a', 'A',                                   // Add page
@@ -856,8 +892,16 @@ export class ImagesService {
     event.preventDefault();
     event.stopPropagation();
 
-    // Select left / right page
+    // Select left / right page OR Filters number of pages
     if ((key === '+' || key === 'ě' || key === 'Ě' || key === '1' || key === '2') && !event.ctrlKey && !this.dialogOpen()) {
+      if (event.altKey || event.metaKey) {
+        const filter = ['+', '1'].includes(key) ? 'single' : 'double';
+        this.selectedFilter = filter;
+        localStorage.setItem('filter', this.selectedFilter);
+        this.switchFilter(this.selectedFilter);
+        return;
+      }
+      
       if (this.pageWasEdited) this.updateCurrentPagesWithEdited();
       this.lastSelectedPage = this.selectedPage;
       const isLeftKey = key === '+' || key === '1';
@@ -869,7 +913,7 @@ export class ImagesService {
       this.redrawImage();
       this.currentPages.forEach(p => this.drawPage(p));
       this.toggleMainImageOrCanvas();
-      this.updateMainImageItemAndImages();
+      this.mainImageItem.set({ ...this.mainImageItem(), url: this.c.toDataURL('image/jpeg') });
     }
 
     // Unselect page
@@ -877,6 +921,7 @@ export class ImagesService {
       if (this.dialogOpen()) {
         this.dialogOpen.set(false);
         this.dialogOpened = false;
+        if (this.dialogTitle() === 'Nastavení') this.gridRadio.set(this.gridMode());
         return;
       }
       
@@ -887,8 +932,8 @@ export class ImagesService {
       this.editable.set(false);
       this.redrawImage();
       this.currentPages.forEach(p => this.drawPage(p));
+      this.mainImageItem.set({ ...this.mainImageItem(), url: this.c.toDataURL('image/jpeg') });
       this.toggleMainImageOrCanvas();
-      this.updateMainImageItemAndImages();
     }
 
     // Remove selected page
@@ -1224,7 +1269,7 @@ export class ImagesService {
 
     // Rotate
     if (
-      ['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].includes(key) && this.selectedPage && !this.dialogOpen()
+      ['ArrowUp', 'ArrowDown'].includes(key) && this.selectedPage && !this.dialogOpen()
       && (event.ctrlKey || event.metaKey) && event.altKey
     ) {
       const page = this.selectedPage;
@@ -1319,7 +1364,7 @@ export class ImagesService {
         F1: 'all',
         F2: 'flagged',
         F3: 'edited',
-        F4: 'ok',
+        F4: 'ok'
       };
 
       const filter = filterByKey[key];

@@ -31,7 +31,7 @@ export interface DialogButton {
 }
 
 export type InputType = 'left' | 'top' | 'width' | 'height' | 'angle';
-export type PageType = 'left' | 'right';
+export type PageType = 'single' | 'left' | 'right';
 export type ImgOrCanvas = 'image' | 'canvas';
 
 

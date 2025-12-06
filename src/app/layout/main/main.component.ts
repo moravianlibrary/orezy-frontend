@@ -69,12 +69,15 @@ export class MainComponent {
       } 
 
       if (imgSvc.pageWasEdited) imgSvc.updateCurrentPagesWithEdited();
+      imgSvc.lastSelectedPage = imgSvc.selectedPage;
       imgSvc.selectedPage = null;
       imgSvc.lastPageCursorIsInside = null;
       imgSvc.editable.set(false);
+      imgSvc.redrawImage();
+      imgSvc.currentPages.forEach(p => imgSvc.drawPage(p));
+      imgSvc.mainImageItem.set({ ...imgSvc.mainImageItem(), url: imgSvc.c.toDataURL('image/jpeg') });
       imgSvc.toggleMainImageOrCanvas();
       this.hoveringPage('');
-      imgSvc.updateMainImageItemAndImages();
     };
 
     el.onmousemove = (ev) => {
@@ -401,9 +404,11 @@ export class MainComponent {
       imgSvc.clickedDiffPage = imgSvc.lastSelectedPage && imgSvc.selectedPage && imgSvc.lastSelectedPage !== imgSvc.selectedPage;
       imgSvc.lastPageCursorIsInside = hitPage;
       imgSvc.editable.set(insideArea);
+      imgSvc.redrawImage();
+      imgSvc.currentPages.forEach(p => imgSvc.drawPage(p));
+      imgSvc.mainImageItem.set({ ...imgSvc.mainImageItem(), url: imgSvc.c.toDataURL('image/jpeg') });
       imgSvc.toggleMainImageOrCanvas();
       this.hoveringPage(hitPage?._id ?? '');
-      imgSvc.updateMainImageItemAndImages();
     }    
 
     // Drag
@@ -428,7 +433,9 @@ export class MainComponent {
 
           if (!imgSvc.imgWasEdited) return;
           this.hoveringPage(hitPage._id);
-          imgSvc.updateMainImageItemAndImages();
+          imgSvc.redrawImage();
+          imgSvc.currentPages.forEach(p => imgSvc.drawPage(p));
+          imgSvc.mainImageItem.set({ ...imgSvc.mainImageItem(), url: imgSvc.c.toDataURL('image/jpeg') });
         }
       }
     }
@@ -462,7 +469,7 @@ export class MainComponent {
           imgSvc.pageWasEdited = true;
           imgSvc.redrawImage();
           imgSvc.currentPages.forEach(p => imgSvc.drawPage(p));
-          imgSvc.updateMainImageItemAndImages();
+          imgSvc.mainImageItem.set({ ...imgSvc.mainImageItem(), url: imgSvc.c.toDataURL('image/jpeg') });
         }
       }
     }
@@ -487,7 +494,9 @@ export class MainComponent {
         imgSvc.resizeStartPage = null;
         imgSvc.resizeStartMouse = null;
         imgSvc.pageWasEdited = true;
-        imgSvc.updateMainImageItemAndImages();
+        imgSvc.redrawImage();
+        imgSvc.currentPages.forEach(p => imgSvc.drawPage(p));
+        imgSvc.mainImageItem.set({ ...imgSvc.mainImageItem(), url: imgSvc.c.toDataURL('image/jpeg') });
       }
     }
   }

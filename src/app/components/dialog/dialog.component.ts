@@ -1,4 +1,4 @@
-import { Component, HostListener, inject, output } from '@angular/core';
+import { Component, inject, output } from '@angular/core';
 import { GridMode } from '../../app.types';
 import { ImagesService } from '../../services/images.service';
 import { gridModeDict } from '../../app.config';
@@ -25,5 +25,8 @@ export class DialogComponent {
   onBackdropClick() {
     this.backdropClick.emit();
     this.close();
+
+    const imgSvc = this.imagesService;
+    if (imgSvc.dialogTitle() === 'Nastavení') imgSvc.gridRadio.set(imgSvc.gridMode());
   }
 }

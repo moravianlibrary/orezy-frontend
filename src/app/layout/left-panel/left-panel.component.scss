@@ -35,7 +35,13 @@
     }
   }
 
-  .crops {
+  h2 {
+    @include font(400, var(--font-size-x1-5), var(--spacing-x4));
+    color: var(--text-light);
+    margin-block: 6px;
+  }
+
+  .filters {
     display: flex;
     flex-wrap: wrap;
     gap: var(--spacing-x2);

@@ -69,7 +69,11 @@ export class LeftPanelComponent {
     CLICKS
   ------------------------------ */
   clickThumbnail(image: ImageItem): void {
-    this.imagesService.setMainImage(image);
+    const imgSvc = this.imagesService;
+    if (image._id === imgSvc.mainImageItem()._id) return;
+    
+    imgSvc.updateImagesByCurrentPages();
+    imgSvc.setMainImage(image);
   }
 
   getStatus(image: ImageItem): 'edited' | 'error' | 'warning' | 'success' {

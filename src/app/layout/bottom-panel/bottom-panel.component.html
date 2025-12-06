@@ -22,7 +22,7 @@
   @if (imagesService.selectedFilter === 'flagged') {
     <span
       class="button secondary mark-ok"
-      [class.disabled]="wasAnyPageEdited"
+      [class.disabled]="wasAnyPageEdited || imagesService.imgWasEdited"
       (click)="imagesService.markImageOK()"
       title="Přesune sken do OK. Použijte v případě, že by sken neměl být podezřelý. Sken je možné přesunout pouze bez jakýchkoliv uživatelských úprav."
     >

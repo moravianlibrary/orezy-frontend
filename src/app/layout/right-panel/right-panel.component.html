@@ -48,7 +48,7 @@
     <span class="page">
       <span class="header">
         <span class="title-menu-wrapper">
-          <h1>Obdélník (výřez)</h1>
+          <h1>Výřez (obdélník)</h1>
         </span>
         <span class="actions">
           <span
@@ -76,7 +76,7 @@
               #xInput
               id="X"
               name="X"
-              title="Nejlevější bod obdélníku (většinou levá strana nebo roh)"
+              title="Nejlevější bod výřezu (většinou levá strana nebo roh)"
               class="left-input"
               type="number"
               [ngModel]="imagesService.selectedPage.left * 100 | number:'1.0-2'"
@@ -113,7 +113,7 @@
               #yInput
               id="Y"
               name="Y"
-              title="Nejhornější bod obdélníku (většinou horní strana nebo roh)"
+              title="Nejhornější bod výřezu (většinou horní strana nebo roh)"
               class="right-input"
               type="number"
               [ngModel]="imagesService.selectedPage.top * 100 | number:'1.0-2'"
@@ -156,7 +156,7 @@
               #widthInput
               id="width"
               name="width"
-              title="Šířka obdélníku"
+              title="Šířka výřezu"
               class="left-input"
               type="number"
               [ngModel]="imagesService.selectedPage.width * 100 | number:'1.0-2'"
@@ -202,7 +202,7 @@
               #heightInput
               id="height"
               name="height"
-              title="Výška obdélníku"
+              title="Výška výřezu"
               class="right-input"
               type="number"
               [ngModel]="imagesService.selectedPage.height * 100 | number:'1.0-2'"
@@ -250,7 +250,7 @@
         <span class="input-wrapper angle-wrapper">
           <input
             #angleInput
-            title="Kladné stupně otáčí obdélník po směru hodinových ručiček"
+            title="Kladné stupně otáčí výřez po směru hodinových ručiček"
             class="left-input angle-input"
             type="number"
             [ngModel]="imagesService.selectedPage.angle | number:'1.0-2'"

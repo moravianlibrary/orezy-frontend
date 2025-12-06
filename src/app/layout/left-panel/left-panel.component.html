@@ -3,7 +3,7 @@
     <h1>Skeny k revizi</h1>
     <app-menu [type]="'menu-primary'" />
   </div>
-  <div class="crops">
+  <div class="filters">
     <span
       class="filter"
       [class.selected-filter]="imagesService.selectedFilter === 'all'"
@@ -24,6 +24,21 @@
       [class.selected-filter]="imagesService.selectedFilter === 'ok'"
       (click)="imagesService.switchFilter('ok')"
     >OK <span class="filter-number">({{ imagesService.notFlaggedImages().length }})</span></span>
+  </div>
+  <div>
+    <h2>Počet výřezů</h2>
+    <div class="filters">
+      <span
+        class="filter"
+        [class.selected-filter]="imagesService.selectedFilter === 'single'"
+        (click)="imagesService.switchFilter('single')"
+      >Jeden <span class="filter-number">({{ imagesService.singlePagesImages().length }})</span></span>
+      <span
+        class="filter"
+        [class.selected-filter]="imagesService.selectedFilter === 'double'"
+        (click)="imagesService.switchFilter('double')"
+      >Dva <span class="filter-number">({{ imagesService.doublePagesImages().length }})</span></span>
+    </div>
   </div>
 </div>
 
