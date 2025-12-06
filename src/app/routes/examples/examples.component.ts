@@ -31,8 +31,6 @@ export class ExamplesComponent {
   }
 
   onClick(example: string): void {
-    this.router.navigate(['/'], {
-      queryParams: { id: example }
-    });
+    this.router.navigate(['/book', example]);
   }
 }

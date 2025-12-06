@@ -2,7 +2,7 @@
 
 @if (loading()) { Loading... }
 @else {
-  @for (example of examples(); track $index) {
+  @for (example of examples(); track example) {
     <p
       class="example"
       (click)="onClick(example)"

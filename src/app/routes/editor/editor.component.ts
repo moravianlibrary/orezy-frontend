@@ -18,17 +18,17 @@ import { roundToDecimals } from '../../utils/utils';
 export class EditorComponent {
   imagesService = inject(ImagesService);
   private activatedRoute = inject(ActivatedRoute);
-  private queryParamsOnBookId = new Subscription();
+  private paramsOnBookId = new Subscription();
 
   @ViewChild('mainWrapper', { static: true }) mainWrapper!: ElementRef<HTMLElement>;
 
   ngOnInit() {
     const imgSvc = this.imagesService;
     
-    // Subscribe to URL queryParams
-    this.queryParamsOnBookId = this.activatedRoute.queryParams
+    // Subscribe to params
+    this.paramsOnBookId = this.activatedRoute.paramMap
       .pipe(
-        map(params => params['id'] || '' ),
+        map(params => params.get('id') || '' ),
         switchMap(id => id === '' ? imgSvc.fetchAllTitleIds(): of([id])),
         tap((idArr: string[]) => {
           imgSvc.book.set(idArr[0]);
@@ -81,6 +81,6 @@ export class EditorComponent {
   }
 
   ngOnDestroy(): void {
-    this.queryParamsOnBookId.unsubscribe();
+    this.paramsOnBookId.unsubscribe();
   }
 }
