@@ -77,7 +77,7 @@ export class MainComponent {
       imgSvc.currentPages.forEach(p => imgSvc.drawPage(p));
       imgSvc.mainImageItem.set({ ...imgSvc.mainImageItem(), url: imgSvc.c.toDataURL('image/jpeg') });
       imgSvc.toggleMainImageOrCanvas();
-      this.hoveringPage('');
+      imgSvc.hoveringPage('');
     };
 
     el.onmousemove = (ev) => {
@@ -111,32 +111,17 @@ export class MainComponent {
     });
   }
 
-  // ---------- PAGE LOGIC ----------
+  
+  /* ------------------------------
+    PAGE LOGIC
+  ------------------------------ */
   private pageIdCursorInside(e: MouseEvent): string {
     const imgSvc = this.imagesService;
     const pos = this.getMousePosOnMain(e);
+    imgSvc.mousePos = pos;
     if (!pos) return '';
 
-    const hit = imgSvc.selectedPage && imgSvc.currentPages.filter(p => this.isPointInPage(pos.x, pos.y, p)).includes(imgSvc.selectedPage)
-      ? imgSvc.selectedPage
-      : imgSvc.currentPages.find(p => this.isPointInPage(pos.x, pos.y, p));
-    
-    return hit?._id ?? '';
-  }
-
-  private isPointInPage(x: number, y: number, p: Page): boolean {
-    const c = this.imagesService.c;
-    const [centerX, centerY] = [c.width * p.xc, c.height * p.yc];
-    const [width, height] = [c.width * p.width, c.height * p.height];
-    const angle = degreeToRadian(p.angle);
-    const [halfW, halfH] = [width / 2, height / 2];
-    const dx = x - centerX;
-    const dy = y - centerY;
-    const cos = Math.cos(-angle);
-    const sin = Math.sin(-angle);
-    const localX = dx * cos - dy * sin;
-    const localY = dx * sin + dy * cos;
-    return localX >= -halfW && localX <= halfW && localY >= -halfH && localY <= halfH;
+    return imgSvc.pageIdCursorInside();
   }
 
   private hitTest(e: MouseEvent): HitInfo {
@@ -147,104 +132,20 @@ export class MainComponent {
     const pages = imgSvc.currentPages;
 
     if (imgSvc.selectedPage) {
-      const hit = this.hitTestPage(pos.x, pos.y, imgSvc.selectedPage);
+      const page = imgSvc.isShiftActive && imgSvc.currentPages.length === imgSvc.maxPages
+        ? imgSvc.currentPages.find(p => p._id !== imgSvc.selectedPage?._id) ?? imgSvc.selectedPage
+        : imgSvc.selectedPage;
+      const hit = this.hitTestPage(pos.x, pos.y, page);
       if (hit.area !== 'none') return hit;
     }
 
-    for (const p of pages) {
-      if (p === imgSvc.selectedPage) continue;
-      const hit = this.hitTestPage(pos.x, pos.y, p);
-      if (hit.area !== 'none') return hit;
-    }
+    const candidatePages = pages.filter(p => p !== imgSvc.selectedPage);
+    const hits = candidatePages
+      .map(p => this.hitTestPage(pos.x, pos.y, p))
+      .filter(hit => hit.area !== 'none');
+    const index = hits.length <= 1 ? 0 : (imgSvc.isShiftActive ? 1 : 0);
 
-    return { area: 'none' };
-  }
-
-  private localEdgeSideToUserSide(localSide: 'left' | 'right' | 'top' | 'bottom', angleDeg: number) {
-    const a = angleDeg;
-
-    if (a >= -45 && a <= 45) {
-      return localSide;
-    }
-
-    if (a > 45 && a <= 135) {
-      switch (localSide) {
-        case 'left': return 'top';
-        case 'right': return 'bottom';
-        case 'top': return 'right';
-        case 'bottom': return 'left';
-      }
-    }
-
-    if (a > 135 || a <= -135) {
-      switch (localSide) {
-        case 'left': return 'right';
-        case 'right': return 'left';
-        case 'top': return 'bottom';
-        case 'bottom': return 'top';
-      }
-    }
-
-    if (a > -135 && a < -45) {
-      switch (localSide) {
-        case 'left': return 'bottom';
-        case 'right': return 'top';
-        case 'top': return 'left';
-        case 'bottom': return 'right';
-      }
-    }
-
-    return localSide;
-  }
-
-  private localCornerToUserCorner(local: CornerName, angleDeg: number): CornerName {
-    const a = angleDeg;
-
-    if (a >= -45 && a <= 45) return local;
-
-    if (a > 45 && a <= 135) {
-      const map90: { [key: string]: CornerName } = { nw: 'ne', ne: 'se', se: 'sw', sw: 'nw' };
-      return map90[local];
-    }
-
-    if (a > 135 || a <= -135) {
-      const map180: { [key: string]: CornerName } = { nw: 'se', ne: 'sw', sw: 'ne', se: 'nw' };
-      return map180[local];
-    }
-
-    const map270: { [key: string]: CornerName } = { nw: 'sw', sw: 'se', se: 'ne', ne: 'nw' };
-    return map270[local];
-  }
-
-  private getEdgeCursor(angleDeg: number, local: EdgeLocalOrientation): string {
-    let a = angleDeg % 180;
-    if (a < 0) a += 180;
-
-    const mostlyHorizontal = a <= 45 || a >= 135;
-
-    if (local === 'vertical') {
-      return mostlyHorizontal ? 'ew-resize' : 'ns-resize';
-    } else {
-      return mostlyHorizontal ? 'ns-resize' : 'ew-resize';
-    }
-  }
-
-  private getCornerCursor(angleDeg: number, corner: CornerName): string {
-    let a = angleDeg % 180;
-    if (a < 0) a += 180;
-
-    const userCorner = this.localCornerToUserCorner(corner, angleDeg);
-
-    const baseForCorner =
-      userCorner === 'nw' || userCorner === 'se'
-        ? 'nwse-resize'
-        : 'nesw-resize';
-
-    const flippedForCorner =
-      baseForCorner === 'nwse-resize' ? 'nesw-resize' : 'nwse-resize';
-
-    const flip = a >= 45 && a <= 135;
-    return flip ? flippedForCorner : baseForCorner;
+    return hits[index] ?? { area: 'none' };
   }
 
   private hitTestPage(x: number, y: number, p: Page): HitInfo {
@@ -335,6 +236,93 @@ export class MainComponent {
     return { area: 'none' };
   }
 
+  private localEdgeSideToUserSide(localSide: 'left' | 'right' | 'top' | 'bottom', angleDeg: number) {
+    const a = angleDeg;
+
+    if (a >= -45 && a <= 45) {
+      return localSide;
+    }
+
+    if (a > 45 && a <= 135) {
+      switch (localSide) {
+        case 'left': return 'top';
+        case 'right': return 'bottom';
+        case 'top': return 'right';
+        case 'bottom': return 'left';
+      }
+    }
+
+    if (a > 135 || a <= -135) {
+      switch (localSide) {
+        case 'left': return 'right';
+        case 'right': return 'left';
+        case 'top': return 'bottom';
+        case 'bottom': return 'top';
+      }
+    }
+
+    if (a > -135 && a < -45) {
+      switch (localSide) {
+        case 'left': return 'bottom';
+        case 'right': return 'top';
+        case 'top': return 'left';
+        case 'bottom': return 'right';
+      }
+    }
+
+    return localSide;
+  }
+
+  private localCornerToUserCorner(local: CornerName, angleDeg: number): CornerName {
+    const a = angleDeg;
+
+    if (a >= -45 && a <= 45) return local;
+
+    if (a > 45 && a <= 135) {
+      const map90: { [key: string]: CornerName } = { nw: 'ne', ne: 'se', se: 'sw', sw: 'nw' };
+      return map90[local];
+    }
+
+    if (a > 135 || a <= -135) {
+      const map180: { [key: string]: CornerName } = { nw: 'se', ne: 'sw', sw: 'ne', se: 'nw' };
+      return map180[local];
+    }
+
+    const map270: { [key: string]: CornerName } = { nw: 'sw', sw: 'se', se: 'ne', ne: 'nw' };
+    return map270[local];
+  }
+
+  private getEdgeCursor(angleDeg: number, local: EdgeLocalOrientation): string {
+    let a = angleDeg % 180;
+    if (a < 0) a += 180;
+
+    const mostlyHorizontal = a <= 45 || a >= 135;
+
+    if (local === 'vertical') {
+      return mostlyHorizontal ? 'ew-resize' : 'ns-resize';
+    } else {
+      return mostlyHorizontal ? 'ns-resize' : 'ew-resize';
+    }
+  }
+
+  private getCornerCursor(angleDeg: number, corner: CornerName): string {
+    let a = angleDeg % 180;
+    if (a < 0) a += 180;
+
+    const userCorner = this.localCornerToUserCorner(corner, angleDeg);
+
+    const baseForCorner =
+      userCorner === 'nw' || userCorner === 'se'
+        ? 'nwse-resize'
+        : 'nesw-resize';
+
+    const flippedForCorner =
+      baseForCorner === 'nwse-resize' ? 'nesw-resize' : 'nwse-resize';
+
+    const flip = a >= 45 && a <= 135;
+    return flip ? flippedForCorner : baseForCorner;
+  }
+
   private getMousePosOnMain(e: MouseEvent): { x: number; y: number } | null {
     const mainElement = document.getElementById(this.imagesService.editable() ? 'main-canvas' : 'main-image') as HTMLElement;
     if (!mainElement) return null;
@@ -346,21 +334,17 @@ export class MainComponent {
     };
   }
 
-  private hoveringPage(hoveredPageId: string): void {
-    const imgSvc = this.imagesService;
-    imgSvc.redrawImage();
-    imgSvc.currentPages.forEach(p => imgSvc.drawPage(p, hoveredPageId));
-  }
-
   private handleCanvasInteraction(ev: MouseEvent, el: HTMLElement): void {
     if ((ev.target as HTMLElement).tagName !== 'CANVAS') return;
     const imgSvc = this.imagesService;
     
     const hit = this.hitTest(ev);
     const pageId = this.pageIdCursorInside(ev);
+    imgSvc.pageId = pageId;
     const insidePage = Boolean(pageId);
     const insideArea = hit.area !== 'none';
     const hitPage = hit.page ?? null;
+    imgSvc.hitPage = hitPage;
 
     // Hover
     if (ev.type === 'mousemove') {
@@ -369,7 +353,7 @@ export class MainComponent {
         imgSvc.lastPageCursorIsInside = imgSvc.currentPages.find(p => p._id === pageId) ?? null;
         imgSvc.editable.set(insidePage);
         imgSvc.toggleMainImageOrCanvas();
-        this.hoveringPage(hitPage?._id === imgSvc.selectedPage?._id ? imgSvc.selectedPage?._id ?? '' : pageId);
+        imgSvc.hoveringPage(hitPage?._id === imgSvc.selectedPage?._id ? imgSvc.selectedPage?._id ?? '' : pageId);
       }
     }
 
@@ -408,7 +392,7 @@ export class MainComponent {
       imgSvc.currentPages.forEach(p => imgSvc.drawPage(p));
       imgSvc.mainImageItem.set({ ...imgSvc.mainImageItem(), url: imgSvc.c.toDataURL('image/jpeg') });
       imgSvc.toggleMainImageOrCanvas();
-      this.hoveringPage(hitPage?._id ?? '');
+      imgSvc.hoveringPage(hitPage?._id ?? '');
     }    
 
     // Drag
@@ -432,7 +416,7 @@ export class MainComponent {
           imgSvc.dragStartPage = null;
 
           if (!imgSvc.imgWasEdited) return;
-          this.hoveringPage(hitPage._id);
+          imgSvc.hoveringPage(hitPage._id);
           imgSvc.redrawImage();
           imgSvc.currentPages.forEach(p => imgSvc.drawPage(p));
           imgSvc.mainImageItem.set({ ...imgSvc.mainImageItem(), url: imgSvc.c.toDataURL('image/jpeg') });

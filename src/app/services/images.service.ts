@@ -43,16 +43,21 @@ export class ImagesService {
   loadingLeft: boolean = false;
   loadingMain: boolean = false;
 
+  // Interactions
   pageWasEdited: boolean = false;
   currentPages: Page[] = [];
   selectedPage: Page | null = null;
   lastSelectedPage: Page | null = null;
   clickedDiffPage: boolean | null = null;
 
+  pageId!: string;
+  hitPage!: Page | null;
+  mousePos!: { x: number; y: number } | null;
   startHit: HitInfo | null = null;
 
   // Hover
   lastPageCursorIsInside: Page | null = null;
+  isShiftActive: boolean = false;
 
   // Drag
   isDragging: boolean = false;
@@ -191,6 +196,7 @@ export class ImagesService {
     }
     localStorage.setItem('filter', this.selectedFilter ?? 'flagged');
     this.setDisplayedImages();
+    scrollToSelectedImage();
     this.setMainImage(mainImageItemAfter);
 
     this.imgWasEdited = false;
@@ -509,6 +515,48 @@ export class ImagesService {
   /* ------------------------------
     PAGE LOGIC
   ------------------------------ */
+  pageIdCursorInside(): string {
+    const pos = this.mousePos;
+    if (!pos) return '';
+
+    const hits = this.currentPages.filter(p => this.isPointInPage(pos.x, pos.y, p));
+    const hit = this.selectedPage && hits.includes(this.selectedPage)
+      ? this.selectedPage
+      : hits[hits.length === 1 ? 0 : (this.isShiftActive ? 1 : 0)];
+
+    return hit?._id ?? '';
+  }
+
+  isPointInPage(x: number, y: number, p: Page): boolean {
+    const c = this.c;
+    const [centerX, centerY] = [c.width * p.xc, c.height * p.yc];
+    const [width, height] = [c.width * p.width, c.height * p.height];
+    const angle = degreeToRadian(p.angle);
+    const [halfW, halfH] = [width / 2, height / 2];
+    const dx = x - centerX;
+    const dy = y - centerY;
+    const cos = Math.cos(-angle);
+    const sin = Math.sin(-angle);
+    const localX = dx * cos - dy * sin;
+    const localY = dx * sin + dy * cos;
+    return localX >= -halfW && localX <= halfW && localY >= -halfH && localY <= halfH;
+  }
+
+  hoveringPage(hoveredPageId: string): void {
+    this.redrawImage();
+    this.currentPages.forEach(p => this.drawPage(p, hoveredPageId));
+  }
+
+  updateHoverPage(): void {
+    const insidePage = Boolean(this.pageId);
+    if (!this.isDragging && !this.isRotating && insidePage) {
+      this.pageId = this.pageIdCursorInside();
+      this.lastPageCursorIsInside = this.currentPages.find(p => p._id === this.pageId) ?? null;
+      this.editable.set(insidePage);
+      this.hoveringPage(this.hitPage?._id === this.selectedPage?._id ? this.selectedPage?._id ?? '' : this.pageId);
+    }
+  }
+
   computeBounds(xc: number, yc: number, width: number, height: number, angle: number): { 
     left: number,
     right: number,
@@ -678,7 +726,7 @@ export class ImagesService {
     this.selectedPage = null;
     this.redrawImage();
     this.currentPages.forEach(p => this.drawPage(p));
-    this.mainImageItem.set({ ...this.mainImageItem(), url: this.c.toDataURL('image/jpeg') });
+    this.updateMainImageItem();
     this.imgWasEdited = true;
   }
 
@@ -702,16 +750,12 @@ export class ImagesService {
   }
 
   updateMainImageItemAndImages(): void {
+    this.updateMainImageItem();
+    this.updateImagesByCurrentPages();
+  }
+
+  updateMainImageItem(): void {
     this.mainImageItem.set({ ...this.mainImageItem(), url: this.c.toDataURL('image/jpeg') });
-    this.images.update(prev =>
-      prev.map(img => img._id === this.mainImageItem()._id
-        ? { 
-            ...img,
-            pages: this.currentPages
-          }
-        : img
-      )
-    );
   }
 
   updateImagesByCurrentPages(): void {
@@ -892,6 +936,12 @@ export class ImagesService {
     event.preventDefault();
     event.stopPropagation();
 
+    // Update hover page
+    if (key === 'Shift') {
+      this.isShiftActive = true;
+      this.updateHoverPage();
+    }
+
     // Select left / right page OR Filters number of pages
     if ((key === '+' || key === 'ě' || key === 'Ě' || key === '1' || key === '2') && !event.ctrlKey && !this.dialogOpen()) {
       if (event.altKey || event.metaKey) {
@@ -913,7 +963,7 @@ export class ImagesService {
       this.redrawImage();
       this.currentPages.forEach(p => this.drawPage(p));
       this.toggleMainImageOrCanvas();
-      this.mainImageItem.set({ ...this.mainImageItem(), url: this.c.toDataURL('image/jpeg') });
+      this.updateMainImageItem();
     }
 
     // Unselect page
@@ -932,7 +982,7 @@ export class ImagesService {
       this.editable.set(false);
       this.redrawImage();
       this.currentPages.forEach(p => this.drawPage(p));
-      this.mainImageItem.set({ ...this.mainImageItem(), url: this.c.toDataURL('image/jpeg') });
+      this.updateMainImageItem();
       this.toggleMainImageOrCanvas();
     }
 
@@ -1344,18 +1394,20 @@ export class ImagesService {
     };
 
     // Reset změn dokumentu a skenu
-    if (
-      !this.dialogOpen() &&
-      ((key === 'R' && event.ctrlKey && event.shiftKey && !event.metaKey && !event.altKey)
-      || (key === 'R' && event.metaKey && event.shiftKey && !event.ctrlKey && !event.altKey))
-    ) {
-      this.openResetDoc();
-    } else if (
-      !this.dialogOpen() &&
-      ((key === 'r' && event.metaKey && !event.ctrlKey && !event.shiftKey && !event.altKey)
-      || (key === 'r' && event.ctrlKey && !event.metaKey && !event.shiftKey && !event.altKey))
-    ) {
-      this.openResetScan();
+    {
+      if (
+        !this.dialogOpen() &&
+        ((key === 'R' && event.ctrlKey && event.shiftKey && !event.metaKey && !event.altKey)
+        || (key === 'R' && event.metaKey && event.shiftKey && !event.ctrlKey && !event.altKey))
+      ) {
+        this.openResetDoc();
+      } else if (
+        !this.dialogOpen() &&
+        ((key === 'r' && event.metaKey && !event.ctrlKey && !event.shiftKey && !event.altKey)
+        || (key === 'r' && event.ctrlKey && !event.metaKey && !event.shiftKey && !event.altKey))
+      ) {
+        this.openResetScan();
+      }
     }
 
     // Switch filter
@@ -1385,5 +1437,13 @@ export class ImagesService {
 
       this.openShortcuts();
     };
+  }
+
+  onKeyUp(event: KeyboardEvent): void {
+    const key = event.key;
+    if (key !== 'Shift' || (event.target as HTMLElement).tagName === 'INPUT') return;
+    
+    this.isShiftActive = false;
+    this.updateHoverPage();
   }
 }
