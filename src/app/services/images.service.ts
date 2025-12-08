@@ -1,6 +1,6 @@
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { computed, inject, Injectable, signal } from '@angular/core';
-import { DialogButton, DialogContentType, GridMode, HitInfo, ImageItem, ImgOrCanvas, MousePos, Page } from '../app.types';
+import { DialogButton, DialogContentType, GridMode, HitInfo, ImageItem, ImgOrCanvas, MousePos, Page, Toast, ToastType } from '../app.types';
 import { catchError, Observable, of } from 'rxjs';
 import { clamp, defer, degreeToRadian, getColor, scrollToSelectedImage } from '../utils/utils';
 import { EnvironmentService } from './environment.service';
@@ -31,6 +31,7 @@ export class ImagesService {
   displayedImages = signal<ImageItem[]>([]);
 
   mainImageItem = signal<ImageItem>({ _id: '', url: '', thumbnailUrl: '', edited: false, flags: [], pages: [] });
+  emptyImageItem: ImageItem = { _id: '', url: '', edited: false, flags: [], pages: [] };
   imgWasEdited: boolean = false;
 
   c!: HTMLCanvasElement;
@@ -168,6 +169,7 @@ export class ImagesService {
           this.selectedFilter = 'edited';
           localStorage.setItem('filter', this.selectedFilter);
           this.setDisplayedImages();
+          this.showToast('Proces byl úspěšně dokončen!', { type: 'success' });
         },
         error: (err: Error) => console.error(err)
       });
@@ -200,6 +202,8 @@ export class ImagesService {
     this.setMainImage(mainImageItemAfter);
 
     this.imgWasEdited = false;
+
+    this.showToast('Změny skenu byly úspěšně resetovány!', { type: 'success' });
   }
 
   resetDoc(): void {
@@ -215,6 +219,8 @@ export class ImagesService {
       if (this.selectedFilter === 'edited') this.selectedFilter = 'flagged';
       this.setDisplayedImages();
       this.setMainImage(this.displayedImages()[0]);
+
+      this.showToast('Změny dokumentu byly úspěšně resetovány!', { type: 'success' });
     });
   }
 
@@ -254,6 +260,7 @@ export class ImagesService {
     const mainImageItemName = this.mainImageItem()._id;
     if (this.imgWasEdited) {
       this.updateImagesByEdited(mainImageItemName ?? '');
+      this.showToast('Sken byl přesunut do Upravených.');
     }
 
     this.setDisplayedImages();
@@ -439,7 +446,6 @@ export class ImagesService {
     ctx.restore();
   }
 
-
   private drawSimplePage(p: Page): void {
     const { c, ctx } = this;
     
@@ -464,22 +470,27 @@ export class ImagesService {
     PREV / NEXT IMAGE
   ------------------------------ */    
   showPrevImage(): void {
-    if (this.currentIndex() === 0) return;
+    if (this.currentIndex() === 0 || !this.displayedImages().length) return;
     this.updateImagesByCurrentPages();
     this.showImage(-1);
-    if (this.imgWasEdited) defer(() => this.setDisplayedImages(), 100);
+    if (this.imgWasEdited) defer(() => {
+      this.setDisplayedImages();
+      this.showToast('Sken byl přesunut do Upravených.');
+    }, 100);
   }
 
   showNextImage(): void {
-    if (this.currentIndex() === this.displayedImages().length - 1) return;
+    if (this.currentIndex() === this.displayedImages().length - 1 || !this.displayedImages().length) return;
     this.updateImagesByCurrentPages();
     this.showImage(1);
-    if (this.imgWasEdited) defer(() => this.setDisplayedImages(), 100);
+    if (this.imgWasEdited) defer(() => {
+      this.setDisplayedImages();
+      this.showToast('Sken byl přesunut do Upravených.');
+    }, 100);
   }
 
   markImageOK(): void {
-    if (this.currentIndex() === this.displayedImages().length - 1) return;
-    if (this.currentPages.find(p => p.edited) || this.imgWasEdited) return;
+    if (this.currentPages.find(p => p.edited) || this.imgWasEdited || !this.displayedImages().length) return;
     
     this.imgWasEdited = false;
     this.images.update(prev =>
@@ -497,17 +508,18 @@ export class ImagesService {
     );
 
     this.showImage(1);
-    defer(() => this.setDisplayedImages(), 100);
+    this.showToast('Sken byl přesunut do OK.');
+    if (this.imgWasEdited) defer(() => this.setDisplayedImages(), 100);
   }
 
   private showImage(offset: number): void {
     const displayedImages = this.displayedImages();
-
-    if (displayedImages.length === 0) return;
-
-    const newIndex = (this.currentIndex() + offset + displayedImages.length) % displayedImages.length;
-    this.setMainImage(displayedImages[newIndex]);
-
+    const newIndex = ((this.currentIndex() + offset + displayedImages.length) % displayedImages.length);
+    this.setMainImage(displayedImages.length !== 1 ? displayedImages[newIndex] : this.emptyImageItem);
+    if (displayedImages.length === 1) {
+      this.setDisplayedImages();
+      this.mainImageItem.set(this.emptyImageItem);
+    }
     scrollToSelectedImage();
   }
 
@@ -691,7 +703,7 @@ export class ImagesService {
   }
   
   addPage(): void {
-    if (this.currentPages.length >= this.maxPages) return;
+    if (this.currentPages.length >= this.maxPages || !this.displayedImages().length) return;
 
     if (this.pageWasEdited) this.updateCurrentPagesWithEdited();
     
@@ -835,6 +847,7 @@ export class ImagesService {
           const gridRadio = this.gridRadio();
           this.gridMode.set(gridRadio);
           localStorage.setItem('gridMode', gridRadio);
+          this.showToast('Nastavení bylo uloženo.', { type: 'success' });
         }
       }
     ]);
@@ -903,6 +916,37 @@ export class ImagesService {
     ]);
 
     this.openDialog();
+  }
+
+
+  /* ------------------------------
+    TOAST MESSAGES
+  ------------------------------ */
+  toasts = signal<Toast[]>([]);
+  toastDuration: number = 3000;
+  
+  showToast(message: string, opts?: { type?: ToastType; duration?: number }): string {
+    const id = crypto.randomUUID();
+    const toast: Toast = {
+      id,
+      message,
+      type: opts?.type ?? 'info',
+      duration: opts?.duration ?? this.toastDuration,
+    };
+
+    this.toasts.update((prev) => [...prev, toast]);
+    window.setTimeout(() => this.dismissToast(id), toast.duration);
+
+    return id;
+  }
+
+  dismissToast(id: string) {
+    this.toasts.update((prev) => prev.filter((t) => t.id !== id));
+    this.focusMainWrapper();
+  }
+
+  clearAllToasts() {
+    this.toasts.set([]);
   }
 
 

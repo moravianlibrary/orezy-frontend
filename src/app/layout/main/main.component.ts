@@ -3,10 +3,11 @@ import { ImagesService } from '../../services/images.service';
 import { clamp, degreeToRadian, radianToDegree } from '../../utils/utils';
 import { CornerName, EdgeLocalOrientation, EdgeSide, HitInfo, Page } from '../../app.types';
 import { LoaderComponent } from '../../components/loader/loader.component';
+import { ToastComponent } from '../../components/toast/toast.component';
 
 @Component({
   selector: 'app-main',
-  imports: [LoaderComponent],
+  imports: [LoaderComponent, ToastComponent],
   templateUrl: './main.component.html',
   styleUrl: './main.component.scss'
 })

@@ -1,3 +1,10 @@
+export interface ExampleBook {
+  _id: string;
+  created_at: string;
+  modified_at: string;
+  state: string;
+}
+
 export interface Page {
   _id: string;
   xc: number;
@@ -14,7 +21,7 @@ export interface Page {
   edited: boolean;
 }
 
-export interface ImageItem { // = Instructions
+export interface ImageItem {
   _id: string;
   url?: string;
   thumbnailUrl?: string;
@@ -53,3 +60,13 @@ export interface HitInfo {
 // Dialog
 export type GridMode = 'always' | 'never' | 'when-rotating';
 export type DialogContentType = 'settings' | 'shortcuts';
+
+
+// Toast messages
+export type ToastType = 'info' | 'success';
+export interface Toast {
+  id: string;
+  message: string;
+  type?: ToastType;
+  duration?: number;
+}

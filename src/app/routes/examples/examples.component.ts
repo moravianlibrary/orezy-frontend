@@ -2,6 +2,7 @@ import { Component, inject, signal } from '@angular/core';
 import { ImagesService } from '../../services/images.service';
 import { Router } from '@angular/router';
 import { catchError, of, tap } from 'rxjs';
+import { ExampleBook } from '../../app.types';
 
 @Component({
   selector: 'app-examples',
@@ -13,7 +14,7 @@ export class ExamplesComponent {
   private router = inject(Router);
   imageService = inject(ImagesService);
   
-  examples = signal<string[]>([]);
+  examples = signal<ExampleBook[]>([]);
   loading = signal<boolean>(true);
   
   ngOnInit(): void {
@@ -24,8 +25,8 @@ export class ExamplesComponent {
         return of([]);
       })
     )
-    .subscribe((r: string[]) => {
-      this.examples.set(r);
+    .subscribe(r => {
+      this.examples.set(r as ExampleBook[]);
       this.loading.set(false);
     });
   }

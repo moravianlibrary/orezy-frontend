@@ -31,7 +31,7 @@
   <span class="actions">
     <span
       class="action"
-      [class.disabled]="imagesService.currentPages.length >= imagesService.maxPages"
+      [class.disabled]="imagesService.currentPages.length >= imagesService.maxPages || !imagesService.displayedImages().length"
       (click)="imagesService.addPage()"
     >
       Přidat výřez

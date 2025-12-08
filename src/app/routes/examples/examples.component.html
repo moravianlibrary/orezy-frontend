@@ -5,7 +5,7 @@
   @for (example of examples(); track example) {
     <p
       class="example"
-      (click)="onClick(example)"
-    >{{ example }}</p>
+      (click)="onClick(example._id)"
+    >{{ example._id }}</p>
   }
 }
