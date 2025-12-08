@@ -987,10 +987,10 @@ export class ImagesService {
     }
 
     // Remove selected page
-    if (['Backspace', 'Delete'].includes(key) && !this.dialogOpen()) if (this.selectedPage) this.removePage();
+    if (['Backspace', 'Delete'].includes(key) && !this.dialogOpen() && this.selectedPage) this.removePage();
     
     // Add page
-    if (['p', 'P', 'a', 'A'].includes(key) && !this.dialogOpen()) if (this.currentPages.length < this.maxPages) this.addPage();
+    if (['p', 'P', 'a', 'A'].includes(key) && !this.dialogOpen() && this.currentPages.length < this.maxPages) this.addPage();
 
     // Change grid mode
     if (['m', 'M', 'g', 'G'].includes(key) && this.selectedPage &&!this.dialogOpen()) {
@@ -1362,6 +1362,14 @@ export class ImagesService {
       this.redrawImage();
       this.currentPages.forEach(p => this.drawPage(p));
     }
+    if ( // Is rotating ON
+      (((event.ctrlKey || event.metaKey) && key === 'Alt') || (['Control', 'Meta'].includes(key) && event.altKey))
+      && this.selectedPage && !this.dialogOpen()
+    ) {
+      this.isRotating = true;
+      this.redrawImage();
+      this.currentPages.forEach(p => this.drawPage(p));
+    }
 
     // Sken je OK
     if (key === 'Enter' && !event.ctrlKey && !event.metaKey && !this.dialogOpen()) this.markImageOK();
@@ -1441,9 +1449,22 @@ export class ImagesService {
 
   onKeyUp(event: KeyboardEvent): void {
     const key = event.key;
-    if (key !== 'Shift' || (event.target as HTMLElement).tagName === 'INPUT') return;
+    if (!['Shift', 'Control', 'Meta', 'Alt'].includes(key) || (event.target as HTMLElement).tagName === 'INPUT') return;
     
-    this.isShiftActive = false;
-    this.updateHoverPage();
+    // Change hover
+    if (key === 'Shift') {
+      this.isShiftActive = false;
+      this.updateHoverPage();
+    }
+
+    // Is rotating OFF
+    if (
+      (((event.ctrlKey || event.metaKey) && key === 'Alt') || (['Control', 'Meta'].includes(key) && event.altKey))
+      && this.selectedPage && !this.dialogOpen()
+    ) {
+      this.isRotating = false;
+      this.redrawImage();
+      this.currentPages.forEach(p => this.drawPage(p));
+    }
   }
 }
