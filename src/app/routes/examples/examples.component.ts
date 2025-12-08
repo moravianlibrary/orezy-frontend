@@ -31,7 +31,21 @@ export class ExamplesComponent {
     });
   }
 
-  onClick(example: string): void {
-    this.router.navigate(['/book', example]);
+  getUrl(example: ExampleBook): string {
+    const base = window.location.origin;
+    const isBookPage = example.state === 'ready' || example.state === 'user_approved';
+    return isBookPage ? `${base}/book/${example._id}` : 'javascript:void(0)';
+  }
+
+  getDate(input: string): string {
+    const date = new Date(input);
+    return date.toLocaleString('cs-CZ', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit',
+    });
   }
 }

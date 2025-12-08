@@ -39,8 +39,6 @@ export class ImagesService {
 
   currentIndex = computed<number>(() => this.displayedImages().findIndex(img => img._id === this.mainImageItem()._id));
   mainImage: HTMLImageElement | null = null;
-  lastBook: string = '';
-  lastMode: string = '';
   loadingLeft: boolean = false;
   loadingMain: boolean = false;
 

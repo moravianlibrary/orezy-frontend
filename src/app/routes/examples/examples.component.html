@@ -1,11 +1,23 @@
-<h2>Example books</h2>
+<h2>Příkladové knihy</h2>
 
 @if (loading()) { Loading... }
 @else {
-  @for (example of examples(); track example) {
-    <p
-      class="example"
-      (click)="onClick(example._id)"
-    >{{ example._id }}</p>
-  }
+  <table cellspacing="0" cellpadding="0">
+    <tr><th>ID</th><th>Stav</th><th>Vytvořeno</th><th>Upraveno</th></tr>
+    @for (example of examples(); track example) {
+      <tr
+        [class.link]="['ready', 'user_approved'].includes(example.state)"
+      >
+        <td><a [href]="getUrl(example)">{{ example._id }}</a></td>
+        <td><a [href]="getUrl(example)"><span
+          class="tag"
+          [class.success]="['ready', 'user_approved'].includes(example.state)"
+          [class.progress]="example.state === 'in_progress'"
+          [class.error]="example.state === 'failed'"
+        >{{ example.state }}</span></a></td>
+        <td><a [href]="getUrl(example)">{{ getDate(example.created_at) }}</a></td>
+        <td><a [href]="getUrl(example)">{{ getDate(example.modified_at) }}</a></td>
+      </tr>
+    }
+  </table>
 }

@@ -1,37 +1,98 @@
+@mixin font($font-weight, $font-size, $line-height, $color) {
+  font-family: 'IBM Plex Sans', sans-serif;
+  letter-spacing: 0%;
+  font-weight: $font-weight;
+  font-size: $font-size;
+  line-height: $line-height;
+  color: $color;
+}
+
 :host {
   display: flex;
   flex-direction: column;
   gap: 10px;
-  justify-content: center;
   align-items: center;
   height: 100%;
+  margin-top: 10%;
 }
 
 h2 {
   color: #333;
-  font-size: 22px;
+  font-size: 28px;
   font-weight: 400;
-  margin-bottom: 10px;
+  margin-bottom: 20px;
 }
 
-.example {
-  text-align: center;
-  line-height: 22px;
-  opacity: .9;
-  color: #333;
+table {
+  border-collapse: separate;
+  border-spacing: 0;
+  border-radius: 4px;
+  overflow: hidden;
+  box-shadow: 0 12px 30px rgba(0,0,0,.12), 0 2px 8px rgba(0,0,0,.08);
+}
 
-  padding: 16px 24px;
-  box-shadow: 0 0 0 0 rgba(0, 0, 0, 0.1), 0 0 6px 0 rgba(0, 0, 0, 0.1);
-  border-radius: 6px;
-  background-color: #fff;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  min-width: 220px;
-  transition: filter 0.2s ease;
+tr {
+  height: 40px;
+  width: 100%;
+  padding: var(--spacing-x2);
+}
 
+a {
+  cursor: initial;
+  display: block;
+  text-decoration: none;
+  padding: var(--spacing-x3);
+  @include font(350, var(--font-size-x2), var(--spacing-x6), var(--text-base));
+}
+
+tr.link {
   &:hover {
-    cursor: pointer;
-    filter: brightness(.95);
+    // background-color: #efeff0;
+    background-color: #0080A820;
   }
+
+  a {
+    cursor: pointer;
+  }
+}
+
+tr:nth-child(odd) {
+  background-color: var(--bg-main-light);
+}
+
+tr:first-child {
+  background-color: #eaeaea;
+  cursor: initial;
+}
+
+th {
+  text-align: left;
+  padding: var(--spacing-x3);
+  @include font(450, var(--font-size-x2), var(--spacing-x6), var(--text-base));
+}
+
+td {
+  @include font(400, var(--font-size-x2), var(--spacing-x6), var(--text-light));
+}
+
+.tag {
+  border-radius: 4px;
+  padding: 6px 8px;
+  background-color: oklch(96.8% .007 247.896);
+  @include font(450, var(--font-size-x1-5), var(--spacing-x3), oklch(44.6% .043 257.281));
+}
+
+.success {
+  background-color: #D7F4DE;
+  @include font(450, var(--font-size-x1-5), var(--spacing-x3), #207936);
+}
+
+.progress {
+  background-color: var(--bg-color-edited);
+  @include font(450, var(--font-size-x1-5), var(--spacing-x3), var(--status-icon-edited));
+}
+
+.error {
+  background-color: var(--bg-color-error);
+  @include font(450, var(--font-size-x1-5), var(--spacing-x3), var(--status-icon-error));
 }
