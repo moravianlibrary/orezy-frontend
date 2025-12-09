@@ -24,11 +24,14 @@ export class ImagesService {
   ------------------------------ */
   book = signal<string>('');
   selectedFilter: string | null = null;
+  selectedPageNumberFilter = signal<string | null>(null);
+  clickedPageNumberFilter: boolean = false;
   editable = signal<boolean>(false);
 
   images = signal<ImageItem[]>([]);
   originalImages = signal<ImageItem[]>([]);
   displayedImages = signal<ImageItem[]>([]);
+  displayedImagesPages = signal<ImageItem[]>([]);
 
   mainImageItem = signal<ImageItem>({ _id: '', url: '', thumbnailUrl: '', edited: false, flags: [], pages: [] });
   emptyImageItem: ImageItem = { _id: '', url: '', edited: false, flags: [], pages: [] };
@@ -37,7 +40,7 @@ export class ImagesService {
   c!: HTMLCanvasElement;
   ctx!: CanvasRenderingContext2D;
 
-  currentIndex = computed<number>(() => this.displayedImages().findIndex(img => img._id === this.mainImageItem()._id));
+  currentIndex = computed<number>(() => this.displayedImagesFinal().findIndex(img => img._id === this.mainImageItem()._id));
   mainImage: HTMLImageElement | null = null;
   loadingLeft: boolean = false;
   loadingMain: boolean = false;
@@ -100,8 +103,7 @@ export class ImagesService {
   flaggedImages = computed<ImageItem[]>(() => this.images().filter(img => !img.edited && img.flags.length));
   notFlaggedImages = computed<ImageItem[]>(() => this.images().filter(img => !img.edited && !img.flags.length));
   editedImages = computed<ImageItem[]>(() => this.images().filter(img => img.edited));
-  singlePagesImages = computed<ImageItem[]>(() => this.images().filter(img => img.pages.length === 1));
-  doublePagesImages = computed<ImageItem[]>(() => this.images().filter(img => img.pages.length === 2));
+  displayedImagesFinal = computed<ImageItem[]>(() => this.selectedPageNumberFilter() ? this.displayedImagesPages() : this.displayedImages());
 
 
   /* ------------------------------
@@ -174,7 +176,7 @@ export class ImagesService {
   }
 
   resetScan(): void {
-    if (!this.displayedImages().length) return;
+    if (!this.displayedImagesFinal().length) return;
 
     const mainImageItemBefore = this.mainImageItem();
     this.mainImageItem.set(this.originalImages().find(img => img._id === mainImageItemBefore._id) ?? mainImageItemBefore);
@@ -216,7 +218,7 @@ export class ImagesService {
       
       if (this.selectedFilter === 'edited') this.selectedFilter = 'flagged';
       this.setDisplayedImages();
-      this.setMainImage(this.displayedImages()[0]);
+      this.setMainImage(this.displayedImagesFinal()[0]);
 
       this.showToast('Změny dokumentu byly úspěšně resetovány!', { type: 'success' });
     });
@@ -240,11 +242,17 @@ export class ImagesService {
       case 'ok':
         this.displayedImages.set(this.notFlaggedImages());
         break;
-      case 'double':
-        this.displayedImages.set(this.doublePagesImages());
-        break;
+    }
+
+    switch (this.selectedPageNumberFilter()) {
       case 'single':
-        this.displayedImages.set(this.singlePagesImages());
+        this.displayedImagesPages.set(this.displayedImages().filter(img => img.pages.length === 1));
+        break;
+      case 'double':
+        this.displayedImagesPages.set(this.displayedImages().filter(img => img.pages.length === 2));
+        break;
+      default:
+        this.displayedImagesPages.set([]);
         break;
     }
   }
@@ -255,17 +263,34 @@ export class ImagesService {
     this.selectedFilter = filter;
     localStorage.setItem('filter', this.selectedFilter);
     
-    const mainImageItemName = this.mainImageItem()._id;
+    const mainImageItemId = this.mainImageItem()._id;
     if (this.imgWasEdited) {
-      this.updateImagesByEdited(mainImageItemName ?? '');
+      this.updateImagesByEdited(mainImageItemId ?? '');
       this.showToast('Sken byl přesunut do Upravených.');
     }
 
     this.setDisplayedImages();
 
-    const newImage = this.displayedImages().find(img => img._id === mainImageItemName)
-      || this.displayedImages()[0]
-      || { url: '' };
+    const imageList = this.displayedImagesFinal();
+    const newImage = imageList.find(img => img._id === mainImageItemId) || imageList[0] || { url: '' };
+    this.setMainImage(newImage);
+
+    scrollToSelectedImage();
+  }
+
+  togglePageNumberFilter(filter: string | null): void {
+    this.clickedPageNumberFilter = true;
+    this.updateImagesByCurrentPages();
+    
+    this.selectedPageNumberFilter.update(prev => prev === filter ? null : filter);
+    localStorage.setItem('filterPageNumber', this.selectedPageNumberFilter() ?? '');
+    
+    const mainImageItemId = this.mainImageItem()._id;
+
+    this.setDisplayedImages();
+
+    const imageList = this.displayedImagesFinal();
+    const newImage = imageList.find(img => img._id === mainImageItemId) || imageList[0] || { url: '' };
     this.setMainImage(newImage);
 
     scrollToSelectedImage();
@@ -293,7 +318,10 @@ export class ImagesService {
       this.toggleMainImageOrCanvas();
       this.renderFullImageAndCanvas(updated);
       this.loadingMain = false;
-      defer(() => this.setDisplayedImages(), 100);
+      defer(() => {
+        this.setDisplayedImages();
+        if (this.clickedPageNumberFilter) this.clickedPageNumberFilter = false; // Don't move image to edited when click on page number filter
+      }, 100);
     };
 
     if (img.url) {
@@ -411,7 +439,7 @@ export class ImagesService {
 
       this.mainImageItem.set({ ...imgItem, url: c.toDataURL('image/jpeg') });
 
-      if (imgItem._id && lastMainImageItemName && imgItem._id !== lastMainImageItemName && this.imgWasEdited) {
+      if (imgItem._id && lastMainImageItemName && imgItem._id !== lastMainImageItemName && this.imgWasEdited && !this.clickedPageNumberFilter) {
         this.updateImagesByEdited(lastMainImageItemName);
       }
     }
@@ -468,7 +496,7 @@ export class ImagesService {
     PREV / NEXT IMAGE
   ------------------------------ */    
   showPrevImage(): void {
-    if (this.currentIndex() === 0 || !this.displayedImages().length) return;
+    if (this.currentIndex() === 0 || !this.displayedImagesFinal().length) return;
     this.updateImagesByCurrentPages();
     this.showImage(-1);
     if (this.imgWasEdited) defer(() => {
@@ -478,7 +506,8 @@ export class ImagesService {
   }
 
   showNextImage(): void {
-    if (this.currentIndex() === this.displayedImages().length - 1 || !this.displayedImages().length) return;
+    const displayedImages = this.displayedImagesFinal();
+    if (this.currentIndex() === displayedImages.length - 1 || !displayedImages.length) return;
     this.updateImagesByCurrentPages();
     this.showImage(1);
     if (this.imgWasEdited) defer(() => {
@@ -488,7 +517,7 @@ export class ImagesService {
   }
 
   markImageOK(): void {
-    if (this.currentPages.find(p => p.edited) || this.imgWasEdited || !this.displayedImages().length) return;
+    if (this.currentPages.find(p => p.edited) || this.imgWasEdited || !this.displayedImagesFinal().length) return;
     
     this.imgWasEdited = false;
     this.images.update(prev =>
@@ -511,7 +540,7 @@ export class ImagesService {
   }
 
   private showImage(offset: number): void {
-    const displayedImages = this.displayedImages();
+    const displayedImages = this.displayedImagesFinal();
     const newIndex = ((this.currentIndex() + offset + displayedImages.length) % displayedImages.length);
     this.setMainImage(displayedImages.length !== 1 ? displayedImages[newIndex] : this.emptyImageItem);
     if (displayedImages.length === 1) {
@@ -701,7 +730,7 @@ export class ImagesService {
   }
   
   addPage(): void {
-    if (this.currentPages.length >= this.maxPages || !this.displayedImages().length) return;
+    if (this.currentPages.length >= this.maxPages || !this.displayedImagesFinal().length) return;
 
     if (this.pageWasEdited) this.updateCurrentPagesWithEdited();
     
@@ -818,10 +847,6 @@ export class ImagesService {
   closeDialog(): void {
     this.dialogOpen.set(false);
     this.dialogOpened = false;
-  }
-
-  upload(): void {
-    console.log('should upload');
   }
 
   openSettings(): void {
@@ -962,7 +987,7 @@ export class ImagesService {
       'PageDown', 'PageUp',                                 // (+ PageUp / PageDown)
       'm', 'M', 'g', 'G',                                   // Mřížka / grid
       'o', 'O',                                             // Obrys / outline
-      'Enter',                                              // Sken je OK, + control/cmd = dokončit
+      'Enter',                                              // Přesunout sken do OK, + control/cmd = dokončit
       'r', 'R',                                             // + control/cmd = reset změn skenu; + control/cmd + shift = reset změn dokumentu
       'F1', 'F2', 'F3', 'F4',                               // Filters
       'Shift',                                              // 1 -> 10
@@ -987,10 +1012,7 @@ export class ImagesService {
     // Select left / right page OR Filters number of pages
     if ((key === '+' || key === 'ě' || key === 'Ě' || key === '1' || key === '2') && !event.ctrlKey && !this.dialogOpen()) {
       if (event.altKey || event.metaKey) {
-        const filter = ['+', '1'].includes(key) ? 'single' : 'double';
-        this.selectedFilter = filter;
-        localStorage.setItem('filter', this.selectedFilter);
-        this.switchFilter(this.selectedFilter);
+        this.togglePageNumberFilter(['+', '1'].includes(key) ? 'single' : 'double');
         return;
       }
       
@@ -1413,7 +1435,7 @@ export class ImagesService {
       this.currentPages.forEach(p => this.drawPage(p));
     }
 
-    // Sken je OK
+    // Přesunout sken do OK
     if (key === 'Enter' && !event.ctrlKey && !event.metaKey && !this.dialogOpen()) this.markImageOK();
 
     // Dokončit
@@ -1450,7 +1472,7 @@ export class ImagesService {
         ((key === 'R' && event.ctrlKey && event.shiftKey && !event.metaKey && !event.altKey)
         || (key === 'R' && event.metaKey && event.shiftKey && !event.ctrlKey && !event.altKey))
       ) {
-        this.openResetDoc();
+        // this.openResetDoc();
       } else if (
         !this.dialogOpen() &&
         ((key === 'r' && event.metaKey && !event.ctrlKey && !event.shiftKey && !event.altKey)

@@ -19,7 +19,7 @@ export class BottomPanelComponent {
   ------------------------------ */
   fitToScreen(): void {
     const imgSvc = this.imagesService;
-    const img = imgSvc.displayedImages().find(img => img._id === imgSvc.mainImageItem()._id);
+    const img = imgSvc.displayedImagesFinal().find(img => img._id === imgSvc.mainImageItem()._id);
     if (!img) return;
     imgSvc.setMainImage(img);
   }

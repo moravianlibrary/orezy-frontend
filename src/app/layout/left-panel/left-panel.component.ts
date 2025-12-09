@@ -15,6 +15,10 @@ import { flagMessages } from '../../app.config';
 export class LeftPanelComponent {
   imagesService = inject(ImagesService);
 
+  pageImagesNumber(number: number): number {
+    return this.imagesService.displayedImages().filter(img => img.pages.length === number).length;
+  }
+
 
   /* ------------------------------
     LAZY IMAGES LOADING
@@ -27,7 +31,7 @@ export class LeftPanelComponent {
 
       const img = entry.target as HTMLImageElement;
       const id = img.dataset['id']!;
-      const targetImg = this.imagesService.images().find(x => x._id === id);
+      const targetImg = this.imagesService.images().find(img => img._id === id);
 
       if (targetImg?.thumbnailUrl) {
         img.src = targetImg.thumbnailUrl;

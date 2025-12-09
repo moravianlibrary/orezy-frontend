@@ -1,7 +1,7 @@
 <div class="left-part button-group">
   <span
     class="button secondary"
-    [class.disabled]="imagesService.currentIndex() === 0 || !imagesService.displayedImages().length"
+    [class.disabled]="imagesService.currentIndex() === 0 || !imagesService.displayedImagesFinal().length"
     (click)="imagesService.showPrevImage()"
   >
     <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -11,7 +11,7 @@
   </span>
   <span
     class="button secondary"
-    [class.disabled]="imagesService.currentIndex() === imagesService.displayedImages().length - 1 || !imagesService.displayedImages().length"
+    [class.disabled]="imagesService.currentIndex() === imagesService.displayedImagesFinal().length - 1 || !imagesService.displayedImagesFinal().length"
     (click)="this.imagesService.showNextImage()"
   >
     <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -22,11 +22,11 @@
   @if (imagesService.selectedFilter === 'flagged') {
     <span
       class="button secondary mark-ok"
-      [class.disabled]="wasAnyPageEdited || imagesService.imgWasEdited || !imagesService.displayedImages().length"
+      [class.disabled]="wasAnyPageEdited || imagesService.imgWasEdited || !imagesService.displayedImagesFinal().length"
       (click)="imagesService.markImageOK()"
       title="Přesune sken do OK. Použijte v případě, že by sken neměl být podezřelý. Sken je možné přesunout pouze bez jakýchkoliv uživatelských úprav."
     >
-      Sken je OK
+      Přesunout sken do OK
       <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
         <path d="M13.78 4.72a.75.75 0 0 1 0 1.06l-6 6a.75.75 0 0 1-1.06 0l-3-3a.75.75 0 1 1 1.06-1.06l2.47 2.47 5.47-5.47a.75.75 0 0 1 1.06 0Z" />
       </svg>

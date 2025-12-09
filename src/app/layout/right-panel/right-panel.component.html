@@ -1,6 +1,6 @@
 <div class="header top border-bottom">
   <span class="title-menu-wrapper">
-    <h1>Sken {{ getCurrentIndexImage() }}/{{ imagesService.displayedImages().length }}</h1>
+    <h1>Sken {{ currentIndexImage }}/{{ imagesService.displayedImagesFinal().length }}</h1>
     <app-menu [type]="'menu-secondary'" />
 </span>
   @for (flag of imagesService.mainImageItem().flags; track flag) {
@@ -31,7 +31,7 @@
   <span class="actions">
     <span
       class="action"
-      [class.disabled]="imagesService.currentPages.length >= imagesService.maxPages || !imagesService.displayedImages().length"
+      [class.disabled]="imagesService.currentPages.length >= imagesService.maxPages || !imagesService.displayedImagesFinal().length"
       (click)="imagesService.addPage()"
     >
       Přidat výřez

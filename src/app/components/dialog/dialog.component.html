@@ -41,7 +41,7 @@
       @if (imagesService.dialogContentType() === 'shortcuts') {
         <div class="shortcuts-content-wrapper">
           <table cellspacing="0" cellpadding="0">
-            <tr><th>Vybrat výřez</th><td>+, Ě, 1, 2</td></tr>
+            <tr><th>Vybrat výřez</th><td>1, 2</td></tr>
             <tr><th>Vybrat při překrývání ten druhý výřez</th><td>Shift + MouseLeftClick</td></tr>
             <tr><th>Zrušit výběr výřezu</th><td>Esc</td></tr>
             <tr><th>Smazat výřez</th><td>Backspace, Delete</td></tr>
@@ -55,10 +55,10 @@
             <tr><th>Předchozí / další sken</th><td>←, →, ↑, ↓, PageUp, PageDown</td></tr>
             <tr><th>Sken je OK</th><td>Enter</td></tr>
             <tr><th>Přepnout filter</th><td>F1, F2, F3, F4</td></tr>
-            <tr><th>Přepnout filter počet výřezů</th><td>Alt / Cmd + +, Ě, 1, 2</td></tr>
+            <tr><th>Přepnout filter počet výřezů</th><td>Alt / Cmd + 1, 2</td></tr>
             <tr><th>Reset mých změn ve skenu</th><td>Ctrl / Cmd + R</td></tr>
             <tr><th>Dokončit</th><td>Ctrl / Cmd + Enter</td></tr>
-            <tr><th>Reset změn v dokumentu</th><td>Ctrl / Cmd + Shift + R</td></tr>
+            <!-- <tr><th>Reset změn v dokumentu</th><td>Ctrl / Cmd + Shift + R</td></tr> -->
             <tr><th>Otevřít klávesové zkratky</th><td>K</td></tr>
           </table>
         </div>
@@ -69,7 +69,7 @@
   }
 
   <footer class="dialog-footer">
-    @for (btn of imagesService.dialogButtons(); track $index) {
+    @for (btn of imagesService.dialogButtons(); track btn) {
       <span
         (click)="btn.action ? btn.action() : null; close()"
         class="button real-button"

@@ -25,8 +25,8 @@ export class RightPanelComponent {
   /* ------------------------------
     HEADER
   ------------------------------ */
-  getCurrentIndexImage(): number {
-    const images = this.imagesService.displayedImages();
+  get currentIndexImage(): number {
+    const images = this.imagesService.displayedImagesFinal();
     const current = this.imagesService.mainImageItem();
     return images.findIndex(img => img._id === current._id) + 1;
   }

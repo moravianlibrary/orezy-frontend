@@ -69,10 +69,13 @@ export class EditorComponent {
         imgSvc.gridMode.set(localStorage.getItem('gridMode') as GridMode ?? 'when-rotating');
         imgSvc.gridRadio.set(imgSvc.gridMode());
         imgSvc.selectedFilter = localStorage.getItem('filter') ?? 'flagged';
+        imgSvc.selectedPageNumberFilter.set(localStorage.getItem('filterPageNumber') || null);
         imgSvc.setDisplayedImages();
-        if (!imgSvc.displayedImages().length) imgSvc.loadingMain = false;;
-        const [firstImage] = imgSvc.displayedImages();
-        if (firstImage) imgSvc.setMainImage(firstImage);
+        
+        const imageList = imgSvc.displayedImagesFinal();
+        if (!imageList.length) imgSvc.loadingMain = false;;
+        const newImage = imageList.find(img => img._id === imgSvc.mainImageItem()._id) || imageList[0] || { url: '' };
+        imgSvc.setMainImage(newImage);
       });
   }
 
