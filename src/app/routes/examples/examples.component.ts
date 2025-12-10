@@ -31,10 +31,13 @@ export class ExamplesComponent {
     });
   }
 
-  getUrl(example: ExampleBook): string {
+  shouldHaveLink(state: string): boolean {
+    return ['ready', 'user_approved', 'completed'].includes(state);
+  }
+
+  getUrl(example: ExampleBook): string | null {
     const base = window.location.origin;
-    const shouldHaveLink = ['ready', 'user_approved', 'completed'].includes(example.state);
-    return shouldHaveLink ? `${base}/book/${example._id}` : 'javascript:void(0)';
+    return this.shouldHaveLink(example.state) ? `${base}/book/${example._id}` : null;
   }
 
   getDate(input: string): string {
