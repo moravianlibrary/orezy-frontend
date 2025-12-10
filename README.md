@@ -21,7 +21,8 @@ First define configuration in environment variables
 export APP_DEV_MODE=false
 export APP_ENV_NAME="local npm run build"
 export APP_ENV_CODE="l-nrb"
-export APP_DATA_SERVER_URL="https://ai-orezy-data.test.api.trinera.cloud/SECRET"
+export APP_DATA_SERVER_URL="https://ai-orezy-data.test.api.trinera.cloud"
+export APP_DATA_SERVER_AUTH_TOKEN="SECRET"
 ```
 
 
@@ -65,7 +66,7 @@ You don't need this to run localy built Docker image.
 
 ```
 docker push trinera/orezy-frontend:0.0.0
-docker push trinera/anakon:latest
+docker push trinera/orezy-frontend:latest
 ```
 
 ### Run Docker image
@@ -78,7 +79,8 @@ Run locally built Docker image
 ```
 docker run -p 1234:80 \
   -e APP_DEV_MODE=false \
-  -e APP_DATA_SERVER_URL=https://ai-orezy-data.test.api.trinera.cloud/SECRET \
+  -e APP_DATA_SERVER_URL=https://ai-orezy-data.test.api.trinera.cloud \
+  -e APP_DATA_SERVER_AUTH_TOKEN=SECRET \
 trinera/orezy-frontend
 ```
 
@@ -86,7 +88,8 @@ trinera/orezy-frontend
 ```
 docker run -p 1234:80 \
   -e APP_DEV_MODE=false \
-  -e APP_DATA_SERVER_URL=https://ai-orezy-data.test.api.trinera.cloud/SECRET \
+  -e APP_DATA_SERVER_URL=https://ai-orezy-data.test.api.trinera.cloud \
+  -e APP_DATA_SERVER_AUTH_TOKEN=SECRET \
 trinera/orezy-frontend:latest
 ```
 or
@@ -94,7 +97,8 @@ or
 ```
 docker run -p 1234:80 \
   -e APP_DEV_MODE=false \
-  -e APP_DATA_SERVER_URL=https://ai-orezy-data.test.api.trinera.cloud/SECRET \
+  -e APP_DATA_SERVER_URL=https://ai-orezy-data.test.api.trinera.cloud \
+  -e APP_DATA_SERVER_AUTH_TOKEN=SECRET \
 trinera/orezy-frontend:0.0.0
 ```
 
@@ -108,7 +112,8 @@ Run image that someone built and pushed to Dockerhub.
 docker pull trinera/orezy-frontend:latest
 docker run -p 1234:80 \
   -e APP_DEV_MODE=false \
-  -e APP_DATA_SERVER_URL=https://ai-orezy-data.test.api.trinera.cloud/SECRET \
+  -e APP_DATA_SERVER_URL=https://ai-orezy-data.test.api.trinera.cloud \
+  -e APP_DATA_SERVER_AUTH_TOKEN=SECRET \
 trinera/orezy-frontend
 ```
 

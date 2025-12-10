@@ -23,6 +23,7 @@ export class AppComponent {
       environmentName: this.envService.get('environmentName'),
 
       serverBaseUrl: this.envService.get('serverBaseUrl'),
+      authToken: this.envService.get('authToken'),
 
       gitCommitHash: this.envService.get('git_commit_hash'),
       gitTag: this.envService.get('git_tag'),
