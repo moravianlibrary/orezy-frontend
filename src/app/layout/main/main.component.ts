@@ -407,8 +407,6 @@ export class MainComponent {
       if (imgSvc.isDragging) {
         if (ev.type === 'mousemove') {
           el.style.cursor = this.moveCursor;
-          imgSvc.pageWasEdited = true;
-          imgSvc.imgWasEdited = true;
           this.dragPage(ev);
         }
 
@@ -451,7 +449,6 @@ export class MainComponent {
           imgSvc.startHit = null;
           imgSvc.isRotating = false;
           imgSvc.rotationStartPage = null;
-          imgSvc.pageWasEdited = true;
           imgSvc.redrawImage();
           imgSvc.currentPages.forEach(p => imgSvc.drawPage(p));
           imgSvc.mainImageItem.set({ ...imgSvc.mainImageItem(), url: imgSvc.c.toDataURL('image/jpeg') });
@@ -478,7 +475,6 @@ export class MainComponent {
         imgSvc.resizeMode = null;
         imgSvc.resizeStartPage = null;
         imgSvc.resizeStartMouse = null;
-        imgSvc.pageWasEdited = true;
         imgSvc.redrawImage();
         imgSvc.currentPages.forEach(p => imgSvc.drawPage(p));
         imgSvc.mainImageItem.set({ ...imgSvc.mainImageItem(), url: imgSvc.c.toDataURL('image/jpeg') });
@@ -542,6 +538,8 @@ export class MainComponent {
       p._id === updatedPage._id ? updatedPage : p
     );
 
+    imgSvc.pageWasEdited = true;
+    imgSvc.imgWasEdited = true;
     imgSvc.redrawImage();
     imgSvc.currentPages.forEach(p => imgSvc.drawPage(p));
   }
@@ -607,6 +605,8 @@ export class MainComponent {
       p._id === updatedPage._id ? updatedPage : p
     );
 
+    imgSvc.pageWasEdited = true;
+    imgSvc.imgWasEdited = true;
     imgSvc.redrawImage();
     imgSvc.currentPages.forEach(p => imgSvc.drawPage(p));
   }
@@ -628,6 +628,9 @@ export class MainComponent {
     if (mode.area === 'corner') {
       this.applyCornerResize(updated, startPage, mode.corner!, ev);
     }
+
+    imgSvc.pageWasEdited = true;
+    imgSvc.imgWasEdited = true;
   }
 
   // TO DO: REFACTOR!
@@ -1623,20 +1626,18 @@ export class MainComponent {
         // TO DO
         if (newBottom > 1) {
           newBottom = 1;
-          const maxMy = Math.min((1 - start.bottom) * ch, my);
-          const mouseDist = Math.hypot(maxMy, mx);
-          const beta = Math.acos((1 - start.bottom) * ch / mouseDist);
-          if (Math.sign(my) > 0) {
-            const gamma = Math.PI / 2 - rad - beta;
-            newHeight = start.height + mouseDist * Math.sin(gamma) / ch;
-            newWidth = start.width + mouseDist * Math.cos(gamma) / cw;
-          } else {
-            const gamma = beta - rad;
-            newHeight = start.height - mouseDist * Math.cos(gamma) / ch;
-            newWidth = start.width + mouseDist * Math.sin(gamma) / cw;
-          }
-          newTop = start.top - (newHeight - start.height) * cos;
+          
+          const dW = (1 - start.bottom) * inverseRatio / sin;
+          newWidth = start.width + dW;
+
+          const mouseDist = Math.hypot(mx, my);
+          // const beta = Math.acos(mx / mouseDist);
+          const threshold = (1 - start.bottom) * ch;
+          const dH = Math.sqrt(mouseDist**2 - (dW * cw)**2) / ch;
+          // newHeight = start.height + (my < threshold ? 1 : -1) * dH;
+          // newTop = start.top - cos * dH;
           newBottom = start.bottom + (newWidth - start.width) * sin * ratio;
+          newRight = start.right + sin * dH * inverseRatio + cos * dW;
         }
 
         if (newTop < 0) {

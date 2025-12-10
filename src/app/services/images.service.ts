@@ -13,9 +13,9 @@ export class ImagesService {
   private http = inject(HttpClient);
   private envService = inject(EnvironmentService);
   
-  private get serverBaseUrl(): string {
+  private get token(): string {
     // Because envService might not be initialized at construction time
-    return this.envService.get('serverBaseUrl') as string;
+    return this.envService.get('authToken') as string;
   }
 
 
@@ -113,11 +113,10 @@ export class ImagesService {
 
   private headers(type: string = 'json', contentType: boolean = false): HttpHeaders {
     const authType = 'Bearer';
-    const token = '2fMRGgdFqWG1xJdPoiyVT6hKuwxKe2JmimxPbDtrmrpOUuW86uLwdGurVDxLPjPT';
 
     return new HttpHeaders({
       accept: type === 'json' ? 'application/json' : '*/*',
-      Authorization: `${authType} ${token}`,
+      Authorization: `${authType} ${this.token}`,
       ...(contentType && { 'Content-Type': 'application/json' })
     });
   }
@@ -160,9 +159,9 @@ export class ImagesService {
     if (this.pageWasEdited) this.updateCurrentPagesWithEdited();
     if (this.imgWasEdited) this.updateImagesByEdited(this.mainImageItem()._id);
     this.selectedPage = null;
-    this.updateMainImageItemAndImages();
     this.redrawImage();
     this.currentPages.forEach(p => this.drawPage(p));
+    this.updateMainImageItemAndImages();
     this.updatePages(this.book(), this.images().filter(img => img.edited))
       .subscribe({
         next: () => {
@@ -536,7 +535,6 @@ export class ImagesService {
 
     this.showImage(1);
     this.showToast('Sken byl přesunut do OK.');
-    if (this.imgWasEdited) defer(() => this.setDisplayedImages(), 100);
   }
 
   private showImage(offset: number): void {
@@ -1426,7 +1424,7 @@ export class ImagesService {
       this.redrawImage();
       this.currentPages.forEach(p => this.drawPage(p));
     }
-    if ( // Is rotating ON
+    if ( // Is rotating ON (to show grid if when-rotating)
       (((event.ctrlKey || event.metaKey) && key === 'Alt') || (['Control', 'Meta'].includes(key) && event.altKey))
       && this.selectedPage && !this.dialogOpen()
     ) {

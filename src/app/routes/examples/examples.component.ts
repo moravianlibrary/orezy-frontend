@@ -33,8 +33,8 @@ export class ExamplesComponent {
 
   getUrl(example: ExampleBook): string {
     const base = window.location.origin;
-    const isBookPage = example.state === 'ready' || example.state === 'user_approved';
-    return isBookPage ? `${base}/book/${example._id}` : 'javascript:void(0)';
+    const shouldHaveLink = ['ready', 'user_approved', 'completed'].includes(example.state);
+    return shouldHaveLink ? `${base}/book/${example._id}` : 'javascript:void(0)';
   }
 
   getDate(input: string): string {

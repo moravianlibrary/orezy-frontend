@@ -11,7 +11,7 @@
         <td><a [href]="getUrl(example)">{{ example._id }}</a></td>
         <td><a [href]="getUrl(example)"><span
           class="tag"
-          [class.success]="['ready', 'user_approved'].includes(example.state)"
+          [class.success]="['ready', 'user_approved', 'completed'].includes(example.state)"
           [class.progress]="example.state === 'in_progress'"
           [class.error]="example.state === 'failed'"
         >{{ example.state }}</span></a></td>
