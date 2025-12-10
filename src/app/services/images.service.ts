@@ -13,10 +13,8 @@ export class ImagesService {
   private http = inject(HttpClient);
   private envService = inject(EnvironmentService);
   
-  private get token(): string {
-    // Because envService might not be initialized at construction time
-    return this.envService.get('authToken') as string;
-  }
+  private get apiUrl(): string { return this.envService.get('serverBaseUrl') };
+  private get token(): string { return this.envService.get('authToken') as string }; // Because envService might not be initialized at construction time
 
 
   /* ------------------------------
@@ -109,8 +107,6 @@ export class ImagesService {
   /* ------------------------------
     API
   ------------------------------ */
-  private apiUrl: string = 'https://api.ai-orezy.trinera.cloud';
-
   private headers(type: string = 'json', contentType: boolean = false): HttpHeaders {
     const authType = 'Bearer';
 

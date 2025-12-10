@@ -7,7 +7,7 @@ export const environment = {
     environmentName: 'deployed (branch dev)', // pro produkci ziskej z promenne APP_ENV_NAME (přes env.json)
     environmentCode: 'd_d', // pro produkci ziskej z promenne APP_ENV_CODE (přes env.json)
 
-    serverBaseUrl: '', // pro produkci ziskej z promenne APP_DATA_SERVER_URL (přes env.json)
+    serverBaseUrl: 'https://api.ai-orezy.trinera.cloud', // pro produkci ziskej z promenne APP_DATA_SERVER_URL (přes env.json)
     authToken: '2fMRGgdFqWG1xJdPoiyVT6hKuwxKe2JmimxPbDtrmrpOUuW86uLwdGurVDxLPjPT',
         
 }
