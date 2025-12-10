@@ -51,12 +51,12 @@ docker build -t orezy-frontend .
 
 possibly including version tag  
 ```
-docker build -t trinera/orezy-frontend:0.0.0 .
+docker build -t trinera/orezy-frontend:1.0.0-dev .
 ```
 
 or including version tag and tag `latest`
 ```
-docker build -t trinera/orezy-frontend:latest -t trinera/orezy-frontend:0.0.0 .
+docker build -t trinera/orezy-frontend:latest -t trinera/orezy-frontend:1.0.0-dev .
 ```
 
 ### Push to Dockerhub
@@ -65,7 +65,7 @@ Only if you have write access to Dockerhub repository trinera/orezy-frontend.
 You don't need this to run localy built Docker image.
 
 ```
-docker push trinera/orezy-frontend:0.0.0
+docker push trinera/orezy-frontend:1.0.0-dev
 docker push trinera/orezy-frontend:latest
 ```
 
@@ -99,7 +99,7 @@ docker run -p 1234:80 \
   -e APP_DEV_MODE=false \
   -e APP_DATA_SERVER_URL=https://ai-orezy-data.test.api.trinera.cloud \
   -e APP_DATA_SERVER_AUTH_TOKEN=SECRET \
-trinera/orezy-frontend:0.0.0
+trinera/orezy-frontend:1.0.0-dev
 ```
 
 #### Image pulled from Docker Hub
