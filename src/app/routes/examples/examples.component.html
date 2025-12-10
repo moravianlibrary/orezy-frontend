@@ -6,12 +6,12 @@
     <tr><th>ID</th><th>Stav</th><th>Vytvořeno</th><th>Upraveno</th></tr>
     @for (example of examples(); track example) {
       @let hasLink = shouldHaveLink(example.state);
-      @let url = hasLink ? getUrl(example) : null;
+      @let url = getUrl(example);
       <tr
         [class.link]="hasLink"
-        (click)="!hasLink && $event.preventDefault()"
+        (click)="!hasLink ? $event.preventDefault() : null"
       >
-        @if (url) {
+        @if (hasLink) {
           <td><a [href]="url">{{ example._id }}</a></td>
           <td><a [href]="url"><span
             class="tag"
@@ -21,7 +21,8 @@
           >{{ example.state }}</span></a></td>
           <td><a [href]="url">{{ getDate(example.created_at) }}</a></td>
           <td><a [href]="url">{{ getDate(example.modified_at) }}</a></td>
-        } @else {
+        }
+        @else {
           <td><a>{{ example._id }}</a></td>
           <td><a><span
             class="tag"
