@@ -14,7 +14,7 @@ export class ImagesService {
   private envService = inject(EnvironmentService);
   
   private get apiUrl(): string { return this.envService.get('serverBaseUrl') };
-  private get token(): string { return this.envService.get('authToken') as string }; // Because envService might not be initialized at construction time
+  private get token(): string { return this.envService.get('authToken') as string };
 
 
   /* ------------------------------

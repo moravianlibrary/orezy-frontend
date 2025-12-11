@@ -1605,6 +1605,20 @@ export class MainComponent {
           newBottom = start.bottom - sin * (start.width - newWidth) * ratio;
         }
 
+        if (newTop < 0) {
+          newTop = 0;
+          const dH = start.top / cos;
+          newHeight = start.height + dH;
+          newRight += dxY + sin * dH * inverseRatio;
+        }
+
+        if (newBottom > 1) {
+          newBottom = 1;
+          const dW = (1 - start.bottom) * inverseRatio / sin;
+          newWidth = start.width + dW;
+          newRight -= dxX - cos * dW;
+        }
+
         if (newRight > 1) {
           newRight = 1;
           const maxMx = Math.min((1 - start.right) * cw, mx);
@@ -1621,27 +1635,6 @@ export class MainComponent {
           }
           newTop = start.top - (newHeight - start.height) * cos;
           newBottom = start.bottom + (newWidth - start.width) * sin * ratio;
-        }
-
-        // TO DO
-        if (newBottom > 1) {
-          newBottom = 1;
-          
-          const dW = (1 - start.bottom) * inverseRatio / sin;
-          newWidth = start.width + dW;
-
-          const mouseDist = Math.hypot(mx, my);
-          // const beta = Math.acos(mx / mouseDist);
-          const threshold = (1 - start.bottom) * ch;
-          const dH = Math.sqrt(mouseDist**2 - (dW * cw)**2) / ch;
-          // newHeight = start.height + (my < threshold ? 1 : -1) * dH;
-          // newTop = start.top - cos * dH;
-          newBottom = start.bottom + (newWidth - start.width) * sin * ratio;
-          newRight = start.right + sin * dH * inverseRatio + cos * dW;
-        }
-
-        if (newTop < 0) {
-
         }
       }
 
@@ -1680,26 +1673,37 @@ export class MainComponent {
           newBottom = start.top + sin * start.width * ratio - sin * (start.width - newWidth) * ratio;
         }
 
-        // TO DO
-        if (newRight > 1) {}
+        if (newLeft < 0) {
+          newLeft = 0;
+          const dH = start.left / sin * ratio;
+          newHeight = start.height + dH;
+          newBottom -= dyY - cos * dH;
+        }
+
+        if (newRight > 1) {
+          newRight = 1;
+          const dW = (1 - start.right) / cos;
+          newWidth = start.width + dW;
+          newBottom -= dyX - sin * dW * ratio;
+        }
+
         if (newBottom > 1) {
           newBottom = 1;
           const maxMy = Math.min((1 - start.bottom) * ch, my);
           const mouseDist = Math.hypot(maxMy, mx);
           const beta = Math.acos((1 - start.bottom) * ch / mouseDist);
-          if (Math.sign(my) > 0) {
+          if (Math.sign(mx) > 0) {
             const gamma = Math.PI / 2 - rad - beta;
             newHeight = start.height + mouseDist * Math.sin(gamma) / ch;
             newWidth = start.width + mouseDist * Math.cos(gamma) / cw;
           } else {
             const gamma = beta - rad;
-            newHeight = start.height - mouseDist * Math.cos(gamma) / ch;
-            newWidth = start.width + mouseDist * Math.sin(gamma) / cw;
+            newHeight = start.height + mouseDist * Math.cos(gamma) / ch;
+            newWidth = start.width - mouseDist * Math.sin(gamma) / cw;
           }
-          newTop = start.top - (newHeight - start.height) * cos;
-          newBottom = start.bottom + (newWidth - start.width) * sin * ratio;
+          newLeft = start.left - (newHeight - start.height) * sin * inverseRatio;
+          newRight = start.right + (newWidth - start.width) * cos;
         }
-        if (newLeft < 0) {}
       }
 
       if (
@@ -1738,10 +1742,37 @@ export class MainComponent {
           newLeft = start.left + sin * start.height * inverseRatio + cos * (start.width - newWidth);
         }
 
-        // TO DO
-        if (newTop < 0) {}
-        if (newBottom > 1) {}
-        if (newLeft < 0) {}
+        if (newTop < 0) {
+          newTop = 0;
+          const dW = start.top / sin * inverseRatio;
+          newWidth = start.width + dW;
+          newLeft -= dxX + cos * dW;
+        }
+
+        if (newBottom > 1) {
+          newBottom = 1;
+          const dH = (1 - start.bottom) / cos;
+          newHeight = start.height + dH;
+          newLeft -= dxY + sin * dH * inverseRatio;
+        }
+
+        if (newLeft < 0) {
+          newLeft = 0;
+          const maxMx = Math.min(start.left * cw, Math.abs(mx));
+          const mouseDist = Math.hypot(maxMx, my);
+          const beta = Math.acos(start.left * cw / mouseDist);
+          if (Math.sign(my) > 0) {
+            const gamma = Math.PI / 2 - rad - beta;
+            newHeight = start.height + mouseDist * Math.cos(gamma) / ch;
+            newWidth = start.width + mouseDist * Math.sin(gamma) / cw;
+          } else {
+            const gamma = beta - rad;
+            newHeight = start.height - mouseDist * Math.sin(gamma) / ch;
+            newWidth = start.width + mouseDist * Math.cos(gamma) / cw;
+          }
+          newTop = start.top - (newWidth - start.width) * sin * ratio;
+          newBottom = start.bottom + (newHeight - start.height) * cos;
+        }
       }
 
       if (
@@ -1780,10 +1811,37 @@ export class MainComponent {
           newLeft = start.left + cos * (start.width - newWidth);
         }
 
-        // TO DO
-        if (newTop < 0) {}
-        if (newRight > 1) {}
-        if (newLeft < 0) {}
+        if (newLeft < 0) {
+          newLeft = 0;
+          const dW = start.left / cos;
+          newWidth = start.width + dW;
+          newTop -= dyX + sin * dW * ratio;
+        }
+
+        if (newRight > 1) {
+          newRight = 1;
+          const dH = (1 - start.right) * ratio / sin;
+          newHeight = start.height + dH;
+          newTop += dyY - cos * dH;
+        }
+
+        if (newTop < 0) {
+          newTop = 0;
+          const maxMy = Math.min(start.top * ch, Math.abs(my));
+          const mouseDist = Math.hypot(maxMy, mx);
+          const beta = Math.acos(start.top * ch / mouseDist);
+          if (Math.sign(mx) < 0) {
+            const gamma = Math.PI / 2 - rad - beta;
+            newHeight = start.height + mouseDist * Math.sin(gamma) / ch;
+            newWidth = start.width + mouseDist * Math.cos(gamma) / cw;
+          } else {
+            const gamma = beta - rad;
+            newHeight = start.height + mouseDist * Math.cos(gamma) / ch;
+            newWidth = start.width - mouseDist * Math.sin(gamma) / cw;
+          }
+          newLeft = start.left - (newWidth - start.width) * cos;
+          newRight = start.right + (newHeight - start.height) * sin * inverseRatio;
+        }
       }
     }
 
@@ -2069,10 +2127,37 @@ export class MainComponent {
           newRight = start.right - cos * (start.width - newWidth) - sin * start.height * inverseRatio;
         }
 
-        // TO DO
-        if (newRight > 1) {}
-        if (newBottom > 1) {}
-        if (newTop < 0) {}
+        if (newTop < 0) {
+          newTop = 0;
+          const dW = start.top * inverseRatio / sin;
+          newWidth = start.width + dW;
+          newRight += dxY + cos * dW;
+        }
+
+        if (newBottom > 1) {
+          newBottom = 1;
+          const dH = (1 - start.bottom) / cos;
+          newHeight = start.height + dH;
+          newRight -= dxX - sin * dH * inverseRatio;
+        }
+
+        if (newRight > 1) {
+          newRight = 1;
+          const maxMx = Math.min((1 - start.right) * cw, mx);
+          const mouseDist = Math.hypot(maxMx, my);
+          const beta = Math.acos((1 - start.right) * cw / mouseDist);
+          if (Math.sign(my) > 0) {
+            const gamma = Math.PI / 2 - rad - beta;
+            newHeight = start.height + mouseDist * Math.cos(gamma) / ch;
+            newWidth = start.width + mouseDist * Math.sin(gamma) / cw;
+          } else {
+            const gamma = beta - rad;
+            newHeight = start.height - mouseDist * Math.sin(gamma) / ch;
+            newWidth = start.width + mouseDist * Math.cos(gamma) / cw;
+          }
+          newTop = start.top - (newWidth - start.width) * sin * ratio;
+          newBottom = start.bottom + (newHeight - start.height) * cos;
+        }
       }
 
       if (
@@ -2111,10 +2196,37 @@ export class MainComponent {
           newLeft = start.left + cos * (start.width - newWidth);
         }
 
-        // TO DO
-        if (newRight > 1) {}
-        if (newBottom > 1) {}
-        if (newLeft < 0) {}
+        if (newLeft < 0) {
+          newLeft = 0;
+          const dW = start.left / cos;
+          newWidth = start.width + dW;
+          newBottom -= dyY - sin * dW * ratio;
+        }
+
+        if (newRight > 1) {
+          newRight = 1;
+          const dH = (1 - start.right) * ratio / sin;
+          newHeight = start.height + dH;
+          newBottom -= dyX - cos * dH;
+        }
+
+        if (newBottom > 1) {
+          newBottom = 1;
+          const maxMy = Math.min((1 - start.bottom) * ch, my);
+          const mouseDist = Math.hypot(maxMy, mx);
+          const beta = Math.acos((1 - start.bottom) * ch / mouseDist);
+          if (Math.sign(mx) < 0) {
+            const gamma = Math.PI / 2 - rad - beta;
+            newHeight = start.height + mouseDist * Math.sin(gamma) / ch;
+            newWidth = start.width + mouseDist * Math.cos(gamma) / cw;
+          } else {
+            const gamma = beta - rad;
+            newHeight = start.height + mouseDist * Math.cos(gamma) / ch;
+            newWidth = start.width - mouseDist * Math.sin(gamma) / cw;
+          }
+          newLeft = start.left - (newWidth - start.width) * cos;
+          newRight = start.right + (newHeight - start.height) * sin * inverseRatio;
+        }
       }
 
       if (
@@ -2153,10 +2265,37 @@ export class MainComponent {
           newLeft = start.left + sin * start.height * inverseRatio + cos * (start.width - newWidth);
         }
 
-        // TO DO
-        if (newTop < 0) {}
-        if (newBottom > 1) {}
-        if (newLeft < 0) {}
+        if (newTop < 0) {
+          newTop = 0;
+          const dH = start.top / cos;
+          newHeight = start.height + dH;
+          newLeft -= dxX + sin * dH * inverseRatio;
+        }
+
+        if (newBottom > 1) {
+          newBottom = 1;
+          const dW = (1 - start.bottom) * inverseRatio / sin;
+          newWidth = start.width + dW;
+          newLeft -= dxY + cos * dW;
+        }
+
+        if (newLeft < 0) {
+          newLeft = 0;
+          const maxMx = Math.min(start.left * cw, Math.abs(mx));
+          const mouseDist = Math.hypot(maxMx, my);
+          const beta = Math.acos(start.left * cw / mouseDist);
+          if (Math.sign(my) < 0) {
+            const gamma = Math.PI / 2 - rad - beta;
+            newHeight = start.height + mouseDist * Math.cos(gamma) / ch;
+            newWidth = start.width + mouseDist * Math.sin(gamma) / cw;
+          } else {
+            const gamma = beta - rad;
+            newHeight = start.height - mouseDist * Math.sin(gamma) / ch;
+            newWidth = start.width + mouseDist * Math.cos(gamma) / cw;
+          }
+          newTop = start.top - (newHeight - start.height) * cos;
+          newBottom = start.bottom + (newWidth - start.width) * sin * ratio;
+        }
       }
 
       if (
@@ -2195,10 +2334,37 @@ export class MainComponent {
           newLeft = start.right - cos * start.width;
         }
 
-        // TO DO
-        if (newTop < 0) {}
-        if (newRight > 1) {}
-        if (newLeft < 0) {}
+        if (newLeft < 0) {
+          newLeft = 0;
+          const dH = start.left * ratio / sin;
+          newHeight = start.height + dH;
+          newTop -= dyX + cos * dH;
+        }
+
+        if (newRight > 1) {
+          newRight = 1;
+          const dW = (1 - start.right) / cos;
+          newWidth = start.width + dW;
+          newTop += dyY - sin * dW * ratio;
+        }
+
+        if (newTop < 0) {
+          newTop = 0;
+          const maxMy = Math.min(start.top * ch, Math.abs(my));
+          const mouseDist = Math.hypot(maxMy, mx);
+          const beta = Math.acos(start.top * ch / mouseDist);
+          if (Math.sign(mx) > 0) {
+            const gamma = Math.PI / 2 - rad - beta;
+            newHeight = start.height + mouseDist * Math.sin(gamma) / ch;
+            newWidth = start.width + mouseDist * Math.cos(gamma) / cw;
+          } else {
+            const gamma = beta - rad;
+            newHeight = start.height + mouseDist * Math.cos(gamma) / ch;
+            newWidth = start.width - mouseDist * Math.sin(gamma) / cw;
+          }
+          newLeft = start.left - (newHeight - start.height) * sin * inverseRatio;
+          newRight = start.right + (newWidth - start.width) * cos;
+        }
       }
     }
 
