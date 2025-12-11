@@ -8,7 +8,8 @@ cat <<EOF > /usr/share/nginx/html/assets/env.json
   "environmentName": "${APP_ENV_NAME:-docker runtime}",
   "environmentCode": "${APP_ENV_CODE:-docker}",
 
-  "serverBaseUrl": "${APP_DATA_SERVER_URL}"
+  "serverBaseUrl": "${APP_DATA_SERVER_URL}",
+  "authToken": "${APP_DATA_SERVER_AUTH_TOKEN}"
 }
 EOF
 
