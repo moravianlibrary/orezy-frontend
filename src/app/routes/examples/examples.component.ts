@@ -26,7 +26,7 @@ export class ExamplesComponent {
       })
     )
     .subscribe(r => {
-      this.examples.set(r as ExampleBook[]);
+      this.examples.set(r);
       this.loading.set(false);
     });
   }

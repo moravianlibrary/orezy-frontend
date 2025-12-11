@@ -6,7 +6,7 @@ import { LeftPanelComponent } from '../../layout/left-panel/left-panel.component
 import { RightPanelComponent } from '../../layout/right-panel/right-panel.component';
 import { ActivatedRoute } from '@angular/router';
 import { catchError, map, of, Subscription, switchMap, tap } from 'rxjs';
-import { GridMode, ImageItem, Page } from '../../app.types';
+import { ExampleBook, GridMode, ImageItem, Page } from '../../app.types';
 import { roundToDecimals } from '../../utils/utils';
 
 @Component({
@@ -29,9 +29,9 @@ export class EditorComponent {
     this.paramsOnBookId = this.activatedRoute.paramMap
       .pipe(
         map(params => params.get('id') || '' ),
-        switchMap(id => id === '' ? imgSvc.fetchAllTitleIds(): of([id])),
-        tap((idArr: string[]) => {
-          imgSvc.book.set(idArr[0]);
+        switchMap(id => id === '' ? imgSvc.fetchAllTitleIds(): of([{ _id: id, created_at: '', modified_at: '', state: '' }])),
+        tap((idArr: ExampleBook[]) => {
+          imgSvc.book.set(idArr[0]._id);
           imgSvc.loadingLeft = true;
           imgSvc.loadingMain = true;
         }),

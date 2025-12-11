@@ -1,6 +1,6 @@
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { computed, inject, Injectable, signal } from '@angular/core';
-import { DialogButton, DialogContentType, GridMode, HitInfo, ImageItem, ImgOrCanvas, MousePos, Page, Toast, ToastType } from '../app.types';
+import { DialogButton, DialogContentType, ExampleBook, GridMode, HitInfo, ImageItem, ImgOrCanvas, MousePos, Page, Toast, ToastType } from '../app.types';
 import { catchError, Observable, of } from 'rxjs';
 import { clamp, defer, degreeToRadian, getColor, scrollToSelectedImage } from '../utils/utils';
 import { EnvironmentService } from './environment.service';
@@ -117,8 +117,8 @@ export class ImagesService {
     });
   }
 
-  fetchAllTitleIds(): Observable<string[]> {
-    return this.http.get<string[]>(`${this.apiUrl}/title-ids`, { headers: this.headers() });
+  fetchAllTitleIds(): Observable<ExampleBook[]> {
+    return this.http.get<ExampleBook[]>(`${this.apiUrl}/title-ids`, { headers: this.headers() });
   }
 
   fetchScans(id: string): Observable<ImageItem[]> {
