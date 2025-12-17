@@ -63,7 +63,7 @@ export type DialogContentType = 'settings' | 'shortcuts';
 
 
 // Toast messages
-export type ToastType = 'info' | 'success';
+export type ToastType = 'info' | 'success' | 'error';
 export interface Toast {
   id: string;
   message: string;

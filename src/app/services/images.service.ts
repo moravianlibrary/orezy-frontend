@@ -337,6 +337,8 @@ export class ImagesService {
     }
 
     this.fetchImage(img._id).subscribe(blob => {
+      if (blob.type.includes('tiff')) this.showToast('Nepodařilo se zobrazit sken, protože je ve formátu TIFF.', { type: 'error' });
+
       const url = URL.createObjectURL(blob);
 
       this.images.update(prev =>
