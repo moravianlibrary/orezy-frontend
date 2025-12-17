@@ -1063,7 +1063,7 @@ export class ImagesService {
     if (['Backspace', 'Delete'].includes(key) && !this.dialogOpen() && this.selectedPage) this.removePage();
     
     // Add page
-    if (['p', 'P', 'a', 'A'].includes(key) && !this.dialogOpen() && this.currentPages.length < this.maxPages) this.addPage();
+    if (['p', 'P'].includes(key) && !this.dialogOpen() && this.currentPages.length < this.maxPages) this.addPage();
 
     // Change grid mode
     if (['m', 'M', 'g', 'G'].includes(key) && this.selectedPage &&!this.dialogOpen()) {
@@ -1095,12 +1095,12 @@ export class ImagesService {
     }
 
     // Drag/move page
-    if (['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].includes(key) && this.selectedPage && !event.altKey && !event.ctrlKey && !event.metaKey &&!this.dialogOpen()) {
+    if (['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].includes(key) && this.selectedPage && !event.altKey && !event.ctrlKey && !event.shiftKey && !event.metaKey &&!this.dialogOpen()) {
       const start = this.selectedPage;
       const isHorizontal = ['ArrowLeft', 'ArrowRight'].includes(key);
       const sign = ['ArrowRight','ArrowDown'].includes(key) ? 1 : -1;
 
-      const delta = this.increment * sign * (event.shiftKey ? 10 : 1);
+      const delta = this.increment * sign/*  * (event.shiftKey ? 10 : 1) */;
 
       const axis = isHorizontal
         ? { c: 'xc' as const, min: 'left' as const, max: 'right' as const }
@@ -1141,10 +1141,7 @@ export class ImagesService {
     }
 
     // Change page width / height
-    if (
-      ['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].includes(key) && this.selectedPage && !this.dialogOpen()
-      && (event.ctrlKey || event.metaKey) && !event.altKey
-    ) {
+    if (['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].includes(key) && event.shiftKey && this.selectedPage && !this.dialogOpen()) {
       if (['ArrowLeft', 'ArrowRight'].includes(key)) {
         const cw = this.c.width;
         const ch = this.c.height;
@@ -1154,7 +1151,7 @@ export class ImagesService {
         const page = this.selectedPage;
         const lastWidth = page.width;
         const sign = key === 'ArrowRight' ? 1 : -1;
-        const delta = this.increment * sign * (event.shiftKey ? 10 : 1);
+        const delta = this.increment * sign/*  * (event.shiftKey ? 10 : 1) */;
         let value = lastWidth + delta;
 
         const handleAligned = (isHorizontal: boolean, reverse: boolean) => {
@@ -1274,7 +1271,7 @@ export class ImagesService {
         const page = this.selectedPage;
         const lastHeight = page.height;
         const sign = key === 'ArrowDown' ? 1 : -1;
-        const delta = this.increment * sign * (event.shiftKey ? 10 : 1);
+        const delta = this.increment * sign/*  * (event.shiftKey ? 10 : 1) */;
         let value = lastHeight + delta;
 
         const handleAlignedHeight = (isHorizontal: boolean, reverse: boolean) => {
@@ -1394,7 +1391,7 @@ export class ImagesService {
     if (['a', 'A', 's', 'S'].includes(key) && this.selectedPage && !this.dialogOpen()) {
       const page = this.selectedPage;
       const sign = ['s', 'S'].includes(key) ? 1 : -1;
-      const delta = this.incrementAngle * sign * (event.shiftKey ? 10 : 1);
+      const delta = this.incrementAngle * sign/*  * (event.shiftKey ? 10 : 1) */;
       const value = page.angle + delta;
       const newAngle = clamp(value, -45, 45);
 
