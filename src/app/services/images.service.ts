@@ -158,6 +158,7 @@ export class ImagesService {
     this.redrawImage();
     this.currentPages.forEach(p => this.drawPage(p));
     this.updateMainImageItemAndImages();
+    console.log(this.images().filter(img => img.edited));
     this.updatePages(this.book(), this.images().filter(img => img.edited))
       .subscribe({
         next: () => {
@@ -727,9 +728,15 @@ export class ImagesService {
     if (this.currentPages.length >= this.maxPages || !this.displayedImagesFinal().length) return;
 
     if (this.pageWasEdited) this.updateCurrentPagesWithEdited();
+
+    this.currentPages = this.currentPages.map(p => ({ ...p, type: p.xc < 0.5 ? 'left' : 'right' }));
     
-    const type = this.currentPages.length && (this.currentPages[0].type === 'left' || this.currentPages[0].type === 'single')
-      ? 'right' : 'left';
+    const type = !this.currentPages.length
+      ? 'single'
+      : this.currentPages[0].type === 'single' && this.currentPages[0].xc < 0.5
+        ? 'right'
+        : 'left';
+
     const addedPage: Page = {
       _id: `${this.mainImageItem()._id}-${type}`,
       xc: .5,
@@ -745,8 +752,8 @@ export class ImagesService {
       type: type,
       flags: []
     };
-    this.currentPages.push(addedPage);
     
+    this.currentPages.push(addedPage);
     this.selectedPage = this.currentPages[this.currentPages.length - 1];
     this.imgWasEdited = true;
     this.redrawImage();
@@ -756,10 +763,12 @@ export class ImagesService {
 
   removePage(): void {
     this.currentPages = this.currentPages.filter(p => p !== this.selectedPage);
+    if (this.currentPages.length) this.currentPages = this.currentPages.map(p => ({ ...p, type: 'single' }));
     this.selectedPage = null;
     this.redrawImage();
     this.currentPages.forEach(p => this.drawPage(p));
     this.updateMainImageItem();
+    this.pageWasEdited = true;
     this.imgWasEdited = true;
   }
 

@@ -2,38 +2,40 @@
 
 @if (loading()) { Loading... }
 @else {
-  <table cellspacing="0" cellpadding="0">
-    <tr><th>ID</th><th>Stav</th><th>Vytvořeno</th><th>Upraveno</th></tr>
-    @for (example of examples(); track example) {
-      @let hasLink = shouldHaveLink(example.state);
-      @let url = getUrl(example);
-      <tr
-        [class.link]="hasLink"
-        (click)="!hasLink ? $event.preventDefault() : null"
-      >
-        @if (hasLink) {
-          <td><a [href]="url">{{ example._id }}</a></td>
-          <td><a [href]="url"><span
-            class="tag"
-            [class.success]="hasLink"
-            [class.progress]="example.state === 'in_progress'"
-            [class.error]="example.state === 'failed'"
-          >{{ example.state }}</span></a></td>
-          <td><a [href]="url">{{ getDate(example.created_at) }}</a></td>
-          <td><a [href]="url">{{ getDate(example.modified_at) }}</a></td>
-        }
-        @else {
-          <td><a>{{ example._id }}</a></td>
-          <td><a><span
-            class="tag"
-            [class.success]="hasLink"
-            [class.progress]="example.state === 'in_progress'"
-            [class.error]="example.state === 'failed'"
-          >{{ example.state }}</span></a></td>
-          <td><a>{{ getDate(example.created_at) }}</a></td>
-          <td><a>{{ getDate(example.modified_at) }}</a></td>
-        }
-      </tr>
-    }
-  </table>
+  <div class="table-wrapper">
+    <table cellspacing="0" cellpadding="0">
+      <tr><th>ID</th><th>Stav</th><th>Vytvořeno</th><th>Upraveno</th></tr>
+      @for (example of examples(); track example) {
+        @let hasLink = shouldHaveLink(example.state);
+        @let url = getUrl(example);
+        <tr
+          [class.link]="hasLink"
+          (click)="!hasLink ? $event.preventDefault() : null"
+        >
+          @if (hasLink) {
+            <td><a [href]="url">{{ example._id }}</a></td>
+            <td><a [href]="url"><span
+              class="tag"
+              [class.success]="hasLink"
+              [class.progress]="example.state === 'in_progress'"
+              [class.error]="example.state === 'failed'"
+            >{{ example.state }}</span></a></td>
+            <td><a [href]="url">{{ getDate(example.created_at) }}</a></td>
+            <td><a [href]="url">{{ getDate(example.modified_at) }}</a></td>
+          }
+          @else {
+            <td><a>{{ example._id }}</a></td>
+            <td><a><span
+              class="tag"
+              [class.success]="hasLink"
+              [class.progress]="example.state === 'in_progress'"
+              [class.error]="example.state === 'failed'"
+            >{{ example.state }}</span></a></td>
+            <td><a>{{ getDate(example.created_at) }}</a></td>
+            <td><a>{{ getDate(example.modified_at) }}</a></td>
+          }
+        </tr>
+      }
+    </table>
+  </div>
 }
