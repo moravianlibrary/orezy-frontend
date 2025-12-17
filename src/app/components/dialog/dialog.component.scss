@@ -1,0 +1,174 @@
+@mixin font($font-weight, $font-size, $line-height, $color) {
+  font-family: 'IBM Plex Sans', sans-serif;
+  letter-spacing: 0%;
+  font-weight: $font-weight;
+  font-size: $font-size;
+  line-height: $line-height;
+  color: $color;
+}
+
+.dialog-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.45);
+  z-index: 5000;
+}
+
+.dialog-container {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: var(--bg-base);
+  padding-block: var(--spacing-x5) var(--spacing-x4);
+  width: min(90dvw, 680px);
+  border-radius: var(--spacing-x1);
+  z-index: 6000;
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-x4);
+  max-height: 90%;
+}
+
+.dialog-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-inline: var(--spacing-x6);
+
+  h2 {
+    @include font(450, var(--font-size-x3), var(--spacing-x8), var(--text-base));
+  }
+}
+
+.dialog-body {
+  padding: var(--spacing-x4);
+  border-top: 1px solid var(--border-color);
+  border-bottom: 1px solid var(--border-color);
+  max-height: 100%;
+  overflow-y: auto;
+}
+
+.dialog-description {
+  margin-bottom: var(--spacing-x2);
+  @include font(350, var(--font-size-x2), var(--spacing-x6), var(--text-base));
+}
+
+.single {
+  padding-inline: var(--spacing-x6);
+}
+
+.dialog-close {
+  cursor: pointer;
+}
+
+.dialog-footer {
+  display: flex;
+  justify-content: center;
+  gap: var(--spacing-x4);
+}
+
+
+/* ------------------------------
+  SETTINGS DIALOG
+------------------------------ */
+.settings-content-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-x3);
+  padding-inline: var(--spacing-x2);
+
+  .settings-block-label {
+    @include font(450, var(--font-size-x2), var(--spacing-x6), var(--text-base));
+  }
+
+  .radios-wrapper {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-x1);
+
+    .radio {
+      display: inline-flex;
+      align-items: center;
+      gap: var(--spacing-x2);
+      cursor: pointer;
+      
+      .grid-value {
+        @include font(450, var(--font-size-x1-5), var(--spacing-x5), var(--text-secondary));
+      }
+    }
+
+    /* visually hide native radio but keep it accessible */
+    .radio > input[type="radio"]{
+      position: absolute;
+      opacity: 0;
+      width: 1px;
+      height: 1px;
+      margin: -1px;
+      pointer-events: none;
+    }
+
+    /* icon holder lives on the text span */
+    .radio > input[type="radio"] + .grid-value{
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    /* base (unchecked): outer circle */
+    .radio > input[type="radio"] + .grid-value::before{
+      content: "";
+      width: 16px;
+      height: 16px;
+      box-sizing: border-box;
+      border-radius: 999px;
+      border: 1px solid #BFCCD9;
+      background: transparent;
+      display: inline-block;
+      flex: 0 0 16px;
+    }
+
+    /* checked: outer stroke + inner dot */
+    .radio > input[type="radio"]:checked + .grid-value::before{
+      border-color: #0080A8;
+      /* inner dot (3px radius) */
+      background: radial-gradient(circle at center, #0080A8 0 3px, transparent 3px);
+    }
+
+    /* keyboard focus ring */
+    .radio > input[type="radio"]:focus-visible + .grid-value::before{
+      outline: 2px solid rgba(0,128,168,.35);
+      outline-offset: 2px;
+    }
+  }
+}
+
+
+/* ------------------------------
+  SHORTCUTS DIALOG
+------------------------------ */
+table {
+  width: 100%;
+  border: none;
+}
+
+tr {
+  height: 40px;
+  width: 100%;
+  padding: var(--spacing-x2);
+}
+
+tr:nth-child(odd) {
+  background-color: var(--bg-main-light);
+}
+
+th {
+  text-align: left;
+  padding-left: var(--spacing-x2);
+  @include font(450, var(--font-size-x2), var(--spacing-x6), var(--text-base));
+}
+
+td {
+  padding-right: var(--spacing-x2);
+  @include font(400, var(--font-size-x2), var(--spacing-x6), var(--text-light));
+}

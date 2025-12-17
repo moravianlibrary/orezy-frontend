@@ -1,0 +1,65 @@
+<div class="header">
+  <div class="title-menu-wrapper">
+    <h1>Skeny k revizi</h1>
+    <app-menu [type]="'menu-primary'" />
+  </div>
+  <div class="filters">
+    <span
+      class="filter"
+      [class.selected-filter]="imagesService.selectedFilter === 'all'"
+      (click)="imagesService.switchFilter('all')"
+    >Vše <span class="filter-number">({{ imagesService.images().length }})</span></span>
+    <span
+      class="filter"
+      [class.selected-filter]="imagesService.selectedFilter === 'flagged'"
+      (click)="imagesService.switchFilter('flagged')"
+    >Podezřelé <span class="filter-number">({{ imagesService.flaggedImages().length }})</span></span>
+    <span
+      class="filter"
+      [class.selected-filter]="imagesService.selectedFilter === 'edited'"
+      (click)="imagesService.switchFilter('edited')"
+    >Upravené <span class="filter-number">({{ imagesService.editedImages().length }})</span></span>
+    <span
+      class="filter"
+      [class.selected-filter]="imagesService.selectedFilter === 'ok'"
+      (click)="imagesService.switchFilter('ok')"
+    >OK <span class="filter-number">({{ imagesService.notFlaggedImages().length }})</span></span>
+  </div>
+  <div>
+    <h2>Počet výřezů</h2>
+    <div class="filters">
+      <span
+        class="filter"
+        [class.selected-filter]="imagesService.selectedPageNumberFilter() === 'single'"
+        (click)="imagesService.togglePageNumberFilter('single')"
+      >Jeden <span class="filter-number">({{ pageImagesNumber(1) }})</span></span>
+      <span
+        class="filter"
+        [class.selected-filter]="imagesService.selectedPageNumberFilter() === 'double'"
+        (click)="imagesService.togglePageNumberFilter('double')"
+      >Dva <span class="filter-number">({{ pageImagesNumber(2) }})</span></span>
+    </div>
+  </div>
+</div>
+
+@if (imagesService.displayedImagesFinal().length) {
+  <div class="thumbnails-wrapper">
+    @for (image of imagesService.displayedImagesFinal(); track image._id) {
+      @let mainImageItem = imagesService.mainImageItem();
+      <div
+        class="thumbnail-wrapper"
+        [class.selected]="mainImageItem._id === image._id"
+        (click)="clickThumbnail(image)"
+      >
+        <img #lazyImg [attr.data-id]="image._id" />
+        <span
+          class="status-icon"
+          [ngClass]="getStatus(image)"
+          [attr.data-tooltip]="getStatusIconTooltip(image)"
+        ></span>
+      </div>
+    }
+  </div>
+} @else {
+  @if (imagesService.loadingLeft) { <app-loader /> }
+}

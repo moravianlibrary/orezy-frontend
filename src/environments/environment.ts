@@ -8,5 +8,6 @@ export const environment = {
     environmentCode: 'd_m', // pro produkci ziskej z promenne APP_ENV_CODE (přes env.json)
 
     serverBaseUrl: '', // pro produkci ziskej z promenne APP_DATA_SERVER_URL (přes env.json)
+    authToken: '', // pro produkci ziskej z promenne APP_DATA_SERVER_AUTH_TOKEN (přes env.json)
         
 }

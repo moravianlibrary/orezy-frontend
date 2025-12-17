@@ -1,55 +1,91 @@
 import { Component, inject } from '@angular/core';
-import { RouterOutlet } from '@angular/router';
 import { ImagesService } from '../../services/images.service';
-import { ButtonGroupComponent } from '../../components/button-group/button-group.component';
+import { clamp, degreeToRadian, radianToDegree } from '../../utils/utils';
+import { CornerName, EdgeLocalOrientation, EdgeSide, HitInfo, Page } from '../../app.types';
+import { LoaderComponent } from '../../components/loader/loader.component';
+import { ToastComponent } from '../../components/toast/toast.component';
 
 @Component({
   selector: 'app-main',
-  imports: [RouterOutlet, ButtonGroupComponent],
+  imports: [LoaderComponent, ToastComponent],
   templateUrl: './main.component.html',
   styleUrl: './main.component.scss'
 })
 export class MainComponent {
   imagesService = inject(ImagesService);
 
+  private moveCursor: string = "url('/assets/move-cursor.png'), auto";
+  private rotateCursorTopRight: string = "url('/assets/rotate-cursor-top-right.png') 9.5 9.5, auto";
+  private rotateCursorTopLeft: string = "url('/assets/rotate-cursor-top-left.png') 9.5 9.5, auto";
+  private rotateCursorBottomRight: string = "url('/assets/rotate-cursor-bottom-right.png') 9.5 9.5, auto";
+  private rotateCursorBottomLeft: string = "url('/assets/rotate-cursor-bototm-left.png') 9.5 9.5, auto";
+
+  private edgeHitTolerance = 14;
+  private cornerHitTolerance = 14;
+  private rotateHandleOffset = 14;
+  private rotateHitTolerance = 24;
+
   ngAfterViewInit(): void {
-    // Set canvas
-    this.imagesService.c = document.getElementById('main-canvas') as HTMLCanvasElement;
-    this.imagesService.ctx = this.imagesService.c.getContext('2d')!;
+    const imgSvc = this.imagesService;
     
-    // Set main image for full mode
-    if (this.imagesService.mode() === 'full') {
-      const [firstFlagged] = this.imagesService.flaggedImages();
-      if (firstFlagged) this.imagesService.setMainImage(firstFlagged);
-    }
+    // Set canvas
+    imgSvc.c = document.getElementById('main-canvas') as HTMLCanvasElement;
+    imgSvc.ctx = imgSvc.c.getContext('2d')!;
 
     // Attach event handlers
     this.attachMainImageEvents();
     this.attachMainCanvasEvents();
-    ['#main-container', 'app-preview-panel'/* , 'app-properties-panel' */].forEach(el => this.attachEventsRest(document.querySelector(el)));
+    ['#main-container', 'app-left-panel' , 'app-bottom-panel', 'app-right-panel'].forEach(el => this.attachEventsRest(document.querySelector(el)));
   }
 
   private attachEventsRest(el: HTMLElement | null): void {
     if (!el) return;
+    const imgSvc = this.imagesService;
 
     el.onclick = (ev) => {
       const tagName = (ev.target as HTMLElement).tagName;
-      if (tagName !== 'APP-PREVIEW-PANEL' && tagName !== 'DIV' && tagName !== 'APP-PROPERTIES-PANEL') return;
+      if (tagName === 'APP-RIGHT-PANEL' || el.tagName === 'APP-RIGHT-PANEL') return;
+      if (tagName !== 'APP-LEFT-PANEL' && tagName !== 'DIV' && tagName !== 'APP-RIGHT-PANEL' && tagName !== 'APP-BOTTOM-PANEL') return;
       if (el.tagName === 'DIV' && tagName !== 'DIV') return;
-      if (this.imagesService.mode() === 'single' || !this.imagesService.selectedRect) return;
-      this.imagesService.selectedRect = null;
-      this.imagesService.lastRectCursorIsInside = null;
-      this.imagesService.editable.set(false);
-      this.imagesService.toggleMainImageOrCanvas();
-      this.imagesService.hoveringRect('');
-      this.imagesService.updateMainImageItemAndImages();
+      if (!imgSvc.selectedPage) return;
+      if (imgSvc.dialogOpened) {
+        imgSvc.dialogOpened = false;
+        return;
+      }
+      if (imgSvc.isDragging || imgSvc.isRotating || imgSvc.isResizing) {
+        imgSvc.isDragging = false;
+        imgSvc.dragStartPage = null;
+        imgSvc.dragStartMouse = null;
+        
+        imgSvc.isRotating = false;
+        imgSvc.rotationStartPage = null;
+        imgSvc.rotationStartMouseAngle = 0;
+      
+        imgSvc.isResizing = false;
+        imgSvc.resizeStartPage = null;
+        imgSvc.resizeStartMouse = null;
+        imgSvc.resizeMode = null;
+        
+        return;
+      } 
+
+      if (imgSvc.pageWasEdited) imgSvc.updateCurrentPagesWithEdited();
+      imgSvc.lastSelectedPage = imgSvc.selectedPage;
+      imgSvc.selectedPage = null;
+      imgSvc.lastPageCursorIsInside = null;
+      imgSvc.editable.set(false);
+      imgSvc.redrawImage();
+      imgSvc.currentPages.forEach(p => imgSvc.drawPage(p));
+      imgSvc.mainImageItem.set({ ...imgSvc.mainImageItem(), url: imgSvc.c.toDataURL('image/jpeg') });
+      imgSvc.toggleMainImageOrCanvas();
+      imgSvc.hoveringPage('');
     };
 
     el.onmousemove = (ev) => {
       if (el.tagName === 'DIV' && (ev.target as HTMLElement).tagName !== 'DIV') return;
-      const rectId = this.imagesService.rectIdCursorInside(ev);
-      const insideRect = Boolean(rectId);
-      this.imagesService.editable.set(insideRect);
+      const pageId = this.pageIdCursorInside(ev);
+      const insidePage = Boolean(pageId);
+      this.imagesService.editable.set(insidePage);
       this.imagesService.toggleMainImageOrCanvas();
     };
   }
@@ -60,9 +96,9 @@ export class MainComponent {
 
     el.onmousemove = (ev) => {
       if ((ev.target as HTMLElement).tagName !== 'IMG') return;
-      const rectId = this.imagesService.rectIdCursorInside(ev);
-      const insideRect = Boolean(rectId);
-      this.imagesService.editable.set(insideRect);
+      const pageId = this.pageIdCursorInside(ev);
+      const insidePage = Boolean(pageId);
+      this.imagesService.editable.set(insidePage);
       this.imagesService.toggleMainImageOrCanvas();
     };
   }
@@ -76,62 +112,2278 @@ export class MainComponent {
     });
   }
 
+  
+  /* ------------------------------
+    PAGE LOGIC
+  ------------------------------ */
+  private pageIdCursorInside(e: MouseEvent): string {
+    const imgSvc = this.imagesService;
+    const pos = this.getMousePosOnMain(e);
+    imgSvc.mousePos = pos;
+    if (!pos) return '';
+
+    return imgSvc.pageIdCursorInside();
+  }
+
+  private hitTest(e: MouseEvent): HitInfo {
+    const pos = this.getMousePosOnMain(e);
+    if (!pos) return { area: 'none' };
+
+    const imgSvc = this.imagesService;
+    const pages = imgSvc.currentPages;
+
+    if (imgSvc.selectedPage) {
+      const page = imgSvc.isShiftActive && imgSvc.currentPages.length === imgSvc.maxPages
+        ? imgSvc.currentPages.find(p => p._id !== imgSvc.selectedPage?._id) ?? imgSvc.selectedPage
+        : imgSvc.selectedPage;
+      const hit = this.hitTestPage(pos.x, pos.y, page);
+      if (hit.area !== 'none') return hit;
+    }
+
+    const candidatePages = pages.filter(p => p !== imgSvc.selectedPage);
+    const hits = candidatePages
+      .map(p => this.hitTestPage(pos.x, pos.y, p))
+      .filter(hit => hit.area !== 'none');
+    const index = hits.length <= 1 ? 0 : (imgSvc.isShiftActive ? 1 : 0);
+
+    return hits[index] ?? { area: 'none' };
+  }
+
+  private hitTestPage(x: number, y: number, p: Page): HitInfo {
+    const imgSvc = this.imagesService;
+    const c = imgSvc.c;
+    const [centerX, centerY] = [c.width * p.xc, c.height * p.yc];
+    const [width, height] = [c.width * p.width, c.height * p.height];
+    const angle = degreeToRadian(p.angle);
+
+    const hw = width / 2;
+    const hh = height / 2;
+
+    const dx = x - centerX;
+    const dy = y - centerY;
+    const cos = Math.cos(-angle);
+    const sin = Math.sin(-angle);
+    const localX = dx * cos - dy * sin;
+    const localY = dx * sin + dy * cos;
+
+    const withinXWithTolerance = Math.abs(localX) <= hw + this.edgeHitTolerance / 2;
+    const withinYWithTolerance = Math.abs(localY) <= hh + this.edgeHitTolerance / 2;
+    const withinX = Math.abs(localX) <= hw;
+    const withinY = Math.abs(localY) <= hh;
+
+    // Corners and rotates
+    const corners: { x: number; y: number; name: CornerName }[] = [
+      { x: -hw - imgSvc.cornerSize / 2, y: -hh - imgSvc.cornerSize / 2, name: 'nw' },
+      { x: hw + imgSvc.cornerSize / 2,  y: -hh - imgSvc.cornerSize / 2, name: 'ne' },
+      { x: hw + imgSvc.cornerSize / 2,  y: hh + imgSvc.cornerSize / 2,  name: 'se' },
+      { x: -hw - imgSvc.cornerSize / 2, y: hh + imgSvc.cornerSize / 2,  name: 'sw' }
+    ];
+
+    for (const corner of corners) {
+      const dxC = localX - corner.x;
+      const dyC = localY - corner.y;
+      const distCorner = Math.hypot(dxC, dyC);
+
+      // Corners
+      if (distCorner <= this.cornerHitTolerance) {
+        const userCorner = this.localCornerToUserCorner(corner.name, p.angle);
+        return { area: 'corner', page: p, corner: userCorner };
+      }
+
+      const distToCorner = Math.hypot(localX - corner.x, localY - corner.y);
+      if (
+        distToCorner < this.rotateHandleOffset
+        || distToCorner > this.rotateHitTolerance
+        || (withinX && withinY)
+      ) {
+        continue;
+      }
+
+      // Rotates
+      const userCorner = this.localCornerToUserCorner(corner.name, p.angle);
+      return { area: 'rotate', page: p, corner: userCorner };
+    }
+
+    if (!withinXWithTolerance || !withinYWithTolerance) {
+      return { area: 'none' };
+    }
+
+    // Edge detection in user space (not local)
+    const nearLeftOrRight = Math.abs(Math.abs(localX) - (hw + 6)) <= this.edgeHitTolerance;
+    const nearTopOrBottom = Math.abs(Math.abs(localY) - (hh + 6)) <= this.edgeHitTolerance;
+
+    if (nearLeftOrRight && !nearTopOrBottom) {
+      const localSide = localX > 0 ? 'right' : 'left';
+      const userSide = this.localEdgeSideToUserSide(localSide, p.angle);
+      return { area: 'edge', page: p, edgeOrientation: 'vertical', edgeSide: userSide };
+      // const isRight = localX > 0;
+      // return { area: 'edge', page: p, edgeOrientation: 'vertical', edgeSide: isRight ? 'right' : 'left' };
+    }
+
+    if (nearTopOrBottom && !nearLeftOrRight) {
+      const localSide = localY > 0 ? 'bottom' : 'top';
+      const userSide = this.localEdgeSideToUserSide(localSide, p.angle);
+      return { area: 'edge', page: p, edgeOrientation: 'horizontal', edgeSide: userSide };
+      // const isBottom = localY > 0;
+      // return { area: 'edge', page: p, edgeOrientation: 'horizontal', edgeSide: isBottom ? 'bottom' : 'top' };
+    }
+
+    // Inside rect
+    if (withinX && withinY) {
+      return { area: 'inside', page: p };
+    }
+
+    // Else
+    return { area: 'none' };
+  }
+
+  private localEdgeSideToUserSide(localSide: 'left' | 'right' | 'top' | 'bottom', angleDeg: number) {
+    const a = angleDeg;
+
+    if (a >= -45 && a <= 45) {
+      return localSide;
+    }
+
+    if (a > 45 && a <= 135) {
+      switch (localSide) {
+        case 'left': return 'top';
+        case 'right': return 'bottom';
+        case 'top': return 'right';
+        case 'bottom': return 'left';
+      }
+    }
+
+    if (a > 135 || a <= -135) {
+      switch (localSide) {
+        case 'left': return 'right';
+        case 'right': return 'left';
+        case 'top': return 'bottom';
+        case 'bottom': return 'top';
+      }
+    }
+
+    if (a > -135 && a < -45) {
+      switch (localSide) {
+        case 'left': return 'bottom';
+        case 'right': return 'top';
+        case 'top': return 'left';
+        case 'bottom': return 'right';
+      }
+    }
+
+    return localSide;
+  }
+
+  private localCornerToUserCorner(local: CornerName, angleDeg: number): CornerName {
+    const a = angleDeg;
+
+    if (a >= -45 && a <= 45) return local;
+
+    if (a > 45 && a <= 135) {
+      const map90: { [key: string]: CornerName } = { nw: 'ne', ne: 'se', se: 'sw', sw: 'nw' };
+      return map90[local];
+    }
+
+    if (a > 135 || a <= -135) {
+      const map180: { [key: string]: CornerName } = { nw: 'se', ne: 'sw', sw: 'ne', se: 'nw' };
+      return map180[local];
+    }
+
+    const map270: { [key: string]: CornerName } = { nw: 'sw', sw: 'se', se: 'ne', ne: 'nw' };
+    return map270[local];
+  }
+
+  private getEdgeCursor(angleDeg: number, local: EdgeLocalOrientation): string {
+    let a = angleDeg % 180;
+    if (a < 0) a += 180;
+
+    const mostlyHorizontal = a <= 45 || a >= 135;
+
+    if (local === 'vertical') {
+      return mostlyHorizontal ? 'ew-resize' : 'ns-resize';
+    } else {
+      return mostlyHorizontal ? 'ns-resize' : 'ew-resize';
+    }
+  }
+
+  private getCornerCursor(angleDeg: number, corner: CornerName): string {
+    let a = angleDeg % 180;
+    if (a < 0) a += 180;
+
+    const userCorner = this.localCornerToUserCorner(corner, angleDeg);
+
+    const baseForCorner =
+      userCorner === 'nw' || userCorner === 'se'
+        ? 'nwse-resize'
+        : 'nesw-resize';
+
+    const flippedForCorner =
+      baseForCorner === 'nwse-resize' ? 'nesw-resize' : 'nwse-resize';
+
+    const flip = a >= 45 && a <= 135;
+    return flip ? flippedForCorner : baseForCorner;
+  }
+
+  private getMousePosOnMain(e: MouseEvent): { x: number; y: number } | null {
+    const mainElement = document.getElementById(this.imagesService.editable() ? 'main-canvas' : 'main-image') as HTMLElement;
+    if (!mainElement) return null;
+
+    const rect = mainElement.getBoundingClientRect();
+    return {
+      x: e.clientX - rect.left,
+      y: e.clientY - rect.top
+    };
+  }
+
   private handleCanvasInteraction(ev: MouseEvent, el: HTMLElement): void {
     if ((ev.target as HTMLElement).tagName !== 'CANVAS') return;
+    const imgSvc = this.imagesService;
     
-    const rectId = this.imagesService.rectIdCursorInside(ev);
-    const insideRect = Boolean(rectId);
+    const hit = this.hitTest(ev);
+    const pageId = this.pageIdCursorInside(ev);
+    imgSvc.pageId = pageId;
+    const insidePage = Boolean(pageId);
+    const insideArea = hit.area !== 'none';
+    const hitPage = hit.page ?? null;
+    imgSvc.hitPage = hitPage;
 
-    if (ev.type === 'mousedown') {
-      this.imagesService.selectedRect = this.imagesService.currentRects.find(r => r.id === rectId) || null;
-      this.imagesService.lastRectCursorIsInside = this.imagesService.currentRects.find(r => r.id === rectId) ?? null;
-      this.imagesService.editable.set(insideRect);
-      this.imagesService.toggleMainImageOrCanvas();
-      this.imagesService.hoveringRect(rectId);
-      this.imagesService.updateMainImageItemAndImages();
-    }
-
+    // Hover
     if (ev.type === 'mousemove') {
-      if (this.imagesService.lastRectCursorIsInside?.id === rectId && !this.imagesService.selectedRect) return;
-      if (!this.imagesService.isDragging) {
-        this.imagesService.lastRectCursorIsInside = this.imagesService.currentRects.find(r => r.id === rectId) ?? null;
-        this.imagesService.editable.set(insideRect);
-        this.imagesService.toggleMainImageOrCanvas();
-        this.imagesService.hoveringRect(rectId);
+      if (imgSvc.lastPageCursorIsInside?._id === pageId && !imgSvc.selectedPage) return;
+      if (!imgSvc.isDragging && !imgSvc.isRotating) {
+        imgSvc.lastPageCursorIsInside = imgSvc.currentPages.find(p => p._id === pageId) ?? null;
+        imgSvc.editable.set(insidePage);
+        imgSvc.toggleMainImageOrCanvas();
+        imgSvc.hoveringPage(hitPage?._id === imgSvc.selectedPage?._id ? imgSvc.selectedPage?._id ?? '' : pageId);
       }
     }
 
-    // Drag rect
-    el.style.cursor = insideRect ? 'move' : 'initial';
-    if (insideRect) {
-      if (ev.type === 'mousedown') {
-        const rect = this.imagesService.selectedRect;
-        if (!rect) return;
-
-        this.imagesService.isDragging = true;
-        this.imagesService.mouseDownCurPos = { x: ev.clientX, y: ev.clientY };
-        this.imagesService.startRectPos = { x: rect?.x_center, y: rect?.y_center };
-      }
-
-      if (ev.type === 'mousemove') {
-        if (!this.imagesService.isDragging) return;
-        this.imagesService.dragRect(ev);
-      }
-
-      if (ev.type === 'mouseup') {
-        if (!this.imagesService.isDragging) return;
-        this.imagesService.isDragging = false;
-        this.imagesService.startRectPos = { x: -1, y: -1 };
-        
-        if (!this.imagesService.currentRects.find(r => r.edited)) return;
-        this.imagesService.updateMainImageItemAndImages();
+    // Change to correct cursor while having selected page
+    let cursor = insidePage ? (imgSvc.selectedPage?._id === hitPage?._id ? this.moveCursor : 'pointer') : 'initial';
+    if (hitPage && hitPage === imgSvc.selectedPage) {
+      if (hit.area === 'inside') {
+        cursor = hitPage && imgSvc.selectedPage?._id === hitPage._id
+          ? this.moveCursor
+          : 'pointer';
+      } else if (hit.area === 'edge' && hit.edgeOrientation && hitPage) {
+        cursor = this.getEdgeCursor(hitPage.angle, hit.edgeOrientation);
+      } else if (hit.area === 'corner' && hit.corner && hitPage) {
+        cursor = this.getCornerCursor(hitPage.angle, hit.corner);
+      } else if (hit.area === 'rotate') {
+        if (hit.corner === 'ne') cursor = this.rotateCursorTopRight;
+        if (hit.corner === 'nw') cursor = this.rotateCursorTopLeft;
+        if (hit.corner === 'se') cursor = this.rotateCursorBottomRight;
+        if (hit.corner === 'sw') cursor = this.rotateCursorBottomLeft;
       }
     }
+    el.style.cursor = cursor;
 
-    // Drag edge
+    // On mousedown
+    if (ev.type === 'mousedown') {
+      if (imgSvc.pageWasEdited && (cursor === 'initial' || cursor === 'pointer')) {
+        imgSvc.updateCurrentPagesWithEdited();
+      }
+      imgSvc.isRotating = false;
+      imgSvc.lastSelectedPage = imgSvc.selectedPage;
+      imgSvc.selectedPage = hitPage;
+      imgSvc.clickedDiffPage = imgSvc.lastSelectedPage && imgSvc.selectedPage && imgSvc.lastSelectedPage !== imgSvc.selectedPage;
+      imgSvc.lastPageCursorIsInside = hitPage;
+      imgSvc.editable.set(insideArea);
+      imgSvc.redrawImage();
+      imgSvc.currentPages.forEach(p => imgSvc.drawPage(p));
+      imgSvc.mainImageItem.set({ ...imgSvc.mainImageItem(), url: imgSvc.c.toDataURL('image/jpeg') });
+      imgSvc.toggleMainImageOrCanvas();
+      imgSvc.hoveringPage(hitPage?._id ?? '');
+    }    
 
-    // Drag corner
+    // Drag
+    if (hit.area === 'inside' || imgSvc.isDragging) {
+      if (ev.type === 'mousedown' && hitPage) {
+        imgSvc.isDragging = true;
+        imgSvc.dragStartMouse = { x: ev.clientX, y: ev.clientY };
+        imgSvc.dragStartPage = structuredClone(hitPage);
+      }
+
+      if (imgSvc.isDragging) {
+        if (ev.type === 'mousemove') {
+          el.style.cursor = this.moveCursor;
+          this.dragPage(ev);
+        }
+
+        if (ev.type === 'mouseup' && hitPage) {
+          imgSvc.isDragging = false;
+          imgSvc.dragStartPage = null;
+
+          if (!imgSvc.imgWasEdited) return;
+          imgSvc.hoveringPage(hitPage._id);
+          imgSvc.redrawImage();
+          imgSvc.currentPages.forEach(p => imgSvc.drawPage(p));
+          imgSvc.mainImageItem.set({ ...imgSvc.mainImageItem(), url: imgSvc.c.toDataURL('image/jpeg') });
+        }
+      }
+    }
 
     // Rotate
+    {
+      if (ev.type === 'mousedown' && hit.area === 'rotate' && hitPage) {
+        imgSvc.startHit = hit;
+
+        const rect = el.getBoundingClientRect();
+        const cx = imgSvc.c.width * hitPage.xc;
+        const cy = imgSvc.c.height * hitPage.yc;
+
+        const dx = ev.clientX - rect.left - cx;
+        const dy = ev.clientY - rect.top - cy;
+        imgSvc.rotationStartMouseAngle = Math.atan2(dy, dx);
+
+        imgSvc.rotationStartPage = imgSvc.selectedPage;
+        imgSvc.isRotating = true;
+      }
+
+      if (imgSvc.isRotating) {
+        if (ev.type === 'mousemove') {
+          this.rotatePage(cursor, ev, el);
+        }
+
+        if (ev.type === 'mouseup') {
+          imgSvc.startHit = null;
+          imgSvc.isRotating = false;
+          imgSvc.rotationStartPage = null;
+          imgSvc.redrawImage();
+          imgSvc.currentPages.forEach(p => imgSvc.drawPage(p));
+          imgSvc.mainImageItem.set({ ...imgSvc.mainImageItem(), url: imgSvc.c.toDataURL('image/jpeg') });
+        }
+      }
+    }
+
+    // Resize
+    {
+      if (ev.type === 'mousedown' && (hit.area === 'edge' || hit.area === 'corner') && hitPage) {
+        imgSvc.resizeMode = hit;
+        imgSvc.resizeStartPage = imgSvc.selectedPage;
+        imgSvc.resizeStartMouse = this.getMousePosOnMain(ev);
+        imgSvc.resizeCursor = el.style.cursor;
+      }
+
+      if (ev.type === 'mousemove' && imgSvc.resizeMode && imgSvc.resizeStartPage) {
+        imgSvc.isResizing = true;
+        this.resizePage(ev, el);
+      }
+
+      if (ev.type === 'mouseup' && imgSvc.resizeMode) {
+        imgSvc.isResizing = false;
+        imgSvc.resizeMode = null;
+        imgSvc.resizeStartPage = null;
+        imgSvc.resizeStartMouse = null;
+        imgSvc.redrawImage();
+        imgSvc.currentPages.forEach(p => imgSvc.drawPage(p));
+        imgSvc.mainImageItem.set({ ...imgSvc.mainImageItem(), url: imgSvc.c.toDataURL('image/jpeg') });
+      }
+    }
+  }
+
+  private dragPage(e: MouseEvent): void {    
+    const imgSvc = this.imagesService;
+    if (!imgSvc.selectedPage) return;
+
+    const { width, height } = imgSvc.c;
+    const start = imgSvc.dragStartPage;
+    if (!start || !imgSvc.dragStartMouse) return;
+    const page = imgSvc.selectedPage;
+
+    const dx = (e.clientX - imgSvc.dragStartMouse.x) / width;
+    const dy = (e.clientY - imgSvc.dragStartMouse.y) / height;
+
+    let newCx = start.xc + dx;
+    let newCy = start.yc + dy;
+    let newLeft = start.left + dx;
+    let newRight = start.right + dx;
+    let newTop = start.top + dy;
+    let newBottom = start.bottom + dy;
+
+    if (newLeft < 0) {
+      newCx += -newLeft;
+      newRight += -newLeft;
+      newLeft = 0;
+    }
+    if (newRight > 1) {
+      newCx -= newRight - 1;
+      newLeft -= newRight - 1;
+      newRight = 1;
+    }
+    if (newTop < 0) {
+      newCy += -newTop;
+      newBottom += -newTop;
+      newTop = 0;
+    }
+    if (newBottom > 1) {
+      newCy -= newBottom - 1;
+      newTop -= newBottom - 1;
+      newBottom = 1;
+    }
+
+    const updatedPage: Page = {
+      ...page,
+      xc: newCx,
+      yc: newCy,
+      left: newLeft,
+      right: newRight,
+      top: newTop,
+      bottom: newBottom,
+    };
+
+    imgSvc.selectedPage = updatedPage;
+    imgSvc.lastSelectedPage = updatedPage;
+    imgSvc.currentPages = imgSvc.currentPages.map(p =>
+      p._id === updatedPage._id ? updatedPage : p
+    );
+
+    imgSvc.pageWasEdited = true;
+    imgSvc.imgWasEdited = true;
+    imgSvc.redrawImage();
+    imgSvc.currentPages.forEach(p => imgSvc.drawPage(p));
+  }
+
+  private rotatePage(cursor: string, ev: MouseEvent, el: HTMLElement): void {
+    const imgSvc = this.imagesService;
+    if (!imgSvc.rotationStartPage) return;
+
+    if (imgSvc.startHit?.corner === 'ne') cursor = this.rotateCursorTopRight;
+    if (imgSvc.startHit?.corner === 'nw') cursor = this.rotateCursorTopLeft;
+    if (imgSvc.startHit?.corner === 'se') cursor = this.rotateCursorBottomRight;
+    if (imgSvc.startHit?.corner === 'sw') cursor = this.rotateCursorBottomLeft;
+    el.style.cursor = cursor;
+    
+    const startPage = imgSvc.rotationStartPage;
+    
+    const rect = el.getBoundingClientRect();
+    const cx = imgSvc.c.width * startPage.xc;
+    const cy = imgSvc.c.height * startPage.yc;
+
+    const dx = ev.clientX - rect.left - cx;
+    const dy = ev.clientY - rect.top - cy;
+
+    const currentMouseAngle = Math.atan2(dy, dx);
+
+    let delta = currentMouseAngle - imgSvc.rotationStartMouseAngle;
+
+    let proposedAngle = startPage.angle + radianToDegree(delta);
+    proposedAngle = clamp(proposedAngle, -45, 45);
+    imgSvc.rotationDirection = Math.sign((proposedAngle - startPage.angle) || proposedAngle);
+
+    const canRotate = (angle: number) => {
+      const bounds = imgSvc.computeBounds(startPage.xc, startPage.yc, startPage.width, startPage.height, angle);
+      return bounds.left >= 0 && bounds.right <= 1 && bounds.top >= 0 && bounds.bottom <= 1;
+    }
+
+    if (!canRotate(proposedAngle)) {
+      const step = (proposedAngle - startPage.angle) > 0 ? imgSvc.incrementAngle : -imgSvc.incrementAngle;
+
+      let temp = startPage.angle;
+      while (canRotate(temp + step)) temp += step;
+
+      proposedAngle = temp;
+    }
+
+    // Build updated page
+    if (!imgSvc.selectedPage) return;
+
+    const bounds = imgSvc.computeBounds(startPage.xc, startPage.yc, startPage.width, startPage.height, proposedAngle);
+    const updatedPage: Page = {
+      ...imgSvc.selectedPage,
+      angle: proposedAngle,
+      left: bounds.left,
+      right: bounds.right,
+      top: bounds.top,
+      bottom: bounds.bottom,
+    };
+
+    // Update state
+    imgSvc.selectedPage = updatedPage;
+    imgSvc.lastSelectedPage = updatedPage;
+    imgSvc.currentPages = imgSvc.currentPages.map(p =>
+      p._id === updatedPage._id ? updatedPage : p
+    );
+
+    imgSvc.pageWasEdited = true;
+    imgSvc.imgWasEdited = true;
+    imgSvc.redrawImage();
+    imgSvc.currentPages.forEach(p => imgSvc.drawPage(p));
+  }
+
+  private resizePage(ev: MouseEvent, el: HTMLElement): void {
+    const imgSvc = this.imagesService;
+    const mode = imgSvc.resizeMode;
+    const startPage = imgSvc.resizeStartPage;
+    if (!mode || !startPage) return;
+
+    el.style.cursor = imgSvc.resizeCursor;
+
+    const updated = structuredClone(startPage);
+    
+    if (mode.area === 'edge') {
+      this.applyEdgeResize(updated, startPage, mode.edgeSide!, ev);
+    }
+
+    if (mode.area === 'corner') {
+      this.applyCornerResize(updated, startPage, mode.corner!, ev);
+    }
+
+    imgSvc.pageWasEdited = true;
+    imgSvc.imgWasEdited = true;
+  }
+
+  // TO DO: REFACTOR!
+  private applyEdgeResize(p: Page, start: Page, userSide: EdgeSide, ev: MouseEvent) {
+    const c = this.imagesService.c;
+    const cw = c.width;
+    const ch = c.height;
+    const ratio = cw / ch;
+    const inverseRatio = ch / cw;
+
+    const startMouse = this.imagesService.resizeStartMouse;
+    const mouse = this.getMousePosOnMain(ev);
+    if (!mouse || !startMouse) return;
+
+    const mx = mouse.x - startMouse.x;
+    const my = mouse.y - startMouse.y;
+
+    let newWidth = start.width;
+    let newHeight = start.height;
+    let newLeft = start.left;
+    let newRight = start.right;
+    let newTop = start.top;
+    let newBottom = start.bottom;
+    let newXc = start.xc;
+    let newYc = start.yc;
+
+    if ([0, -180, 90, -90].includes(start.angle)) {
+      const dx = mx / cw;
+      const dy = my / ch;
+      
+      if (userSide === 'left' || userSide === 'right') {
+        if (userSide === 'right') {
+          newRight = start.right + dx;
+          if (newRight < newLeft) newRight = start.left;
+        } else {
+          newLeft = start.left + dx;
+          if (newRight < newLeft) newLeft = start.right;
+        }
+
+        if ([0, -180].includes(start.angle)) {
+          newWidth = newRight - newLeft;
+          if (newWidth < 0) newWidth = 0;
+          if (userSide === 'right' && start.angle === 0 && newWidth > 1 - start.left) {
+            newWidth = 1 - start.left;
+            newRight = 1;
+          }
+          if (userSide === 'left' && start.angle === 0 && newWidth > start.right) {
+            newWidth = start.right;
+            newLeft = 0;
+          }
+          if (userSide === 'left' && start.angle === -180 && newWidth > start.right) {
+            newWidth = start.right;
+            newLeft = 0;
+          }
+          if (userSide === 'right' && start.angle === -180 && newWidth > 1 - start.left) {
+            newWidth = 1 - start.left;
+            newRight = 1;
+          }
+        } else {
+          newHeight = (newRight - newLeft) * ratio;
+          if (newHeight < 0) newHeight = 0;
+          if (userSide === 'right' && start.angle === 90 && newHeight * inverseRatio > 1 - start.left) {
+            newHeight = (1 - start.left) * ratio;
+            newRight = 1;
+          }
+          if (userSide === 'left' && start.angle === 90 && newHeight * inverseRatio > start.right) {
+            newHeight = start.right * ratio;
+            newLeft = 0;
+          }
+          if (userSide === 'left' && start.angle === -90 && newHeight * inverseRatio > start.right) {
+            newHeight = start.right * ratio;
+            newLeft = 0;
+          }
+          if (userSide === 'right' && start.angle === -90 && newHeight * inverseRatio > 1 - start.left) {
+            newHeight = (1 - start.left) * ratio;
+            newRight = 1;
+          }
+        }
+        newXc = (newLeft + newRight) / 2;
+      }
+
+      if (userSide === 'top' || userSide === 'bottom') {
+        if (userSide === 'bottom') {
+          newBottom = start.bottom + dy;
+          if (newBottom < newTop) newBottom = start.top;
+        } else {
+          newTop = start.top + dy;
+          if (newBottom < newTop) newTop = start.bottom;
+        }
+
+        if ([0, -180].includes(start.angle)) {
+          newHeight = newBottom - newTop;
+          if (newHeight < 0) newHeight = 0;
+          if (userSide === 'bottom' && start.angle === 0 && newHeight > 1 - start.top) {
+            newHeight = 1 - start.top;
+            newBottom = 1;
+          }
+          if (userSide === 'top' && start.angle === 0 && newHeight > start.bottom) {
+            newHeight = start.bottom;
+            newTop = 0;
+          }
+          if (userSide === 'top' && start.angle === -180 && newHeight > start.bottom) {
+            newHeight = start.bottom;
+            newTop = 0;
+          }
+          if (userSide === 'bottom' && start.angle === -180 && newHeight > 1 - start.top) {
+            newHeight = 1 - start.top;
+            newBottom = 1;
+          }
+        } else {
+          newWidth = (newBottom - newTop) * inverseRatio;
+          if (newWidth < 0) newWidth = 0;
+          if (userSide === 'bottom' && start.angle === 90 && newWidth * ratio > 1 - start.top) {
+            newWidth = (1 - start.top) * inverseRatio;
+            newBottom = 1;
+          }
+          if (userSide === 'top' && start.angle === 90 && newWidth * ratio > start.bottom) {
+            newWidth = start.bottom * inverseRatio;
+            newTop = 0;
+          }
+          if (userSide === 'top' && start.angle === -90 && newWidth * ratio > start.bottom) {
+            newWidth = start.bottom * inverseRatio;
+            newTop = 0;
+          }
+          if (userSide === 'bottom' && start.angle === -90 && newWidth * ratio > 1 - start.top) {
+            newWidth = (1 - start.top) * inverseRatio;
+            newBottom = 1;
+          }
+        }
+        newYc = (newTop + newBottom) / 2;
+      }
+    }
+
+    // 0-90 degrees
+    if (start.angle > 0 && start.angle < 90) {
+      const rad = degreeToRadian(start.angle);
+      const cos = Math.cos(rad);
+      const sin = Math.sin(rad);
+
+      if (
+        (start.angle > 0 && start.angle <= 45 && userSide === 'right')
+        || (start.angle > 45 && start.angle < 90 && userSide === 'bottom')
+      ) {
+        const hypot = mx * cos + my * sin;
+        const dx = cos * hypot / cw;
+        const dy = sin * hypot / ch;
+
+        newWidth = start.width + hypot / cw;
+        newRight = start.right + dx;
+        newBottom = start.bottom + dy;
+        newXc = start.xc + dx / 2;
+        newYc = start.yc + dy / 2;
+
+        if (newWidth < 0) {
+          newWidth = 0;
+          newRight = start.right - cos * start.width;
+          newBottom = start.bottom - sin * start.width * ratio;
+          newXc = (newRight - start.left) / 2 + start.left;
+          newYc = (newBottom - start.top) / 2 + start.top;
+        }
+
+        if (newRight > 1) {
+          newRight = 1;
+          newWidth = start.width + (1 - start.right) / cos;
+          newBottom = start.bottom + (newWidth - start.width) * sin * ratio;
+          newXc = start.xc + (cos * (newWidth - start.width)) / 2;
+          newYc = start.yc + ((newWidth - start.width) * sin * ratio) / 2;
+        }
+
+        if (newBottom > 1) {
+          newBottom = 1;
+          newWidth = start.width + (1 - start.bottom) * inverseRatio / sin;
+          newRight = start.right + (newWidth - start.width) * cos;
+          newXc = start.xc + (cos * (newWidth - start.width)) / 2;
+          newYc = start.yc + ((newWidth - start.width) * sin * ratio) / 2;
+        }
+      }
+
+      if (
+        (start.angle > 0 && start.angle <= 45 && userSide === 'bottom')
+        || (start.angle > 45 && start.angle < 90 && userSide === 'left')
+      ) {
+        const hypot = mx * (-sin) + my * cos;
+        const dx = (-sin) * hypot / cw;
+        const dy = cos * hypot / ch;
+
+        newHeight = start.height + hypot / ch;
+        newLeft = start.left + dx;
+        newBottom = start.bottom + dy;
+        newXc = start.xc + dx / 2;
+        newYc = start.yc + dy / 2;
+
+        if (newHeight < 0) {
+          newHeight = 0;
+          newLeft = start.left + sin * start.height * inverseRatio;
+          newBottom = start.bottom - cos * start.height;
+          newXc = (start.right - newLeft) / 2 + newLeft;
+          newYc = (newBottom - start.top) / 2 + start.top;
+        }
+
+        if (newLeft < 0) {
+          newLeft = 0;
+          newHeight = start.height + start.left / sin * ratio;
+          newBottom = start.bottom + (newHeight - start.height) * cos;
+          newXc = start.xc - (sin * (newHeight - start.height) * inverseRatio) / 2;
+          newYc = start.yc + ((newHeight - start.height) * cos) / 2;
+        }
+
+        if (newBottom > 1) {
+          newBottom = 1;
+          newHeight = start.height + (1 - start.bottom) / cos;
+          newLeft = start.left - (newHeight - start.height) * sin * inverseRatio;
+          newXc = start.xc - (sin * (newHeight - start.height) * inverseRatio) / 2;
+          newYc = start.yc + ((newHeight - start.height) * cos) / 2;
+        }
+      }
+
+      if (
+        (start.angle > 0 && start.angle <= 45 && userSide === 'left')
+        || (start.angle > 45 && start.angle < 90 && userSide === 'top')
+      ) {
+        const hypot = mx * cos + my * sin;
+        const dx = cos * hypot / cw;
+        const dy = sin * hypot / ch;
+
+        newWidth = start.width - hypot / cw;
+        newLeft = start.left + dx;
+        newTop = start.top + dy;
+        newXc = start.xc + dx / 2;
+        newYc = start.yc + dy / 2;
+
+        if (newWidth < 0) {
+          newWidth = 0;
+          newLeft = start.left + cos * start.width;
+          newTop = start.top + sin * start.width * ratio;
+          newXc = (start.right - newLeft) / 2 + newLeft;
+          newYc = (start.bottom - newTop) / 2 + newTop;
+        }
+
+        if (newLeft < 0) {
+          newLeft = 0;
+          newWidth = start.width + start.left / cos;
+          newTop = start.top - (newWidth - start.width) * sin * ratio;
+          newXc = start.xc - (cos * (newWidth - start.width)) / 2;
+          newYc = start.yc - ((newWidth - start.width) * sin * ratio) / 2;
+        }
+
+        if (newTop < 0) {
+          newTop = 0;
+          newWidth = start.width + start.top * inverseRatio / sin;
+          newLeft = start.left - (newWidth - start.width) * cos;
+          newXc = start.xc - (cos * (newWidth - start.width)) / 2;
+          newYc = start.yc - ((newWidth - start.width) * sin * ratio) / 2;
+        }
+      }
+
+      if (
+        (start.angle > 0 && start.angle <= 45 && userSide === 'top')
+        || (start.angle > 45 && start.angle < 90 && userSide === 'right')
+      ) {
+        const hypot = mx * (-sin) + my * cos;
+        const dx = (-sin) * -hypot / cw;
+        const dy = cos * -hypot / ch;
+
+        newHeight = start.height - hypot / ch;
+        newRight = start.right - dx;
+        newTop = start.top - dy;
+        newXc = start.xc - dx / 2;
+        newYc = start.yc - dy / 2;
+
+        if (newHeight < 0) {
+          newHeight = 0;
+          newRight = start.right - sin * start.height * inverseRatio;
+          newTop = start.top + cos * start.height;
+          newXc = (newRight - start.left) / 2 + start.left;
+          newYc = (start.bottom - newTop) / 2 + newTop;
+        }
+
+        if (newRight > 1) {
+          newRight = 1;
+          newHeight = start.height + (1 - start.right) / sin * ratio;
+          newTop = start.top - (newHeight - start.height) * cos;
+          newXc = start.xc + (sin * (newHeight - start.height) * inverseRatio) / 2;
+          newYc = start.yc - ((newHeight - start.height) * cos) / 2;
+        }
+
+        if (newTop < 0) {
+          newTop = 0;
+          newHeight = start.height + start.top / cos;
+          newRight = start.right + (newHeight - start.height) * sin * inverseRatio;
+          newXc = start.xc + (sin * (newHeight - start.height) * inverseRatio) / 2;
+          newYc = start.yc - ((newHeight - start.height) * cos) / 2;
+        }
+      }
+    }
+
+    // 90-180 degrees
+    if (start.angle > 90 && start.angle < 180) {
+      const rad = degreeToRadian(start.angle - 90);
+      const cos = Math.cos(rad);
+      const sin = Math.sin(rad);
+
+      if (
+        (start.angle > 90 && start.angle <= 135 && userSide === 'right')
+        || (start.angle > 135 && start.angle < 180 && userSide === 'bottom')
+      ) {
+        const hypot = mx * cos + my * sin;
+        const dx = cos * hypot / cw;
+        const dy = sin * hypot / ch;
+
+        newHeight = start.height + hypot / ch;
+        newRight = start.right + dx;
+        newBottom = start.bottom + dy;
+        newXc = start.xc + dx / 2;
+        newYc = start.yc + dy / 2;
+
+        if (newHeight < 0) {
+          newHeight = 0;
+          newRight = start.right - cos * start.height * inverseRatio;
+          newBottom = start.bottom - sin * start.height;
+          newXc = (newRight - start.left) / 2 + start.left;
+          newYc = (newBottom - start.top) / 2 + start.top;
+        }
+
+        if (newRight > 1) {
+          newRight = 1;
+          newHeight = start.height + (1 - start.right) / cos * ratio;
+          newBottom = start.bottom + (newHeight - start.height) * sin;
+          newXc = start.xc + (cos * (newHeight - start.height) * inverseRatio) / 2;
+          newYc = start.yc + ((newHeight - start.height) * sin) / 2;
+        }
+
+        if (newBottom > 1) {
+          newBottom = 1;
+          newHeight = start.height + (1 - start.bottom) / sin;
+          newRight = start.right + (newHeight - start.height) * cos * inverseRatio;
+          newXc = start.xc + (cos * (newHeight - start.height) * inverseRatio) / 2;
+          newYc = start.yc + ((newHeight - start.height) * sin) / 2;
+        }
+      }
+
+      if (
+        (start.angle > 90 && start.angle <= 135 && userSide === 'bottom')
+        || (start.angle > 135 && start.angle < 180 && userSide === 'left')
+      ) {
+        const hypot = mx * (-sin) + my * cos;
+        const dx = (-sin) * hypot / cw;
+        const dy = cos * hypot / ch;
+
+        newWidth = start.width + hypot / cw;
+        newLeft = start.left + dx;
+        newBottom = start.bottom + dy;
+        newXc = start.xc + dx / 2;
+        newYc = start.yc + dy / 2;
+
+        if (newWidth < 0) {
+          newWidth = 0;
+          newLeft = start.left + sin * start.width;
+          newBottom = start.bottom - cos * start.width * ratio;
+          newXc = (start.right - newLeft) / 2 + newLeft;
+          newYc = (newBottom - start.top) / 2 + start.top;
+        }
+
+        if (newLeft < 0) {
+          newLeft = 0;
+          newWidth = start.width + start.left / sin;
+          newBottom = start.bottom + (newWidth - start.width) * cos;
+          newXc = start.xc - sin * (newWidth - start.width) / 2;
+          newYc = start.yc + ((newWidth - start.width) * cos * ratio) / 2;
+        }
+
+        if (newBottom > 1) {
+          newBottom = 1;
+          newWidth = start.width + (1 - start.bottom) / cos * inverseRatio;
+          newLeft = start.left - (newWidth - start.width) * sin;
+          newXc = start.xc - sin * (newWidth - start.width) / 2;
+          newYc = start.yc + ((newWidth - start.width) * cos * ratio) / 2;
+        }
+      }
+
+      if (
+        (start.angle > 90 && start.angle <= 135 && userSide === 'left')
+        || (start.angle > 135 && start.angle < 180 && userSide === 'top')
+      ) {
+        const hypot = mx * cos + my * sin;
+        const dx = cos * hypot / cw;
+        const dy = sin * hypot / ch;
+
+        newHeight = start.height - hypot / ch;
+        newLeft = start.left + dx;
+        newTop = start.top + dy;
+        newXc = start.xc + dx / 2;
+        newYc = start.yc + dy / 2;
+
+        if (newHeight < 0) {
+          newHeight = 0;
+          newLeft = start.left + cos * start.height * inverseRatio;
+          newTop = start.top + sin * start.height;
+          newXc = (start.right - newLeft) / 2 + newLeft;
+          newYc = (start.bottom - newTop) / 2 + newTop;
+        }
+
+        if (newLeft < 0) {
+          newLeft = 0;
+          newHeight = start.height + start.left / cos * ratio;
+          newTop = start.top - (newHeight - start.height) * sin;
+          newXc = start.xc - (cos * (newHeight - start.height) * inverseRatio) / 2;
+          newYc = start.yc - ((newHeight - start.height) * sin) / 2;
+        }
+
+        if (newTop < 0) {
+          newTop = 0;
+          newHeight = start.height + start.top / sin;
+          newLeft = start.left - (newHeight - start.height) * cos * inverseRatio;
+          newXc = start.xc - (cos * (newHeight - start.height) * inverseRatio) / 2;
+          newYc = start.yc - ((newHeight - start.height) * sin) / 2;
+        }
+      }
+
+      if (
+        (start.angle > 90 && start.angle <= 135 && userSide === 'top')
+        || (start.angle > 135 && start.angle < 180 && userSide === 'right')
+      ) {
+        const hypot = mx * (-sin) + my * cos;
+        const dx = (-sin) * -hypot / cw;
+        const dy = cos * -hypot / ch;
+
+        newWidth = start.width - hypot / cw;
+        newRight = start.right - dx;
+        newTop = start.top - dy;
+        newXc = start.xc - dx / 2;
+        newYc = start.yc - dy / 2;
+
+        if (newWidth < 0) {
+          newWidth = 0;
+          newRight = start.right - sin * start.width;
+          newTop = start.top + cos * start.width * ratio;
+          newXc = (newRight - start.left) / 2 + start.left;
+          newYc = (start.bottom - newTop) / 2 + newTop;
+        }
+
+        if (newRight > 1) {
+          newRight = 1;
+          newWidth = start.width + (1 - start.right) / sin;
+          newTop = start.top - (newWidth - start.width) * cos * ratio;
+          newXc = start.xc + (sin * (newWidth - start.width)) / 2;
+          newYc = start.yc - ((newWidth - start.width) * cos * ratio) / 2;
+        }
+
+        if (newTop < 0) {
+          newTop = 0;
+          newWidth = start.width + start.top / cos * inverseRatio;
+          newRight = start.right + (newWidth - start.width) * sin;
+          newXc = start.xc + (sin * (newWidth - start.width)) / 2;
+          newYc = start.yc - ((newWidth - start.width) * cos * ratio) / 2;
+        }
+      }
+    }
+
+    // -180 - -90 degrees
+    if (start.angle > -180 && start.angle < -90) {
+      const rad = degreeToRadian(-start.angle - 90);
+      const cos = Math.cos(rad);
+      const sin = Math.sin(rad);
+
+      if (
+        (start.angle > -180 && start.angle <= -135 && userSide === 'right')
+        || (start.angle > -135 && start.angle < -90 && userSide === 'bottom')
+      ) {
+        const hypot = mx * sin + my * cos;
+        const dx = sin * hypot / cw;
+        const dy = cos * hypot / ch;
+
+        newWidth = start.width + hypot / cw;
+        newRight = start.right + dx;
+        newBottom = start.bottom + dy;
+        newXc = start.xc + dx / 2;
+        newYc = start.yc + dy / 2;
+
+        if (newWidth < 0) {
+          newWidth = 0;
+          newRight = start.right - sin * start.width;
+          newBottom = start.bottom - cos * start.width * ratio;
+          newXc = (newRight - start.left) / 2 + start.left;
+          newYc = (newBottom - start.top) / 2 + start.top;
+        }
+
+        if (newRight > 1) {
+          newRight = 1;
+          newWidth = start.width + (1 - start.right) / sin;
+          newBottom = start.bottom + (newWidth - start.width) * cos * ratio;
+          newXc = start.xc + (sin * (newWidth - start.width)) / 2;
+          newYc = start.yc + ((newWidth - start.width) * cos * ratio) / 2;
+        }
+
+        if (newBottom > 1) {
+          newBottom = 1;
+          newWidth = start.width + (1 - start.bottom) * inverseRatio / cos;
+          newRight = start.right + (newWidth - start.width) * sin;
+          newXc = start.xc + (sin * (newWidth - start.width)) / 2;
+          newYc = start.yc + ((newWidth - start.width) * cos * ratio) / 2;
+        }
+      }
+
+      if (
+        (start.angle > -180 && start.angle <= -135 && userSide === 'bottom')
+        || (start.angle > -135 && start.angle < -90 && userSide === 'left')
+      ) {
+        const hypot = mx * (-cos) + my * sin;
+        const dx = (-cos) * hypot / cw;
+        const dy = sin * hypot / ch;
+
+        newHeight = start.height + hypot / ch;
+        newLeft = start.left + dx;
+        newBottom = start.bottom + dy;
+        newXc = start.xc + dx / 2;
+        newYc = start.yc + dy / 2;
+
+        if (newHeight < 0) {
+          newHeight = 0;
+          newLeft = start.left + cos * start.height * inverseRatio;
+          newBottom = start.bottom - sin * start.height;
+          newXc = (start.right - newLeft) / 2 + newLeft;
+          newYc = (newBottom - start.top) / 2 + start.top;
+        }
+
+        if (newLeft < 0) {
+          newLeft = 0;
+          newHeight = start.height + start.left / cos * ratio;
+          newBottom = start.bottom + (newHeight - start.height) * sin;
+          newXc = start.xc - (cos * (newHeight - start.height) * inverseRatio) / 2;
+          newYc = start.yc + ((newHeight - start.height) * sin) / 2;
+        }
+
+        if (newBottom > 1) {
+          newBottom = 1;
+          newHeight = start.height + (1 - start.bottom) / sin;
+          newLeft = start.left - (newHeight - start.height) * cos * inverseRatio;
+          newXc = start.xc - (cos * (newHeight - start.height) * inverseRatio) / 2;
+          newYc = start.yc + ((newHeight - start.height) * sin) / 2;
+        }
+      }
+
+      if (
+        (start.angle > -180 && start.angle <= -135 && userSide === 'left')
+        || (start.angle > -135 && start.angle < -90 && userSide === 'top')
+      ) {
+        const hypot = mx * sin + my * cos;
+        const dx = sin * hypot / cw;
+        const dy = cos * hypot / ch;
+
+        newWidth = start.width - hypot / cw;
+        newLeft = start.left + dx;
+        newTop = start.top + dy;
+        newXc = start.xc + dx / 2;
+        newYc = start.yc + dy / 2;
+
+        if (newWidth < 0) {
+          newWidth = 0;
+          newLeft = start.left + sin * start.width;
+          newTop = start.top + cos * start.width * ratio;
+          newXc = (start.right - newLeft) / 2 + newLeft;
+          newYc = (start.bottom - newTop) / 2 + newTop;
+        }
+
+        if (newLeft < 0) {
+          newLeft = 0;
+          newWidth = start.width + start.left / sin;
+          newTop = start.top - (newWidth - start.width) * cos * ratio;
+          newXc = start.xc - (sin * (newWidth - start.width)) / 2;
+          newYc = start.yc - ((newWidth - start.width) * cos * ratio) / 2;
+        }
+
+        if (newTop < 0) {
+          newTop = 0;
+          newWidth = start.width + start.top * inverseRatio / cos;
+          newLeft = start.left - (newWidth - start.width) * sin;
+          newXc = start.xc - (sin * (newWidth - start.width)) / 2;
+          newYc = start.yc - ((newWidth - start.width) * cos * ratio) / 2;
+        }
+      }
+
+      if (
+        (start.angle > -180 && start.angle <= -135 && userSide === 'top')
+        || (start.angle > -135 && start.angle < -90 && userSide === 'right')
+      ) {
+        const hypot = mx * (-cos) + my * sin;
+        const dx = (-cos) * -hypot / cw;
+        const dy = sin * -hypot / ch;
+
+        newHeight = start.height - hypot / ch;
+        newRight = start.right - dx;
+        newTop = start.top - dy;
+        newXc = start.xc - dx / 2;
+        newYc = start.yc - dy / 2;
+
+        if (newHeight < 0) {
+          newHeight = 0;
+          newRight = start.right - cos * start.height * inverseRatio;
+          newTop = start.top + sin * start.height;
+          newXc = (newRight - start.left) / 2 + start.left;
+          newYc = (start.bottom - newTop) / 2 + newTop;
+        }
+
+        if (newRight > 1) {
+          newRight = 1;
+          newHeight = start.height + (1 - start.right) / cos * ratio;
+          newTop = start.top - (newHeight - start.height) * sin;
+          newXc = start.xc + (cos * (newHeight - start.height) * inverseRatio) / 2;
+          newYc = start.yc - ((newHeight - start.height) * sin) / 2;
+        }
+
+        if (newTop < 0) {
+          newTop = 0;
+          newHeight = start.height + start.top / sin;
+          newRight = start.right + (newHeight - start.height) * cos * inverseRatio;
+          newXc = start.xc + (cos * (newHeight - start.height) * inverseRatio) / 2;
+          newYc = start.yc - ((newHeight - start.height) * sin) / 2;
+        }
+      }
+    }
+
+    // -90-0 degrees
+    if (start.angle > -90 && start.angle < 0) {
+      const rad = degreeToRadian(-start.angle);
+      const cos = Math.cos(rad);
+      const sin = Math.sin(rad);
+
+      if (
+        (start.angle > -90 && start.angle < -45 && userSide === 'right')
+        || (start.angle >= -45 && start.angle < 0 && userSide === 'bottom')
+      ) {
+        const hypot = mx * sin + my * cos;
+        const dx = sin * hypot / cw;
+        const dy = cos * hypot / ch;
+
+        newHeight = start.height + hypot / ch;
+        newRight = start.right + dx;
+        newBottom = start.bottom + dy;
+        newXc = start.xc + dx / 2;
+        newYc = start.yc + dy / 2;
+
+        if (newHeight < 0) {
+          newHeight = 0;
+          newRight = start.right - sin * start.height * inverseRatio;
+          newBottom = start.bottom - cos * start.height;
+          newXc = (newRight - start.left) / 2 + start.left;
+          newYc = (newBottom - start.top) / 2 + start.top;
+        }
+
+        if (newRight > 1) {
+          newRight = 1;
+          newHeight = start.height + (1 - start.right) / sin * ratio;
+          newBottom = start.bottom + (newHeight - start.height) * cos;
+          newXc = start.xc + (sin * (newHeight - start.height) * inverseRatio) / 2;
+          newYc = start.yc + ((newHeight - start.height) * cos) / 2;
+        }
+
+        if (newBottom > 1) {
+          newBottom = 1;
+          newHeight = start.height + (1 - start.bottom) / cos;
+          newRight = start.right + (newHeight - start.height) * sin * inverseRatio;
+          newXc = start.xc + (sin * (newHeight - start.height) * inverseRatio) / 2;
+          newYc = start.yc + ((newHeight - start.height) * cos) / 2;
+        }
+      }
+
+      if (
+        (start.angle > -90 && start.angle < -45 && userSide === 'bottom')
+        || (start.angle >= -45 && start.angle < 0 && userSide === 'left')
+      ) {
+        const hypot = mx * (-cos) + my * sin;
+        const dx = (-cos) * hypot / cw;
+        const dy = sin * hypot / ch;
+
+        newWidth = start.width + hypot / cw;
+        newLeft = start.left + dx;
+        newBottom = start.bottom + dy;
+        newXc = start.xc + dx / 2;
+        newYc = start.yc + dy / 2;
+
+        if (newWidth < 0) {
+          newWidth = 0;
+          newLeft = start.left + cos * start.width;
+          newBottom = start.bottom - sin * start.width * ratio;
+          newXc = (start.right - newLeft) / 2 + newLeft;
+          newYc = (newBottom - start.top) / 2 + start.top;
+        }
+
+        if (newLeft < 0) {
+          newLeft = 0;
+          newWidth = start.width + start.left / cos;
+          newBottom = start.bottom + (newWidth - start.width) * sin;
+          newXc = start.xc - cos * (newWidth - start.width) / 2;
+          newYc = start.yc + ((newWidth - start.width) * sin * ratio) / 2;
+        }
+
+        if (newBottom > 1) {
+          newBottom = 1;
+          newWidth = start.width + (1 - start.bottom) / sin * inverseRatio;
+          newLeft = start.left - (newWidth - start.width) * cos;
+          newXc = start.xc - cos * (newWidth - start.width) / 2;
+          newYc = start.yc + ((newWidth - start.width) * sin * ratio) / 2;
+        }
+      }
+
+      if (
+        (start.angle > -90 && start.angle < -45 && userSide === 'left')
+        || (start.angle >= -45 && start.angle < 0 && userSide === 'top')
+      ) {
+        const hypot = mx * sin + my * cos;
+        const dx = sin * hypot / cw;
+        const dy = cos * hypot / ch;
+
+        newHeight = start.height - hypot / ch;
+        newLeft = start.left + dx;
+        newTop = start.top + dy;
+        newXc = start.xc + dx / 2;
+        newYc = start.yc + dy / 2;
+
+        if (newHeight < 0) {
+          newHeight = 0;
+          newLeft = start.left + sin * start.height * inverseRatio;
+          newTop = start.top + cos * start.height;
+          newXc = (start.right - newLeft) / 2 + newLeft;
+          newYc = (start.bottom - newTop) / 2 + newTop;
+        }
+
+        if (newLeft < 0) {
+          newLeft = 0;
+          newHeight = start.height + start.left / sin * ratio;
+          newTop = start.top - (newHeight - start.height) * cos;
+          newXc = start.xc - (sin * (newHeight - start.height) * inverseRatio) / 2;
+          newYc = start.yc - ((newHeight - start.height) * cos) / 2;
+        }
+
+        if (newTop < 0) {
+          newTop = 0;
+          newHeight = start.height + start.top / cos;
+          newLeft = start.left - (newHeight - start.height) * sin * inverseRatio;
+          newXc = start.xc - (sin * (newHeight - start.height) * inverseRatio) / 2;
+          newYc = start.yc - ((newHeight - start.height) * cos) / 2;
+        }
+      }
+
+      if (
+        (start.angle > -90 && start.angle < -45 && userSide === 'top')
+        || (start.angle >= -45 && start.angle < 0 && userSide === 'right')
+      ) {
+        const hypot = mx * (-cos) + my * sin;
+        const dx = (-cos) * -hypot / cw;
+        const dy = sin * -hypot / ch;
+
+        newWidth = start.width - hypot / cw;
+        newRight = start.right - dx;
+        newTop = start.top - dy;
+        newXc = start.xc - dx / 2;
+        newYc = start.yc - dy / 2;
+
+        if (newWidth < 0) {
+          newWidth = 0;
+          newRight = start.right - cos * start.width;
+          newTop = start.top + sin * start.width * ratio;
+          newXc = (newRight - start.left) / 2 + start.left;
+          newYc = (start.bottom - newTop) / 2 + newTop;
+        }
+
+        if (newRight > 1) {
+          newRight = 1;
+          newWidth = start.width + (1 - start.right) / cos;
+          newTop = start.top - (newWidth - start.width) * sin * ratio;
+          newXc = start.xc + (cos * (newWidth - start.width)) / 2;
+          newYc = start.yc - ((newWidth - start.width) * sin * ratio) / 2;
+        }
+
+        if (newTop < 0) {
+          newTop = 0;
+          newWidth = start.width + start.top / sin * inverseRatio;
+          newRight = start.right + (newWidth - start.width) * cos;
+          newXc = start.xc + (cos * (newWidth - start.width)) / 2;
+          newYc = start.yc - ((newWidth - start.width) * sin * ratio) / 2;
+        }
+      }
+    }
+
+    p.width = newWidth;
+    p.height = newHeight;
+    p.left = newLeft;
+    p.right = newRight;
+    p.top = newTop;
+    p.bottom = newBottom;
+    p.xc = newXc;
+    p.yc = newYc;
+
+    const imgSvc = this.imagesService;
+    imgSvc.selectedPage = p;
+    imgSvc.currentPages = imgSvc.currentPages.map(page => page._id === p._id ? p : page);
+    imgSvc.redrawImage();
+    imgSvc.currentPages.forEach(p => imgSvc.drawPage(p));
+  }
+
+  // TO DO: REFACTOR!
+  private applyCornerResize(p: Page, start: Page, userCorner: CornerName, ev: MouseEvent) {
+    const c = this.imagesService.c;
+    const cw = c.width;
+    const ch = c.height;
+    const ratio = cw / ch;
+    const inverseRatio = ch / cw;
+    
+    const startMouse = this.imagesService.resizeStartMouse;
+    const mouse = this.getMousePosOnMain(ev);
+    if (!mouse || !startMouse) return;
+
+    const mx = mouse.x - startMouse.x;
+    const my = mouse.y - startMouse.y;
+
+    let newWidth = start.width;
+    let newHeight = start.height;
+    let newLeft = start.left;
+    let newRight = start.right;
+    let newTop = start.top;
+    let newBottom = start.bottom;
+    let newXc = start.xc;
+    let newYc = start.yc;
+
+    if ([0, -180, 90, -90].includes(start.angle)) {
+      const dx = mx / cw;
+      const dy = my / ch;
+
+      if (userCorner.includes('e') || userCorner.includes('w')) {
+        if (userCorner.includes('e')) {
+          newRight = start.right + dx;
+          if (newRight < newLeft) newRight = start.left;
+        } else if (userCorner.includes('w')) {
+          newLeft = start.left + dx;
+          if (newRight < newLeft) newLeft = start.right;
+        }
+
+        if ([0, -180].includes(start.angle)) {
+          newWidth = newRight - newLeft;
+          if (newWidth < 0) newWidth = 0;
+          if (userCorner.includes('e') && start.angle === 0 && newWidth > 1 - start.left) {
+            newWidth = 1 - start.left;
+            newRight = 1;
+          }
+          if (userCorner.includes('w') && start.angle === 0 && newWidth > start.right) {
+            newWidth = start.right;
+            newLeft = 0;
+          }
+          if (userCorner.includes('w') && start.angle === -180 && newWidth > start.right) {
+            newWidth = start.right;
+            newLeft = 0;
+          }
+          if (userCorner.includes('e') && start.angle === -180 && newWidth > 1 - start.left) {
+            newWidth = 1 - start.left;
+            newRight = 1;
+          }
+        } else {
+          newHeight = (newRight - newLeft) * ratio;
+          if (newHeight < 0) newHeight = 0;
+          if (userCorner.includes('e') && start.angle === 90 && newHeight * inverseRatio > 1 - start.left) {
+            newHeight = (1 - start.left) * ratio;
+            newRight = 1;
+          }
+          if (userCorner.includes('w') && start.angle === 90 && newHeight * inverseRatio > start.right) {
+            newHeight = start.right * ratio;
+            newLeft = 0;
+          }
+          if (userCorner.includes('w') && start.angle === -90 && newHeight * inverseRatio > start.right) {
+            newHeight = start.right * ratio;
+            newLeft = 0;
+          }
+          if (userCorner.includes('e') && start.angle === -90 && newHeight * inverseRatio > 1 - start.left) {
+            newHeight = (1 - start.left) * ratio;
+            newRight = 1;
+          }
+        }
+        newXc = (newLeft + newRight) / 2;
+      }
+
+      if (userCorner.includes('n') || userCorner.includes('s')) {
+        if (userCorner.includes('s')) {
+          newBottom = start.bottom + dy;
+          if (newBottom < newTop) newBottom = start.top;
+        } else if (userCorner.includes('n')) {
+          newTop = start.top + dy;
+          if (newBottom < newTop) newTop = start.bottom;
+        }
+
+        if ([0, -180].includes(start.angle)) {
+          newHeight = newBottom - newTop;
+          if (newHeight < 0) newHeight = 0;
+          if (userCorner.includes('s') && start.angle === 0 && newHeight > 1 - start.top) {
+            newHeight = 1 - start.top;
+            newBottom = 1;
+          }
+          if (userCorner.includes('n') && start.angle === 0 && newHeight > start.bottom) {
+            newHeight = start.bottom;
+            newTop = 0;
+          }
+          if (userCorner.includes('n') && start.angle === -180 && newHeight > start.bottom) {
+            newHeight = start.bottom;
+            newTop = 0;
+          }
+          if (userCorner.includes('s') && start.angle === -180 && newHeight > 1 - start.top) {
+            newHeight = 1 - start.top;
+            newBottom = 1;
+          }
+        } else {
+          newWidth = (newBottom - newTop) * inverseRatio;
+          if (newWidth < 0) newWidth = 0;
+          if (userCorner.includes('s') && start.angle === 90 && newWidth * ratio > 1 - start.top) {
+            newWidth = (1 - start.top) * inverseRatio;
+            newBottom = 1;
+          }
+          if (userCorner.includes('n') && start.angle === 90 && newWidth * ratio > start.bottom) {
+            newWidth = start.bottom * inverseRatio;
+            newTop = 0;
+          }
+          if (userCorner.includes('n') && start.angle === -90 && newWidth * ratio > start.bottom) {
+            newWidth = start.bottom * inverseRatio;
+            newTop = 0;
+          }
+          if (userCorner.includes('s') && start.angle === -90 && newWidth * ratio > 1 - start.top) {
+            newWidth = (1 - start.top) * inverseRatio;
+            newBottom = 1;
+          }
+        }
+        newYc = (newTop + newBottom) / 2;
+      }
+    }
+
+    // 0-90 degrees
+    if (start.angle > 0 && start.angle < 90) {
+      const rad = degreeToRadian(start.angle);
+      const cos = Math.cos(rad);
+      const sin = Math.sin(rad);
+
+      if (
+        (start.angle > 0 && start.angle <= 45 && userCorner === 'ne')
+        || (start.angle > 45 && start.angle < 90 && userCorner === 'se')
+      ) {
+        const hypotX = mx * cos + my * sin;
+        const dxX = cos * hypotX / cw;
+        const dyX = sin * hypotX / ch;
+        const hypotY = mx * (-sin) + my * cos;
+        const dxY = (-sin) * -hypotY / cw;
+        const dyY = cos * -hypotY / ch;
+
+        newWidth = start.width + hypotX / cw;
+        newRight = start.right + dxX;
+        newBottom = start.bottom + dyX;
+        newHeight = start.height - hypotY / ch;
+        newRight -= dxY;
+        newTop = start.top - dyY;
+
+        if (newWidth < 0 && newHeight < 0) {
+          newWidth = 0;
+          newHeight = 0;
+          newRight = start.left;
+          newBottom = start.bottom - sin * start.width * ratio;
+          newTop = newBottom;
+        } else if (newWidth < 0) {
+          newWidth = 0;
+          newRight = start.right - cos * start.width - sin * (start.height - newHeight) * inverseRatio;
+          newBottom = start.bottom - sin * start.width * ratio;
+          newTop = start.top + cos * (start.height - newHeight);
+        } else if (newHeight < 0) {
+          newHeight = 0;
+          newRight = start.right - sin * start.height * inverseRatio - cos * (start.width - newWidth);
+          newTop = start.top + cos * start.height;
+          newBottom = start.bottom - sin * (start.width - newWidth) * ratio;
+        }
+
+        if (newTop < 0) {
+          newTop = 0;
+          const dH = start.top / cos;
+          newHeight = start.height + dH;
+          newRight += dxY + sin * dH * inverseRatio;
+        }
+
+        if (newBottom > 1) {
+          newBottom = 1;
+          const dW = (1 - start.bottom) * inverseRatio / sin;
+          newWidth = start.width + dW;
+          newRight -= dxX - cos * dW;
+        }
+
+        if (newRight > 1) {
+          newRight = 1;
+          const maxMx = Math.min((1 - start.right) * cw, mx);
+          const mouseDist = Math.hypot(maxMx, my);
+          const beta = Math.acos((1 - start.right) * cw / mouseDist);
+          if (Math.sign(my) < 0) {
+            const gamma = Math.PI / 2 - rad - beta;
+            newHeight = start.height + mouseDist * Math.cos(gamma) / ch;
+            newWidth = start.width + mouseDist * Math.sin(gamma) / cw;
+          } else {
+            const gamma = beta - rad;
+            newHeight = start.height - mouseDist * Math.sin(gamma) / ch;
+            newWidth = start.width + mouseDist * Math.cos(gamma) / cw;
+          }
+          newTop = start.top - (newHeight - start.height) * cos;
+          newBottom = start.bottom + (newWidth - start.width) * sin * ratio;
+        }
+      }
+
+      if (
+        (start.angle > 0 && start.angle <= 45 && userCorner === 'se')
+        || (start.angle > 45 && start.angle < 90 && userCorner === 'sw')
+      ) {
+        const hypotX = mx * cos + my * sin;
+        const dxX = cos * hypotX / cw;
+        const dyX = sin * hypotX / ch;
+        const hypotY = mx * (-sin) + my * cos;
+        const dxY = (-sin) * hypotY / cw;
+        const dyY = cos * hypotY / ch;
+
+        newWidth = start.width + hypotX / cw;
+        newRight = start.right + dxX;
+        newBottom = start.bottom + dyX;
+        newHeight = start.height + hypotY / ch;
+        newLeft = start.left + dxY;
+        newBottom += dyY;
+
+        if (newWidth < 0 && newHeight < 0) {
+          newWidth = 0;
+          newHeight = 0;
+          newBottom = start.top;
+          newLeft = start.left + sin * start.height * inverseRatio;
+          newRight = newLeft;
+        } else if (newWidth < 0) {
+          newWidth = 0;
+          newRight = start.right - cos * start.width;
+          newBottom = start.bottom - sin * start.width * ratio - cos * (start.height - newHeight);
+        } else if (newHeight < 0) {
+          newHeight = 0;
+          newRight = start.right - cos * (start.width - newWidth);
+          newLeft = start.left + sin * start.height * inverseRatio;
+          newBottom = start.top + sin * start.width * ratio - sin * (start.width - newWidth) * ratio;
+        }
+
+        if (newLeft < 0) {
+          newLeft = 0;
+          const dH = start.left / sin * ratio;
+          newHeight = start.height + dH;
+          newBottom -= dyY - cos * dH;
+        }
+
+        if (newRight > 1) {
+          newRight = 1;
+          const dW = (1 - start.right) / cos;
+          newWidth = start.width + dW;
+          newBottom -= dyX - sin * dW * ratio;
+        }
+
+        if (newBottom > 1) {
+          newBottom = 1;
+          const maxMy = Math.min((1 - start.bottom) * ch, my);
+          const mouseDist = Math.hypot(maxMy, mx);
+          const beta = Math.acos((1 - start.bottom) * ch / mouseDist);
+          if (Math.sign(mx) > 0) {
+            const gamma = Math.PI / 2 - rad - beta;
+            newHeight = start.height + mouseDist * Math.sin(gamma) / ch;
+            newWidth = start.width + mouseDist * Math.cos(gamma) / cw;
+          } else {
+            const gamma = beta - rad;
+            newHeight = start.height + mouseDist * Math.cos(gamma) / ch;
+            newWidth = start.width - mouseDist * Math.sin(gamma) / cw;
+          }
+          newLeft = start.left - (newHeight - start.height) * sin * inverseRatio;
+          newRight = start.right + (newWidth - start.width) * cos;
+        }
+      }
+
+      if (
+        (start.angle > 0 && start.angle <= 45 && userCorner === 'sw')
+        || (start.angle > 45 && start.angle < 90 && userCorner === 'nw')
+      ) {
+        const hypotX = mx * cos + my * sin;
+        const dxX = cos * hypotX / cw;
+        const dyX = sin * hypotX / ch;
+        const hypotY = mx * (-sin) + my * cos;
+        const dxY = (-sin) * hypotY / cw;
+        const dyY = cos * hypotY / ch;
+
+        newWidth = start.width - hypotX / cw;
+        newLeft = start.left + dxX;
+        newTop = start.top + dyX;
+        newHeight = start.height + hypotY / ch;
+        newLeft += dxY;
+        newBottom = start.bottom + dyY;
+
+        if (newWidth < 0 && newHeight < 0) {
+          newWidth = 0;
+          newHeight = 0;
+          newTop = start.top + sin * start.width * ratio;
+          newBottom = newTop;
+          newLeft = start.right;
+        } else if (newWidth < 0) {
+          newWidth = 0;
+          newTop = start.top + sin * start.width * ratio;
+          newBottom = start.bottom - cos * (start.height - newHeight);
+          newLeft = start.left + cos * start.width + sin * (start.height - newHeight) * inverseRatio;
+        } else if (newHeight < 0) {
+          newHeight = 0;
+          newTop = start.top + sin * (start.width - newWidth) * ratio;
+          newBottom = start.top + sin * start.width * ratio;
+          newLeft = start.left + sin * start.height * inverseRatio + cos * (start.width - newWidth);
+        }
+
+        if (newTop < 0) {
+          newTop = 0;
+          const dW = start.top / sin * inverseRatio;
+          newWidth = start.width + dW;
+          newLeft -= dxX + cos * dW;
+        }
+
+        if (newBottom > 1) {
+          newBottom = 1;
+          const dH = (1 - start.bottom) / cos;
+          newHeight = start.height + dH;
+          newLeft -= dxY + sin * dH * inverseRatio;
+        }
+
+        if (newLeft < 0) {
+          newLeft = 0;
+          const maxMx = Math.min(start.left * cw, Math.abs(mx));
+          const mouseDist = Math.hypot(maxMx, my);
+          const beta = Math.acos(start.left * cw / mouseDist);
+          if (Math.sign(my) > 0) {
+            const gamma = Math.PI / 2 - rad - beta;
+            newHeight = start.height + mouseDist * Math.cos(gamma) / ch;
+            newWidth = start.width + mouseDist * Math.sin(gamma) / cw;
+          } else {
+            const gamma = beta - rad;
+            newHeight = start.height - mouseDist * Math.sin(gamma) / ch;
+            newWidth = start.width + mouseDist * Math.cos(gamma) / cw;
+          }
+          newTop = start.top - (newWidth - start.width) * sin * ratio;
+          newBottom = start.bottom + (newHeight - start.height) * cos;
+        }
+      }
+
+      if (
+        (start.angle > 0 && start.angle <= 45 && userCorner === 'nw')
+        || (start.angle > 45 && start.angle < 90 && userCorner === 'ne')
+      ) {
+        const hypotX = mx * cos + my * sin;
+        const dxX = cos * hypotX / cw;
+        const dyX = sin * hypotX / ch;
+        const hypotY = mx * (-sin) + my * cos;
+        const dxY = (-sin) * -hypotY / cw;
+        const dyY = cos * -hypotY / ch;
+
+        newWidth = start.width - hypotX / cw;
+        newLeft = start.left + dxX;
+        newTop = start.top + dyX;
+        newHeight = start.height - hypotY / ch;
+        newRight = start.right - dxY;
+        newTop -= dyY;
+
+        if (newWidth < 0 && newHeight < 0) {
+          newWidth = 0;
+          newHeight = 0;
+          newTop = start.bottom;
+          newRight = start.right - sin * start.height * inverseRatio;
+          newLeft = newRight;
+        } else if (newWidth < 0) {
+          newWidth = 0;
+          newTop = start.top + sin * start.width * ratio + cos * (start.height - newHeight);
+          newLeft = start.left + cos * start.width;
+          newRight = start.right - sin * (start.height - newHeight) * inverseRatio;
+        } else if (newHeight < 0) {
+          newHeight = 0;
+          newTop = start.top + cos * start.height + sin * (start.width - newWidth) * ratio;
+          newRight = start.right - sin * start.height * inverseRatio;
+          newLeft = start.left + cos * (start.width - newWidth);
+        }
+
+        if (newLeft < 0) {
+          newLeft = 0;
+          const dW = start.left / cos;
+          newWidth = start.width + dW;
+          newTop -= dyX + sin * dW * ratio;
+        }
+
+        if (newRight > 1) {
+          newRight = 1;
+          const dH = (1 - start.right) * ratio / sin;
+          newHeight = start.height + dH;
+          newTop += dyY - cos * dH;
+        }
+
+        if (newTop < 0) {
+          newTop = 0;
+          const maxMy = Math.min(start.top * ch, Math.abs(my));
+          const mouseDist = Math.hypot(maxMy, mx);
+          const beta = Math.acos(start.top * ch / mouseDist);
+          if (Math.sign(mx) < 0) {
+            const gamma = Math.PI / 2 - rad - beta;
+            newHeight = start.height + mouseDist * Math.sin(gamma) / ch;
+            newWidth = start.width + mouseDist * Math.cos(gamma) / cw;
+          } else {
+            const gamma = beta - rad;
+            newHeight = start.height + mouseDist * Math.cos(gamma) / ch;
+            newWidth = start.width - mouseDist * Math.sin(gamma) / cw;
+          }
+          newLeft = start.left - (newWidth - start.width) * cos;
+          newRight = start.right + (newHeight - start.height) * sin * inverseRatio;
+        }
+      }
+    }
+
+    // 90-180 degrees
+    if (start.angle > 90 && start.angle < 180) {
+      const rad = degreeToRadian(start.angle - 90);
+      const cos = Math.cos(rad);
+      const sin = Math.sin(rad);
+
+
+      if (
+        (start.angle > 90 && start.angle <= 135 && userCorner === 'ne')
+        || (start.angle > 135 && start.angle < 180 && userCorner === 'se')
+      ) {
+        const hypotX = mx * cos + my * sin;
+        const dxX = cos * hypotX / cw;
+        const dyX = sin * hypotX / ch;
+        const hypotY = mx * (-sin) + my * cos;
+        const dxY = (-sin) * -hypotY / cw;
+        const dyY = cos * -hypotY / ch;
+
+        newHeight = start.height + hypotX / ch;
+        newRight = start.right + dxX;
+        newBottom = start.bottom + dyX;
+        newWidth = start.width - hypotY / cw;
+        newRight -= dxY;
+        newTop = start.top - dyY;
+
+        // TO DO
+        if (newWidth < 0 && newHeight < 0) {}
+        else if (newWidth < 0) {}
+        else if (newHeight < 0) {}
+
+        if (newRight > 1) {}
+        if (newBottom > 1) {}
+        if (newTop < 0) {}
+      }
+
+      if (
+        (start.angle > 90 && start.angle <= 135 && userCorner === 'se')
+        || (start.angle > 135 && start.angle < 180 && userCorner === 'sw')
+      ) {
+        const hypotX = mx * cos + my * sin;
+        const dxX = cos * hypotX / cw;
+        const dyX = sin * hypotX / ch;
+        const hypotY = mx * (-sin) + my * cos;
+        const dxY = (-sin) * hypotY / cw;
+        const dyY = cos * hypotY / ch;
+
+        newHeight = start.height + hypotX / ch;
+        newRight = start.right + dxX;
+        newBottom = start.bottom + dyX;
+        newWidth = start.width + hypotY / cw;
+        newLeft = start.left + dxY;
+        newBottom += dyY;
+
+        // TO DO
+        if (newWidth < 0 && newHeight < 0) {}
+        else if (newWidth < 0) {}
+        else if (newHeight < 0) {}
+
+        if (newRight > 1) {}
+        if (newBottom > 1) {}
+        if (newLeft < 0) {}
+      }
+
+      if (
+        (start.angle > 90 && start.angle <= 135 && userCorner === 'sw')
+        || (start.angle > 135 && start.angle < 180 && userCorner === 'nw')
+      ) {
+        const hypotX = mx * cos + my * sin;
+        const dxX = cos * hypotX / cw;
+        const dyX = sin * hypotX / ch;
+        const hypotY = mx * (-sin) + my * cos;
+        const dxY = (-sin) * hypotY / cw;
+        const dyY = cos * hypotY / ch;
+
+        newHeight = start.height - hypotX / ch;
+        newLeft = start.left + dxX;
+        newTop = start.top + dyX;
+        newWidth = start.width + hypotY / cw;
+        newLeft += dxY;
+        newBottom = start.bottom + dyY;
+
+        // TO DO
+        if (newWidth < 0 && newHeight < 0) {}
+        else if (newWidth < 0) {}
+        else if (newHeight < 0) {}
+
+        if (newTop < 0) {}
+        if (newBottom > 1) {}
+        if (newLeft < 0) {}
+      }
+
+      if (
+        (start.angle > 90 && start.angle <= 135 && userCorner === 'nw')
+        || (start.angle > 135 && start.angle < 180 && userCorner === 'ne')
+      ) {
+        const hypotX = mx * cos + my * sin;
+        const dxX = cos * hypotX / cw;
+        const dyX = sin * hypotX / ch;
+        const hypotY = mx * (-sin) + my * cos;
+        const dxY = (-sin) * -hypotY / cw;
+        const dyY = cos * -hypotY / ch;
+
+        newHeight = start.height - hypotX / ch;
+        newLeft = start.left + dxX;
+        newTop = start.top + dyX;
+        newWidth = start.width - hypotY / cw;
+        newRight = start.right - dxY;
+        newTop -= dyY;
+
+        // TO DO
+        if (newWidth < 0 && newHeight < 0) {}
+        else if (newWidth < 0) {}
+        else if (newHeight < 0) {}
+
+        if (newTop < 0) {}
+        if (newRight > 1) {}
+        if (newLeft < 0) {}
+      }
+    }
+
+    // -180 - -90 degrees
+    if (start.angle > -180 && start.angle < -90) {
+      const rad = degreeToRadian(-start.angle - 90);
+      const cos = Math.cos(rad);
+      const sin = Math.sin(rad);
+
+
+      if (
+        (start.angle > -180 && start.angle <= -135 && userCorner === 'ne')
+        || (start.angle > -135 && start.angle < -90 && userCorner === 'se')
+      ) {
+        const hypotX = mx * sin + my * cos;
+        const dxX = sin * hypotX / cw;
+        const dyX = cos * hypotX / ch;
+        const hypotY = mx * (-cos) + my * sin;
+        const dxY = (-cos) * -hypotY / cw;
+        const dyY = sin * -hypotY / ch;
+
+        newWidth = start.width + hypotX / cw;
+        newRight = start.right + dxX;
+        newBottom = start.bottom + dyX;
+        newHeight = start.height - hypotY / ch;
+        newRight -= dxY;
+        newTop = start.top - dyY;
+
+        // TO DO
+        if (newWidth < 0 && newHeight < 0) {}
+        else if (newWidth < 0) {}
+        else if (newHeight < 0) {}
+
+        if (newRight > 1) {}
+        if (newBottom > 1) {}
+        if (newTop < 0) {}
+      }
+
+      if (
+        (start.angle > -180 && start.angle <= -135 && userCorner === 'se')
+        || (start.angle > -135 && start.angle < -90 && userCorner === 'sw')
+      ) {
+        const hypotX = mx * sin + my * cos;
+        const dxX = sin * hypotX / cw;
+        const dyX = cos * hypotX / ch;
+        const hypotY = mx * (-cos) + my * sin;
+        const dxY = (-cos) * hypotY / cw;
+        const dyY = sin * hypotY / ch;
+
+        newWidth = start.width + hypotX / cw;
+        newRight = start.right + dxX;
+        newBottom = start.bottom + dyX;
+        newHeight = start.height + hypotY / ch;
+        newLeft = start.left + dxY;
+        newBottom += dyY;
+
+        // TO DO
+        if (newWidth < 0 && newHeight < 0) {}
+        else if (newWidth < 0) {}
+        else if (newHeight < 0) {}
+
+        if (newRight > 1) {}
+        if (newBottom > 1) {}
+        if (newLeft < 0) {}
+      }
+
+      if (
+        (start.angle > -180 && start.angle <= -135 && userCorner === 'sw')
+        || (start.angle > -135 && start.angle < -90 && userCorner === 'nw')
+      ) {
+        const hypotX = mx * sin + my * cos;
+        const dxX = sin * hypotX / cw;
+        const dyX = cos * hypotX / ch;
+        const hypotY = mx * (-cos) + my * sin;
+        const dxY = (-cos) * hypotY / cw;
+        const dyY = sin * hypotY / ch;
+
+        newWidth = start.width - hypotX / cw;
+        newLeft = start.left + dxX;
+        newTop = start.top + dyX;
+        newHeight = start.height + hypotY / ch;
+        newLeft += dxY;
+        newBottom = start.bottom + dyY;
+
+        // TO DO
+        if (newWidth < 0 && newHeight < 0) {}
+        else if (newWidth < 0) {}
+        else if (newHeight < 0) {}
+
+        if (newTop < 0) {}
+        if (newBottom > 1) {}
+        if (newLeft < 0) {}
+      }
+
+      if (
+        (start.angle > -180 && start.angle <= -135 && userCorner === 'nw')
+        || (start.angle > -135 && start.angle < -90 && userCorner === 'ne')
+      ) {
+        const hypotX = mx * sin + my * cos;
+        const dxX = sin * hypotX / cw;
+        const dyX = cos * hypotX / ch;
+        const hypotY = mx * (-cos) + my * sin;
+        const dxY = (-cos) * -hypotY / cw;
+        const dyY = sin * -hypotY / ch;
+
+        newWidth = start.width - hypotX / cw;
+        newLeft = start.left + dxX;
+        newTop = start.top + dyX;
+        newHeight = start.height - hypotY / ch;
+        newRight = start.right - dxY;
+        newTop -= dyY;
+
+        // TO DO
+        if (newWidth < 0 && newHeight < 0) {}
+        else if (newWidth < 0) {}
+        else if (newHeight < 0) {}
+
+        if (newTop < 0) {}
+        if (newRight > 1) {}
+        if (newLeft < 0) {}
+      }
+    }
+
+    // -90-0 degrees
+    if (start.angle > -90 && start.angle < 0) {
+      const rad = degreeToRadian(-start.angle);
+      const cos = Math.cos(rad);
+      const sin = Math.sin(rad);
+
+      if (
+        (start.angle > -90 && start.angle < -45 && userCorner === 'ne')
+        || (start.angle >= -45 && start.angle < 0 && userCorner === 'se')
+      ) {
+        const hypotX = mx * sin + my * cos;
+        const dxX = sin * hypotX / cw;
+        const dyX = cos * hypotX / ch;
+        const hypotY = mx * (-cos) + my * sin;
+        const dxY = (-cos) * -hypotY / cw;
+        const dyY = sin * -hypotY / ch;
+
+        newHeight = start.height + hypotX / ch;
+        newRight = start.right + dxX;
+        newBottom = start.bottom + dyX;
+        newWidth = start.width - hypotY / cw;
+        newRight -= dxY;
+        newTop = start.top - dyY;
+
+        if (newWidth < 0 && newHeight < 0) {
+          newWidth = 0;
+          newHeight = 0;
+          newRight = start.left;
+          newBottom = start.bottom - cos * start.height;
+          newTop = newBottom;
+        } else if (newWidth < 0) {
+          newWidth = 0;
+          newTop = start.top + sin * start.width * ratio;
+          newBottom = start.bottom - cos * (start.height - newHeight);
+          newRight = start.right - cos * start.width - sin * (start.height - newHeight) * inverseRatio;
+        } else if (newHeight < 0) {
+          newHeight = 0;
+          newTop = start.top + sin * (start.width - newWidth) * ratio;
+          newBottom = start.bottom - cos * start.height;
+          newRight = start.right - cos * (start.width - newWidth) - sin * start.height * inverseRatio;
+        }
+
+        if (newTop < 0) {
+          newTop = 0;
+          const dW = start.top * inverseRatio / sin;
+          newWidth = start.width + dW;
+          newRight += dxY + cos * dW;
+        }
+
+        if (newBottom > 1) {
+          newBottom = 1;
+          const dH = (1 - start.bottom) / cos;
+          newHeight = start.height + dH;
+          newRight -= dxX - sin * dH * inverseRatio;
+        }
+
+        if (newRight > 1) {
+          newRight = 1;
+          const maxMx = Math.min((1 - start.right) * cw, mx);
+          const mouseDist = Math.hypot(maxMx, my);
+          const beta = Math.acos((1 - start.right) * cw / mouseDist);
+          if (Math.sign(my) > 0) {
+            const gamma = Math.PI / 2 - rad - beta;
+            newHeight = start.height + mouseDist * Math.cos(gamma) / ch;
+            newWidth = start.width + mouseDist * Math.sin(gamma) / cw;
+          } else {
+            const gamma = beta - rad;
+            newHeight = start.height - mouseDist * Math.sin(gamma) / ch;
+            newWidth = start.width + mouseDist * Math.cos(gamma) / cw;
+          }
+          newTop = start.top - (newWidth - start.width) * sin * ratio;
+          newBottom = start.bottom + (newHeight - start.height) * cos;
+        }
+      }
+
+      if (
+        (start.angle > -90 && start.angle < -45 && userCorner === 'se')
+        || (start.angle >= -45 && start.angle < 0 && userCorner === 'sw')
+      ) {
+        const hypotX = mx * sin + my * cos;
+        const dxX = sin * hypotX / cw;
+        const dyX = cos * hypotX / ch;
+        const hypotY = mx * (-cos) + my * sin;
+        const dxY = (-cos) * hypotY / cw;
+        const dyY = sin * hypotY / ch;
+
+        newHeight = start.height + hypotX / ch;
+        newRight = start.right + dxX;
+        newBottom = start.bottom + dyX;
+        newWidth = start.width + hypotY / cw;
+        newLeft = start.left + dxY;
+        newBottom += dyY;
+
+        if (newWidth < 0 && newHeight < 0) {
+          newWidth = 0;
+          newHeight = 0;
+          newBottom = start.top;
+          newRight = start.right - sin * start.height * inverseRatio;
+          newLeft = newRight;
+        } else if (newWidth < 0) {
+          newWidth = 0;
+          newBottom = start.bottom - sin * start.width * ratio - cos * (start.height - newHeight);
+          newRight = start.right - sin * (start.height - newHeight) * inverseRatio;
+          newLeft = start.left + cos * start.width;
+        } else if (newHeight < 0) {
+          newHeight = 0;
+          newBottom = start.bottom - cos * start.height - sin * (start.width - newWidth) * ratio;
+          newRight = start.right - sin * start.height * inverseRatio;
+          newLeft = start.left + cos * (start.width - newWidth);
+        }
+
+        if (newLeft < 0) {
+          newLeft = 0;
+          const dW = start.left / cos;
+          newWidth = start.width + dW;
+          newBottom -= dyY - sin * dW * ratio;
+        }
+
+        if (newRight > 1) {
+          newRight = 1;
+          const dH = (1 - start.right) * ratio / sin;
+          newHeight = start.height + dH;
+          newBottom -= dyX - cos * dH;
+        }
+
+        if (newBottom > 1) {
+          newBottom = 1;
+          const maxMy = Math.min((1 - start.bottom) * ch, my);
+          const mouseDist = Math.hypot(maxMy, mx);
+          const beta = Math.acos((1 - start.bottom) * ch / mouseDist);
+          if (Math.sign(mx) < 0) {
+            const gamma = Math.PI / 2 - rad - beta;
+            newHeight = start.height + mouseDist * Math.sin(gamma) / ch;
+            newWidth = start.width + mouseDist * Math.cos(gamma) / cw;
+          } else {
+            const gamma = beta - rad;
+            newHeight = start.height + mouseDist * Math.cos(gamma) / ch;
+            newWidth = start.width - mouseDist * Math.sin(gamma) / cw;
+          }
+          newLeft = start.left - (newWidth - start.width) * cos;
+          newRight = start.right + (newHeight - start.height) * sin * inverseRatio;
+        }
+      }
+
+      if (
+        (start.angle > -90 && start.angle < -45 && userCorner === 'sw')
+        || (start.angle >= -45 && start.angle < 0 && userCorner === 'nw')
+      ) {
+        const hypotX = mx * sin + my * cos;
+        const dxX = sin * hypotX / cw;
+        const dyX = cos * hypotX / ch;
+        const hypotY = mx * (-cos) + my * sin;
+        const dxY = (-cos) * hypotY / cw;
+        const dyY = sin * hypotY / ch;
+
+        newHeight = start.height - hypotX / ch;
+        newLeft = start.left + dxX;
+        newTop = start.top + dyX;
+        newWidth = start.width + hypotY / cw;
+        newLeft += dxY;
+        newBottom = start.bottom + dyY;
+
+        if (newWidth < 0 && newHeight < 0) {
+          newWidth = 0;
+          newHeight = 0;
+          newBottom = start.bottom - sin * start.width * ratio;
+          newTop = newBottom;
+          newLeft = start.right;
+        } else if (newWidth < 0) {
+          newWidth = 0;
+          newBottom = start.bottom - sin * start.width * ratio;
+          newTop = start.top + cos * (start.height - newHeight);
+          newLeft = start.left + cos * start.width + sin * (start.height - newHeight) * inverseRatio;
+        } else if (newHeight < 0) {
+          newHeight = 0;
+          newBottom = start.bottom - sin * (start.width - newWidth) * ratio;
+          newTop = start.top + cos * start.height;
+          newLeft = start.left + sin * start.height * inverseRatio + cos * (start.width - newWidth);
+        }
+
+        if (newTop < 0) {
+          newTop = 0;
+          const dH = start.top / cos;
+          newHeight = start.height + dH;
+          newLeft -= dxX + sin * dH * inverseRatio;
+        }
+
+        if (newBottom > 1) {
+          newBottom = 1;
+          const dW = (1 - start.bottom) * inverseRatio / sin;
+          newWidth = start.width + dW;
+          newLeft -= dxY + cos * dW;
+        }
+
+        if (newLeft < 0) {
+          newLeft = 0;
+          const maxMx = Math.min(start.left * cw, Math.abs(mx));
+          const mouseDist = Math.hypot(maxMx, my);
+          const beta = Math.acos(start.left * cw / mouseDist);
+          if (Math.sign(my) < 0) {
+            const gamma = Math.PI / 2 - rad - beta;
+            newHeight = start.height + mouseDist * Math.cos(gamma) / ch;
+            newWidth = start.width + mouseDist * Math.sin(gamma) / cw;
+          } else {
+            const gamma = beta - rad;
+            newHeight = start.height - mouseDist * Math.sin(gamma) / ch;
+            newWidth = start.width + mouseDist * Math.cos(gamma) / cw;
+          }
+          newTop = start.top - (newHeight - start.height) * cos;
+          newBottom = start.bottom + (newWidth - start.width) * sin * ratio;
+        }
+      }
+
+      if (
+        (start.angle > -90 && start.angle < -45 && userCorner === 'nw')
+        || (start.angle >= -45 && start.angle < 0 && userCorner === 'ne')
+      ) {
+        const hypotX = mx * sin + my * cos;
+        const dxX = sin * hypotX / cw;
+        const dyX = cos * hypotX / ch;
+        const hypotY = mx * (-cos) + my * sin;
+        const dxY = (-cos) * -hypotY / cw;
+        const dyY = sin * -hypotY / ch;
+
+        newHeight = start.height - hypotX / ch;
+        newLeft = start.left + dxX;
+        newTop = start.top + dyX;
+        newWidth = start.width - hypotY / cw;
+        newRight = start.right - dxY;
+        newTop -= dyY;
+
+        if (newWidth < 0 && newHeight < 0) {
+          newWidth = 0;
+          newHeight = 0;
+          newTop = start.bottom;
+          newRight = start.right - cos * start.width;
+          newLeft = newRight;
+        } else if (newWidth < 0) {
+          newWidth = 0;
+          newTop = start.top + sin * start.width * ratio + cos * (start.height - newHeight);
+          newRight = start.right - cos * start.width;
+          newLeft = start.left + sin * (start.height - newHeight) * inverseRatio;
+        } else if (newHeight < 0) {
+          newHeight = 0;
+          newTop = start.top + sin * (start.width - newWidth) * ratio + cos * start.height;
+          newRight = start.right - cos * (start.width - newWidth);
+          newLeft = start.right - cos * start.width;
+        }
+
+        if (newLeft < 0) {
+          newLeft = 0;
+          const dH = start.left * ratio / sin;
+          newHeight = start.height + dH;
+          newTop -= dyX + cos * dH;
+        }
+
+        if (newRight > 1) {
+          newRight = 1;
+          const dW = (1 - start.right) / cos;
+          newWidth = start.width + dW;
+          newTop += dyY - sin * dW * ratio;
+        }
+
+        if (newTop < 0) {
+          newTop = 0;
+          const maxMy = Math.min(start.top * ch, Math.abs(my));
+          const mouseDist = Math.hypot(maxMy, mx);
+          const beta = Math.acos(start.top * ch / mouseDist);
+          if (Math.sign(mx) > 0) {
+            const gamma = Math.PI / 2 - rad - beta;
+            newHeight = start.height + mouseDist * Math.sin(gamma) / ch;
+            newWidth = start.width + mouseDist * Math.cos(gamma) / cw;
+          } else {
+            const gamma = beta - rad;
+            newHeight = start.height + mouseDist * Math.cos(gamma) / ch;
+            newWidth = start.width - mouseDist * Math.sin(gamma) / cw;
+          }
+          newLeft = start.left - (newHeight - start.height) * sin * inverseRatio;
+          newRight = start.right + (newWidth - start.width) * cos;
+        }
+      }
+    }
+
+    newXc = (newLeft + newRight) / 2;
+    newYc = (newTop + newBottom) / 2;
+
+    p.width = newWidth;
+    p.height = newHeight;
+    p.left = newLeft;
+    p.right = newRight;
+    p.top = newTop;
+    p.bottom = newBottom;
+    p.xc = newXc;
+    p.yc = newYc;
+
+    const imgSvc = this.imagesService;
+    imgSvc.selectedPage = p;
+    imgSvc.currentPages = imgSvc.currentPages.map(page => page._id === p._id ? p : page);
+    imgSvc.redrawImage();
+    imgSvc.currentPages.forEach(p => imgSvc.drawPage(p));
   }
 }

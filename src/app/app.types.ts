@@ -1,47 +1,72 @@
-export interface ImageItem {
-  name?: string;
-  url?: string;
-  crop_part?: number;
-  low_confidence?: boolean;
-  bad_sides_ratio?: boolean;
-  custom?: boolean;
-  rects?: Rect[];
+export interface ExampleBook {
+  _id: string;
+  created_at: string;
+  modified_at: string;
+  state: string;
 }
 
-export interface ImageFlags {
-  low_confidence?: boolean;
-  bad_sides_ratio?: boolean;
-}
-
-export interface Transformation {
-  image_path: string;
-  x_center: number;
-  y_center: number;
-  width: number;
-  height: number;
-  confidence: number;
-  angle: number;
-  crop_part: number;
-  color: string;
-  low_confidence: boolean;
-  bad_sides_ratio: boolean;
-}
-
-export interface Rect {
-  id: string;
-  x_center: number;
-  y_center: number;
-  x?: number;
-  y?: number;
+export interface Page {
+  _id: string;
+  xc: number;
+  yc: number;
   width: number;
   height: number;
   angle: number;
-  crop_part: number;
-  color: string;
+  type: PageType;
+  flags: string[];
+  left: number;
+  right: number;
+  top: number;
+  bottom: number;
   edited: boolean;
 }
 
-export interface AvgRect {
-  width: number;
-  height: number;
+export interface ImageItem {
+  _id: string;
+  url?: string;
+  thumbnailUrl?: string;
+  edited: boolean;
+  flags: string[];
+  pages: Page[];
+}
+
+export interface DialogButton {
+  label: string;
+  primary?: boolean;
+  destructive?: boolean;
+  action?: () => void;
+}
+
+export type InputType = 'left' | 'top' | 'width' | 'height' | 'angle';
+export type PageType = 'single' | 'left' | 'right';
+export type ImgOrCanvas = 'image' | 'canvas';
+
+
+// Cursors
+export type MousePos = { x: number, y: number };
+export type HitArea = 'none' | 'inside' | 'edge' | 'corner' | 'rotate';
+export type EdgeLocalOrientation = 'vertical' | 'horizontal';
+export type EdgeSide = 'left' | 'right' | 'top' | 'bottom';
+export type CornerName = 'nw' | 'ne' | 'se' | 'sw';
+export interface HitInfo {
+  area: HitArea;
+  page?: Page;
+  edgeOrientation?: EdgeLocalOrientation;
+  edgeSide?: EdgeSide;
+  corner?: CornerName;
+}
+
+
+// Dialog
+export type GridMode = 'always' | 'never' | 'when-rotating';
+export type DialogContentType = 'settings' | 'shortcuts';
+
+
+// Toast messages
+export type ToastType = 'info' | 'success' | 'error';
+export interface Toast {
+  id: string;
+  message: string;
+  type?: ToastType;
+  duration?: number;
 }

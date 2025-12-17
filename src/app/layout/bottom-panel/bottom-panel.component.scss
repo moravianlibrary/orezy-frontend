@@ -1,0 +1,37 @@
+@mixin font($font-weight, $font-size, $line-height) {
+  font-family: 'IBM Plex Sans', sans-serif;
+  letter-spacing: 0%;
+  font-weight: $font-weight;
+  font-size: $font-size;
+  line-height: $line-height;
+}
+
+:host {
+  display: flex;
+  justify-content: space-between;
+  padding: var(--spacing-x2) var(--spacing-x4);
+  border-top: 1px solid var(--border-color);
+  height: 56px;
+}
+
+.left-part svg, .middle-part svg {
+  fill: var(--icon-dark);
+}
+
+.right-part {
+  width: 92px;
+}
+
+.disabled { 
+  color: var(--text-disabled);
+
+  svg {
+    fill: var(--icon-disabled);
+  }
+}
+
+.mark-ok {
+  @include font(400, var(--font-size-x1-5), var(--spacing-x4));
+  gap: var(--spacing-x2);
+  margin-left: var(--spacing-x3);
+}

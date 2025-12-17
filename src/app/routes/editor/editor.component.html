@@ -1,0 +1,14 @@
+<div 
+  #mainWrapper
+  class="main-wrapper"
+  (keydown)="imagesService.onKeyDown($event)"
+  (keyup)="imagesService.onKeyUp($event)"
+  tabindex="0"
+>
+  <app-left-panel></app-left-panel>
+  <div class="middle-wrapper">
+    <app-main id="app-main"></app-main>
+    <app-bottom-panel></app-bottom-panel>
+  </div>
+  <app-right-panel></app-right-panel>
+</div>

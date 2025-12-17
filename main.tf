@@ -25,6 +25,10 @@ variable "APP_DATA_SERVER_URL" {
   type = string
 }
 
+variable "APP_DATA_SERVER_AUTH_TOKEN" {
+  type = string
+}
+
 variable "docker_host_uri" {
   type = string
 }
@@ -65,15 +69,15 @@ provider "docker" {
 }
 
 # Creating Docker Image with the `latest` as Tag.
-resource "docker_image" "anakon_frontend" {
+resource "docker_image" "orezy_frontend" {
   name = var.docker_image
 }
 
 # Create Docker Container
-resource "docker_container" "anakon_frontend" {
+resource "docker_container" "orezy_frontend" {
   memory            = 256
   count             = 1
-  image             = docker_image.anakon_frontend.image_id
+  image             = docker_image.orezy_frontend.image_id
   name              = var.docker_container_name
   must_run          = true
   publish_all_ports = true
@@ -82,7 +86,8 @@ resource "docker_container" "anakon_frontend" {
     "APP_DEV_MODE=${var.APP_DEV_MODE}",
     "APP_ENV_NAME=${var.APP_ENV_NAME}",
     "APP_ENV_CODE=${var.APP_ENV_CODE}",
-    "APP_DATA_SERVER_URL=${var.APP_DATA_SERVER_URL}"
+    "APP_DATA_SERVER_URL=${var.APP_DATA_SERVER_URL}",
+    "APP_DATA_SERVER_AUTH_TOKEN=${var.APP_DATA_SERVER_AUTH_TOKEN}"
   ]
 
   labels {

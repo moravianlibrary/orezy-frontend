@@ -1,18 +1,14 @@
 import { Component, inject } from '@angular/core';
-import { MainComponent } from './layout/main/main.component';
-import { PreviewPanelComponent } from './layout/preview-panel/preview-panel.component';
-import { PropertiesPanelComponent } from './layout/properties-panel/properties-panel.component';
-import { ImagesService } from './services/images.service';
 import { EnvironmentService } from './services/environment.service';
+import { RouterOutlet } from '@angular/router';
 
 @Component({
   selector: 'app-root',
-  imports: [MainComponent, PreviewPanelComponent, PropertiesPanelComponent],
+  imports: [RouterOutlet],
   templateUrl: './app.component.html',
   styleUrl: './app.component.scss'
 })
 export class AppComponent {
-  imagesService = inject(ImagesService);
   envService = inject(EnvironmentService);
 
   ngOnInit(): void {
@@ -27,6 +23,7 @@ export class AppComponent {
       environmentName: this.envService.get('environmentName'),
 
       serverBaseUrl: this.envService.get('serverBaseUrl'),
+      authToken: this.envService.get('authToken'),
 
       gitCommitHash: this.envService.get('git_commit_hash'),
       gitTag: this.envService.get('git_tag'),

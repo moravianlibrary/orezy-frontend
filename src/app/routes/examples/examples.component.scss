@@ -1,0 +1,106 @@
+@mixin font($font-weight, $font-size, $line-height, $color) {
+  font-family: 'IBM Plex Sans', sans-serif;
+  letter-spacing: 0%;
+  font-weight: $font-weight;
+  font-size: $font-size;
+  line-height: $line-height;
+  color: $color;
+}
+
+:host {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  align-items: center;
+  height: 100%;
+  padding: 100px;
+}
+
+h2 {
+  color: #333;
+  font-size: 28px;
+  font-weight: 400;
+  margin-bottom: 20px;
+}
+
+.table-wrapper {
+  max-height: 100%;
+  overflow-y: auto;
+  border-radius: 4px;
+  box-shadow: 0 12px 30px rgba(0,0,0,.12), 0 2px 8px rgba(0,0,0,.08);
+}
+
+table {
+  border-collapse: separate;
+  border-spacing: 0;
+  border-radius: 4px;
+}
+
+tr {
+  height: 40px;
+  width: 100%;
+  padding: var(--spacing-x2);
+}
+
+a {
+  cursor: initial;
+  display: block;
+  text-decoration: none;
+  padding: var(--spacing-x3);
+  @include font(350, var(--font-size-x2), var(--spacing-x6), var(--text-base));
+}
+
+tr.link {
+  &:hover {
+    background-color: #0080A820;
+  }
+
+  a {
+    cursor: pointer;
+  }
+}
+
+tr:nth-child(odd) {
+  background-color: var(--bg-main-light);
+}
+
+tr:first-child {
+  background-color: #eaeaea;
+  cursor: initial;
+}
+
+th {
+  text-align: left;
+  padding: var(--spacing-x3);
+  @include font(450, var(--font-size-x2), var(--spacing-x6), var(--text-base));
+  position: sticky;
+  top: 0;
+  background-color: #eaeaea;
+  z-index: 1;
+}
+
+td {
+  @include font(400, var(--font-size-x2), var(--spacing-x6), var(--text-light));
+}
+
+.tag {
+  border-radius: 4px;
+  padding: 6px 8px;
+  background-color: oklch(96.8% .007 247.896);
+  @include font(450, var(--font-size-x1-5), var(--spacing-x3), oklch(44.6% .043 257.281));
+}
+
+.success {
+  background-color: #D7F4DE;
+  @include font(450, var(--font-size-x1-5), var(--spacing-x3), #207936);
+}
+
+.progress {
+  background-color: var(--bg-color-edited);
+  @include font(450, var(--font-size-x1-5), var(--spacing-x3), var(--status-icon-edited));
+}
+
+.error {
+  background-color: var(--bg-color-error);
+  @include font(450, var(--font-size-x1-5), var(--spacing-x3), var(--status-icon-error));
+}

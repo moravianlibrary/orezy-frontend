@@ -20,7 +20,8 @@ const config = {
   environmentName: process.env.APP_ENV_NAME || '',
   environmentCode: process.env.APP_ENV_CODE || '',
 
-  serverBaseUrl: process.env.APP_DATA_SERVER_URL || ''  
+  serverBaseUrl: process.env.APP_DATA_SERVER_URL || '',
+  authToken: process.env.APP_DATA_SERVER_AUTH_TOKEN || ''
 };
 
 fs.writeFileSync(outputPath, JSON.stringify(config, null, 2));

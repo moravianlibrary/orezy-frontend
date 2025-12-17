@@ -1,6 +1,50 @@
 :root {
-  --left: #00BFFF;
-  --right: #FF10F0;
+  --primary: #0080A8;
+  --bg-base: #FFFFFF;
+  --bg-bright: #EFF2F5;
+  --bg-selected: #EAF6FA;
+  --bg-main-light: #F6F7F9;
+  --bg-destructive: #FF3A30;
+  --border-color: #DFE5EC;
+  --border-tertiary-color: #BFCCD9;
+  --border-tertiary-pressed: #8099B3;
+  --text-base: #0A0D10;
+  --text-secondary: #263340;
+  --text-tertiary: #394C60;
+  --text-destructive: #FF3A30;
+  --text-light: #4C6580;
+  --text-white: #FFFFFF;
+  --text-disabled: #DFE5EC;
+  --text-label-bright: #9FB2C6;
+  --icon-black: #0A0D10;
+  --icon-dark: #263340;
+  --icon-white: #FFFFFF;
+  --icon-disabled: #DFE5EC;
+  --status-icon-success: #2AA248;
+  --status-icon-warning: #FF9500;
+  --status-icon-edited: #FFCC00;
+  --status-icon-error: #FF3A30;
+  --bg-color-success: #2AA24810;
+  --bg-color-warning: #FF950010;
+  --bg-color-edited: #FFCC0010;
+  --bg-color-error: #FF3A3010;
+  --font-size-x1: 12px;
+  --font-size-x1-5: 14px;
+  --font-size-x2: 16px;
+  --font-size-x2-5: 18px;
+  --font-size-x3: 20px;
+  --spacing-x1: 4px;
+  --spacing-x1-5: 6px;
+  --spacing-x2: 8px;
+  --spacing-x2-5: 10px;
+  --spacing-x3: 12px;
+  --spacing-x3-5: 14px;
+  --spacing-x4: 16px;
+  --spacing-x5: 20px;
+  --spacing-x6: 24px;
+  --spacing-x7: 28px;
+  --spacing-x7-5: 30px;
+  --spacing-x8: 32px;
 }
 
 *, *::before, *::after {
@@ -8,10 +52,76 @@
   margin: 0;
   box-sizing: border-box;
   font-family: "Roboto", sans-serif;
-  font-size: 16px;
+  font-size: var(--font-size-x2);
 }
 
 html, body {
   margin: 0;
   height: 100%;
+}
+
+// Buttons
+@mixin font($font-weight, $font-size, $line-height) {
+  font-family: 'IBM Plex Sans', sans-serif;
+  letter-spacing: 0%;
+  font-weight: $font-weight;
+  font-size: $font-size;
+  line-height: $line-height;
+}
+
+.button-group {
+  display: flex;
+  gap: var(--spacing-x2);
+}
+
+.button {
+  @include font(400, var(font-size-x1-5), var(--spacing-x4));
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: var(--spacing-x3);
+  padding: var(--spacing-x3);
+  border-radius: 4px;
+  white-space: nowrap;
+
+  &:hover {
+    cursor: pointer;
+  }
+}
+
+.real-button {
+  padding: var(--spacing-x3) var(--spacing-x4);
+  font-size: var(--font-size-x1-5);
+  line-height: var(--spacing-x4);
+}
+
+.primary {
+  background-color: var(--primary);
+  color: var(--text-white);
+}
+
+.secondary {
+  background-color: var(--bg-base);
+  border: 1px solid var(--border-tertiary-color);
+  color: var(--text-secondary);
+}
+
+.tertiary {
+  background-color: var(--bg-base);
+  border: 1px solid var(--border-tertiary-color);
+  color: var(--text-tertiary);
+}
+
+.destructive {
+  background-color: var(--bg-destructive);
+  border: none;
+  color: var(--text-white);
+}
+
+.disabled {
+  border-color: var(--border-color);
+
+  &:hover {
+    cursor: default;
+  }
 }
