@@ -139,7 +139,7 @@ export class ImagesService {
     });
   }
 
-  updatePages(id: string, payload: ImageItem[]): any {
+  updatePages(id: string, payload: any[]): any {
     return this.http.patch(`${this.apiUrl}/${id}/update-pages`, payload, { headers: this.headers('json', true) });
   }
 
@@ -158,8 +158,14 @@ export class ImagesService {
     this.redrawImage();
     this.currentPages.forEach(p => this.drawPage(p));
     this.updateMainImageItemAndImages();
-    console.log(this.images().filter(img => img.edited));
-    this.updatePages(this.book(), this.images().filter(img => img.edited))
+    
+    const editedImages = this.images()
+      .filter(i => i.edited)
+      .map(({ pages, ...i }) => ({
+        ...i,
+        pages: pages.map(({ xc, yc, width, height, angle }) => ({ xc, yc, width, height, angle }))
+      }));
+    this.updatePages(this.book(), editedImages)
       .subscribe({
         next: () => {
           this.selectedFilter = 'edited';
@@ -985,7 +991,7 @@ export class ImagesService {
       '+', 'ě', 'Ě', '1', '2',                              // Select left / right page OR + Alt / Cmd = filters number of pages
       'Escape',                                             // Unselect page
       'Backspace', 'Delete',                                // Remove page
-      'p', 'P', 'a', 'A',                                   // Add page
+      'p', 'P',                                             // Add page
       'ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown',    // Drag selected page x, y by 1; not selected prev/next scan
       'PageDown', 'PageUp',                                 // (+ PageUp / PageDown)
       'm', 'M', 'g', 'G',                                   // Mřížka / grid
@@ -995,7 +1001,7 @@ export class ImagesService {
       'F1', 'F2', 'F3', 'F4',                               // Filters
       'Shift',                                              // 1 -> 10
       'Control', 'Meta',                                    // + arrows = change width / height by 1
-      'Alt',                                                // + control/cmd + arrows = rotate by 1
+      'a', 'A', 's', 'S',                                   // Rotate by 1
       'k', 'K'                                              // Shortcuts
     ].includes(key);
   }
@@ -1385,12 +1391,9 @@ export class ImagesService {
     }
 
     // Rotate
-    if (
-      ['ArrowUp', 'ArrowDown'].includes(key) && this.selectedPage && !this.dialogOpen()
-      && (event.ctrlKey || event.metaKey) && event.altKey
-    ) {
+    if (['a', 'A', 's', 'S'].includes(key) && this.selectedPage && !this.dialogOpen()) {
       const page = this.selectedPage;
-      const sign = ['ArrowRight', 'ArrowUp'].includes(key) ? 1 : -1;
+      const sign = ['s', 'S'].includes(key) ? 1 : -1;
       const delta = this.incrementAngle * sign * (event.shiftKey ? 10 : 1);
       const value = page.angle + delta;
       const newAngle = clamp(value, -45, 45);
@@ -1429,14 +1432,14 @@ export class ImagesService {
       this.redrawImage();
       this.currentPages.forEach(p => this.drawPage(p));
     }
-    if ( // Is rotating ON (to show grid if when-rotating)
-      (((event.ctrlKey || event.metaKey) && key === 'Alt') || (['Control', 'Meta'].includes(key) && event.altKey))
-      && this.selectedPage && !this.dialogOpen()
-    ) {
-      this.isRotating = true;
-      this.redrawImage();
-      this.currentPages.forEach(p => this.drawPage(p));
-    }
+    // if ( // Is rotating ON (to show grid if when-rotating)
+    //   (((event.ctrlKey || event.metaKey) && key === 'Alt') || (['Control', 'Meta'].includes(key) && event.altKey))
+    //   && this.selectedPage && !this.dialogOpen()
+    // ) {
+    //   this.isRotating = true;
+    //   this.redrawImage();
+    //   this.currentPages.forEach(p => this.drawPage(p));
+    // }
 
     // Přesunout sken do OK
     if (key === 'Enter' && !event.ctrlKey && !event.metaKey && !this.dialogOpen()) this.markImageOK();
