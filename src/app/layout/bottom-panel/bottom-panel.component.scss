@@ -12,14 +12,18 @@
   padding: var(--spacing-x2) var(--spacing-x4);
   border-top: 1px solid var(--border-color);
   height: 56px;
+  position: relative;
+}
+
+.middle-part {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
 }
 
 .left-part svg, .middle-part svg {
   fill: var(--icon-dark);
-}
-
-.right-part {
-  width: 92px;
 }
 
 .disabled { 

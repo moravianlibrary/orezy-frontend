@@ -13,14 +13,4 @@ export class BottomPanelComponent {
   get wasAnyPageEdited(): boolean {
     return Boolean(this.imagesService.currentPages.find(p => p.edited));
   }
-
-  /* ------------------------------
-    ZOOMS & FIT TO SCREEN
-  ------------------------------ */
-  fitToScreen(): void {
-    const imgSvc = this.imagesService;
-    const img = imgSvc.displayedImagesFinal().find(img => img._id === imgSvc.mainImageItem()._id);
-    if (!img) return;
-    imgSvc.setMainImage(img);
-  }
 }
