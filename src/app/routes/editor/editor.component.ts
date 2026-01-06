@@ -68,7 +68,6 @@ export class EditorComponent {
 
         imgSvc.gridMode.set(localStorage.getItem('gridMode') as GridMode ?? 'when-rotating');
         imgSvc.gridRadio.set(imgSvc.gridMode());
-        imgSvc.selectedFilter = localStorage.getItem('filter') ?? 'flagged';
         imgSvc.selectedPageNumberFilter.set(localStorage.getItem('filterPageNumber') || null);
         imgSvc.setDisplayedImages();
         

@@ -21,7 +21,7 @@ export class ImagesService {
     STATE
   ------------------------------ */
   book = signal<string>('');
-  selectedFilter: string | null = null;
+  selectedFilter: string | null = 'all';
   selectedPageNumberFilter = signal<string | null>(null);
   clickedPageNumberFilter: boolean = false;
 
@@ -183,7 +183,6 @@ export class ImagesService {
       .subscribe({
         next: () => {
           this.selectedFilter = 'edited';
-          localStorage.setItem('filter', this.selectedFilter);
           this.setDisplayedImages();
           this.showToast('Proces byl úspěšně dokončen!', { type: 'success' });
         },
@@ -212,7 +211,6 @@ export class ImagesService {
         ? 'edited'
         : (mainImageItemAfter.flags.length ? 'flagged' : 'ok');
     }
-    localStorage.setItem('filter', this.selectedFilter ?? 'flagged');
     this.setDisplayedImages();
     scrollToSelectedImage();
     this.setMainImage(mainImageItemAfter);
@@ -277,7 +275,6 @@ export class ImagesService {
     this.updateImagesByCurrentPages();
     
     this.selectedFilter = filter;
-    localStorage.setItem('filter', this.selectedFilter);
     
     const mainImageItemId = this.mainImageItem()._id;
     if (this.imgWasEdited) {
@@ -1842,7 +1839,6 @@ export class ImagesService {
       const filter = filterByKey[key];
       if (filter) {
         this.selectedFilter = filter;
-        localStorage.setItem('filter', this.selectedFilter);
         this.switchFilter(this.selectedFilter);
       }
     }
