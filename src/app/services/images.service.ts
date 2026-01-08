@@ -101,6 +101,9 @@ export class ImagesService {
   panPrevY: number = 0;
 
   // Other
+  dimDefault: string = '0,0,0,0.45';
+  dimRed: string = '255,0,0,0.2';
+  dimColor: string = this.dimDefault;
   outlineTransparent: boolean = false;
   pageOutlineWidth: number = 3;
   cornerOutlineWidth: number = this.pageOutlineWidth - 1;
@@ -484,7 +487,7 @@ export class ImagesService {
 
     ctx.clip('evenodd');
 
-    ctx.fillStyle = 'rgba(0,0,0,0.45)';
+    ctx.fillStyle = `rgba(${this.dimColor})`;
     ctx.fillRect(0, 0, c.width, c.height);
 
     ctx.restore();
@@ -1322,6 +1325,7 @@ export class ImagesService {
       'PageDown', 'PageUp',                                 // (+ PageUp / PageDown)
       'm', 'M', 'g', 'G',                                   // Mřížka / grid
       'o', 'O',                                             // Obrys / outline
+      'c', 'C',                                             // Clona (barva)
       'Enter',                                              // Přesunout sken do OK, + control/cmd = dokončit
       'r', 'R',                                             // + control/cmd = reset změn skenu; + control/cmd + shift = reset změn dokumentu
       'F1', 'F2', 'F3', 'F4',                               // Filters
@@ -1403,6 +1407,13 @@ export class ImagesService {
     // Outline transparency
     if (['o', 'O'].includes(key) && this.selectedPage && !dialogOpen) {
       this.outlineTransparent = !this.outlineTransparent;
+      this.redrawImageOnCanvas();
+      this.currentPages.forEach(p => this.drawPage(p));
+    }
+
+    // Outline transparency
+    if (['c', 'C'].includes(key) && this.selectedPage && !dialogOpen) {
+      this.dimColor = this.dimColor === this.dimDefault ? this.dimRed : this.dimDefault;
       this.redrawImageOnCanvas();
       this.currentPages.forEach(p => this.drawPage(p));
     }
