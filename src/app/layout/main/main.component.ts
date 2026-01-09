@@ -35,11 +35,17 @@ export class MainComponent {
     // Attach event handlers
     this.attachMainCanvasEvents();
     [
-      '#main-container',
+      // '#main-container',
       'app-left-panel',
       'app-bottom-panel',
       'app-right-panel'
     ].forEach(el => this.attachEventsRest(document.querySelector(el)));
+    
+    document.onpointerup = (ev) => {
+      const tagName = (ev.target as HTMLElement).tagName;
+      if (tagName !== 'HTML') return;
+      this.stopDragRotateResize();
+    }
   }
 
   private attachEventsRest(el: HTMLElement | null): void {
@@ -56,22 +62,7 @@ export class MainComponent {
         imgSvc.dialogOpened = false;
         return;
       }
-      if (imgSvc.isDragging || imgSvc.isRotating || imgSvc.isResizing) {
-        imgSvc.isDragging = false;
-        imgSvc.dragStartPage = null;
-        imgSvc.dragStartMouse = null;
-        
-        imgSvc.isRotating = false;
-        imgSvc.rotationStartPage = null;
-        imgSvc.rotationStartMouseAngle = 0;
-      
-        imgSvc.isResizing = false;
-        imgSvc.resizeStartPage = null;
-        imgSvc.resizeStartMouse = null;
-        imgSvc.resizeMode = null;
-        
-        return;
-      } 
+      this.stopDragRotateResize();
 
       if (imgSvc.pageWasEdited) imgSvc.updateCurrentPagesWithEdited();
       imgSvc.lastSelectedPage = imgSvc.selectedPage;
@@ -83,17 +74,16 @@ export class MainComponent {
       imgSvc.hoveringPage('');
     };
 
-    el.onmousemove = (ev) => {
-      if (el.tagName === 'DIV' && (ev.target as HTMLElement).tagName !== 'DIV') return;
-      const pageId = this.pageIdCursorInside(ev);
-      const insidePage = Boolean(pageId);
+    el.onmouseup = (ev) => {
+      if (!imgSvc.selectedPage) return;
+      this.stopDragRotateResize();
     };
   }
 
   private attachMainCanvasEvents(): void {
-    const { c } = this.imagesService;
+    const { c } = this.imagesService; 
 
-    ['mousedown', 'mousemove', 'mouseup', 'wheel'].forEach(eventType => {
+    ['mousedown', 'mousemove', 'mouseup', 'mouseenter', 'mouseleave', 'wheel'].forEach(eventType => {
       c.addEventListener(eventType, (ev) => this.handleCanvasInteraction(ev as (MouseEvent | WheelEvent), c));
     });
   }
@@ -233,12 +223,12 @@ export class MainComponent {
           return;
         }
 
-        if (ev.type === 'mouseup' && hitPage) {
+        if (ev.type === 'mouseup') {
           imgSvc.isDragging = false;
           imgSvc.dragStartPage = null;
 
           if (!imgSvc.imgWasEdited) return;
-          imgSvc.hoveringPage(hitPage._id);
+          if (hitPage) imgSvc.hoveringPage(hitPage._id);
           imgSvc.redrawImageOnCanvas();
           imgSvc.currentPages.forEach(p => imgSvc.drawPage(p));
           imgSvc.mainImageItem.set({ ...imgSvc.mainImageItem(), url: imgSvc.c.toDataURL('image/jpeg') });
@@ -2479,5 +2469,27 @@ export class MainComponent {
     imgSvc.currentPages = imgSvc.currentPages.map(page => page._id === p._id ? p : page);
     imgSvc.redrawImageOnCanvas();
     imgSvc.currentPages.forEach(p => imgSvc.drawPage(p));
+  }
+
+  private stopDragRotateResize(): void {
+    const imgSvc = this.imagesService;
+    if (imgSvc.isDragging || imgSvc.isRotating || imgSvc.isResizing) {
+      imgSvc.isDragging = false;
+      imgSvc.dragStartPage = null;
+      imgSvc.dragStartMouse = null;
+      
+      imgSvc.isRotating = false;
+      imgSvc.rotationStartPage = null;
+      imgSvc.rotationStartMouseAngle = 0;
+    
+      imgSvc.isResizing = false;
+      imgSvc.resizeStartPage = null;
+      imgSvc.resizeStartMouse = null;
+      imgSvc.resizeMode = null;
+      
+      imgSvc.redrawImageOnCanvas();
+      imgSvc.currentPages.forEach(p => imgSvc.drawPage(p));  
+      return;
+    }
   }
 }
