@@ -1199,6 +1199,10 @@ export class ImagesService {
           this.gridRadio.set('when-rotating');
           this.gridMode.set('when-rotating');
           localStorage.setItem('gridMode', 'when-rotating');
+          this.outlineTransparent = false;
+          this.redrawImageOnCanvas();
+          this.currentPages.forEach(p => this.drawPage(p));
+          this.showToast('Nastavení bylo resetováno.', { type: 'success' });
         }
       },
       {
@@ -1208,6 +1212,8 @@ export class ImagesService {
           const gridRadio = this.gridRadio();
           this.gridMode.set(gridRadio);
           localStorage.setItem('gridMode', gridRadio);
+          this.redrawImageOnCanvas();
+          this.currentPages.forEach(p => this.drawPage(p));
           this.showToast('Nastavení bylo uloženo.', { type: 'success' });
         }
       }
@@ -1407,11 +1413,12 @@ export class ImagesService {
     // Outline transparency
     if (['o', 'O'].includes(key) && this.selectedPage && !dialogOpen) {
       this.outlineTransparent = !this.outlineTransparent;
+      localStorage.setItem('outlineTransparent', String(this.outlineTransparent));
       this.redrawImageOnCanvas();
       this.currentPages.forEach(p => this.drawPage(p));
     }
 
-    // Outline transparency
+    // Dimming color
     if (['c', 'C'].includes(key) && this.selectedPage && !dialogOpen) {
       this.dimColor = this.dimColor === this.dimDefault ? this.dimRed : this.dimDefault;
       this.redrawImageOnCanvas();

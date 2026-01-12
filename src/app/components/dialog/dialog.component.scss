@@ -75,71 +75,128 @@
 .settings-content-wrapper {
   display: flex;
   flex-direction: column;
-  gap: var(--spacing-x3);
-  padding-inline: var(--spacing-x2);
+  padding: 0;
+  margin-block: -16px;
 
-  .settings-block-label {
-    @include font(450, var(--font-size-x2), var(--spacing-x6), var(--text-base));
-  }
-
-  .radios-wrapper {
+  .settings-block {
     display: flex;
     flex-direction: column;
-    gap: var(--spacing-x1);
+    gap: var(--spacing-x3);
+    padding: var(--spacing-x4) var(--spacing-x6);
+    margin-inline: -16px;
+    border-bottom: 1px solid var(--border-color);
 
-    .radio {
-      display: inline-flex;
-      align-items: center;
-      gap: var(--spacing-x2);
-      cursor: pointer;
-      
-      .grid-value {
-        @include font(450, var(--font-size-x1-5), var(--spacing-x5), var(--text-secondary));
+    .settings-block-label {
+      @include font(450, var(--font-size-x2), var(--spacing-x6), var(--text-base));
+    }
+
+    .radios-wrapper {
+      display: flex;
+      flex-direction: column;
+      gap: var(--spacing-x1);
+
+      .radio {
+        display: inline-flex;
+        align-items: center;
+        gap: var(--spacing-x2);
+        cursor: pointer;
+        
+        .grid-value {
+          @include font(450, var(--font-size-x1-5), var(--spacing-x5), var(--text-secondary));
+        }
+      }
+
+      /* visually hide native radio but keep it accessible */
+      .radio > input[type="radio"]{
+        position: absolute;
+        opacity: 0;
+        width: 1px;
+        height: 1px;
+        margin: -1px;
+        pointer-events: none;
+      }
+
+      /* icon holder lives on the text span */
+      .radio > input[type="radio"] + .grid-value{
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      /* base (unchecked): outer circle */
+      .radio > input[type="radio"] + .grid-value::before{
+        content: "";
+        width: 16px;
+        height: 16px;
+        box-sizing: border-box;
+        border-radius: 999px;
+        border: 1px solid #BFCCD9;
+        background: transparent;
+        display: inline-block;
+        flex: 0 0 16px;
+      }
+
+      /* checked: outer stroke + inner dot */
+      .radio > input[type="radio"]:checked + .grid-value::before{
+        border-color: var(--primary);
+        /* inner dot (3px radius) */
+        background: radial-gradient(circle at center, var(--primary) 0 3px, transparent 3px);
+      }
+
+      /* keyboard focus ring */
+      .radio > input[type="radio"]:focus-visible + .grid-value::before{
+        outline: 2px solid rgba(0,128,168,.35);
+        outline-offset: 2px;
       }
     }
 
-    /* visually hide native radio but keep it accessible */
-    .radio > input[type="radio"]{
-      position: absolute;
-      opacity: 0;
-      width: 1px;
-      height: 1px;
-      margin: -1px;
-      pointer-events: none;
-    }
-
-    /* icon holder lives on the text span */
-    .radio > input[type="radio"] + .grid-value{
-      display: inline-flex;
+    .toggle-switch {
+      display: flex;
       align-items: center;
       gap: 8px;
     }
 
-    /* base (unchecked): outer circle */
-    .radio > input[type="radio"] + .grid-value::before{
-      content: "";
-      width: 16px;
-      height: 16px;
-      box-sizing: border-box;
+    .toggle-switch input {
+      position: absolute;
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+
+    .toggle-switch .slider {
+      margin-top: 2px;
+      position: relative;
+      width: 40px;
+      height: 24px;
+      background-color: var(--icon-disabled);
       border-radius: 999px;
-      border: 1px solid #BFCCD9;
-      background: transparent;
-      display: inline-block;
-      flex: 0 0 16px;
+      transition: background-color 0.25s ease;
     }
 
-    /* checked: outer stroke + inner dot */
-    .radio > input[type="radio"]:checked + .grid-value::before{
-      border-color: #0080A8;
-      /* inner dot (3px radius) */
-      background: radial-gradient(circle at center, #0080A8 0 3px, transparent 3px);
+    .toggle-switch .slider::before {
+      content: "";
+      position: absolute;
+      height: 20px;
+      width: 20px;
+      left: 2px;
+      top: 2px;
+      background-color: white;
+      border-radius: 50%;
+      transition: transform 0.25s ease;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
     }
 
-    /* keyboard focus ring */
-    .radio > input[type="radio"]:focus-visible + .grid-value::before{
-      outline: 2px solid rgba(0,128,168,.35);
-      outline-offset: 2px;
+    .toggle-switch input:checked + .slider {
+      background-color: var(--primary);
     }
+
+    .toggle-switch input:checked + .slider::before {
+      transform: translateX(16px);
+    }
+  }
+
+  .last {
+    border-bottom: none;
   }
 }
 

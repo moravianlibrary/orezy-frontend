@@ -29,4 +29,10 @@ export class DialogComponent {
     const imgSvc = this.imagesService;
     if (imgSvc.dialogTitle() === 'Nastavení') imgSvc.gridRadio.set(imgSvc.gridMode());
   }
+
+  toggleOutline(): void {
+    const imgSvc = this.imagesService
+    imgSvc.outlineTransparent = !imgSvc.outlineTransparent;
+    localStorage.setItem('outlineTransparent', `${imgSvc.outlineTransparent}`);
+  }
 }

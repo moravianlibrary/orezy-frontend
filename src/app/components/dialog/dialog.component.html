@@ -20,20 +20,33 @@
       <!-- Setting -->
       @if (imagesService.dialogContentType() === 'settings') {
         <div class="settings-content-wrapper">
-          <div class="settings-block-label">Zobrazení mřížky</div>
-          <span class="radios-wrapper">
-            @for (gridMode of gridModeDictKeys; track gridMode) {
-              <label class="radio">
-                <input
-                  type="radio"
-                  name="grid-mode"
-                  [checked]="gridMode === imagesService.gridRadio()"
-                  (change)="imagesService.gridRadio.set(gridMode)"
-                />
-                <span class="grid-value">{{ gridModeDict[gridMode] }}</span>
-              </label>
-            }
-          </span>
+          <div class="settings-block">
+            <div class="settings-block-label">Zobrazení mřížky</div>
+            <span class="radios-wrapper">
+              @for (gridMode of gridModeDictKeys; track gridMode) {
+                <label class="radio">
+                  <input
+                    type="radio"
+                    name="grid-mode"
+                    [checked]="gridMode === imagesService.gridRadio()"
+                    (change)="imagesService.gridRadio.set(gridMode)"
+                  />
+                  <span class="grid-value">{{ gridModeDict[gridMode] }}</span>
+                </label>
+              }
+            </span>
+          </div>
+          <div class="settings-block last">
+            <label class="settings-block-label toggle-switch">
+              <input
+                type="checkbox"
+                [checked]="!imagesService.outlineTransparent"
+                (click)="toggleOutline()"
+              />
+              <span class="slider"></span>
+              Zobrazení obrysu vybraného výřezu
+            </label>
+          </div>
         </div>
       }
 
