@@ -36,7 +36,7 @@
               }
             </span>
           </div>
-          <div class="settings-block last">
+          <div class="settings-block">
             <label class="settings-block-label toggle-switch">
               <input
                 type="checkbox"
@@ -46,6 +46,22 @@
               <span class="slider"></span>
               Zobrazení obrysu vybraného výřezu
             </label>
+          </div>
+          <div class="settings-block last">
+            <div class="settings-block-label">Barva clony</div>
+            <span class="radios-wrapper">
+              @for (dimColor of dimColorDictKeys; track dimColor) {
+                <label class="radio">
+                  <input
+                    type="radio"
+                    name="dim-color"
+                    [checked]="dimColor === imagesService.dimRadio()"
+                    (change)="imagesService.dimRadio.set(dimColor)"
+                  />
+                  <span class="grid-value">{{ dimColor }}</span>
+                </label>
+              }
+            </span>
           </div>
         </div>
       }

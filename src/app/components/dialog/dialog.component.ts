@@ -1,7 +1,7 @@
 import { Component, inject, output } from '@angular/core';
-import { GridMode } from '../../app.types';
+import { DimColor, GridMode } from '../../app.types';
 import { ImagesService } from '../../services/images.service';
-import { gridModeDict } from '../../app.config';
+import { dimColorDict, gridModeDict } from '../../app.config';
 
 @Component({
   selector: 'app-dialog',
@@ -17,6 +17,9 @@ export class DialogComponent {
 
   gridModeDict: Record<GridMode, string> = gridModeDict;
   gridModeDictKeys = Object.keys(gridModeDict) as GridMode[];
+  
+  dimColorDict: Record<DimColor, string> = dimColorDict;
+  dimColorDictKeys = Object.keys(dimColorDict) as DimColor[];
 
   close() {
     this.closed.emit();

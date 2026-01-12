@@ -58,6 +58,7 @@ export interface HitInfo {
 
 // Dialog
 export type GridMode = 'always' | 'never' | 'when-rotating';
+export type DimColor = 'Černá' | 'Červená';
 export type DialogContentType = 'settings' | 'shortcuts';
 export interface DialogButton {
   label: string;

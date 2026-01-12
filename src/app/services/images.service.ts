@@ -1,10 +1,10 @@
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { computed, inject, Injectable, signal } from '@angular/core';
-import { DialogButton, DialogContentType, ExampleBook, GridMode, HitInfo, ImageItem, ImageRect, MousePos, Page, Toast, ToastType, Viewport } from '../app.types';
+import { DialogButton, DialogContentType, DimColor, ExampleBook, GridMode, HitInfo, ImageItem, ImageRect, MousePos, Page, Toast, ToastType, Viewport } from '../app.types';
 import { catchError, Observable, of } from 'rxjs';
 import { clamp, defer, degreeToRadian, getColor, scrollToSelectedImage } from '../utils/utils';
 import { EnvironmentService } from './environment.service';
-import { gridColor, transparentColor } from '../app.config';
+import { dimColorDict, gridColor, transparentColor } from '../app.config';
 
 @Injectable({
   providedIn: 'root'
@@ -101,9 +101,8 @@ export class ImagesService {
   panPrevY: number = 0;
 
   // Other
-  dimDefault: string = '0,0,0,0.45';
-  dimRed: string = '255,0,0,0.2';
-  dimColor: string = this.dimDefault;
+  dimColor = signal<DimColor>('Černá');
+  dimRadio = signal<DimColor>('Černá');
   outlineTransparent: boolean = false;
   pageOutlineWidth: number = 3;
   cornerOutlineWidth: number = this.pageOutlineWidth - 1;
@@ -487,7 +486,7 @@ export class ImagesService {
 
     ctx.clip('evenodd');
 
-    ctx.fillStyle = `rgba(${this.dimColor})`;
+    ctx.fillStyle = `rgba(${dimColorDict[this.dimColor()]})`;
     ctx.fillRect(0, 0, c.width, c.height);
 
     ctx.restore();
@@ -1200,6 +1199,9 @@ export class ImagesService {
           this.gridMode.set('when-rotating');
           localStorage.setItem('gridMode', 'when-rotating');
           this.outlineTransparent = false;
+          this.dimColor.set('Černá');
+          this.dimRadio.set('Černá');
+          localStorage.setItem('dimColor', 'Černá');
           this.redrawImageOnCanvas();
           this.currentPages.forEach(p => this.drawPage(p));
           this.showToast('Nastavení bylo resetováno.', { type: 'success' });
@@ -1212,6 +1214,9 @@ export class ImagesService {
           const gridRadio = this.gridRadio();
           this.gridMode.set(gridRadio);
           localStorage.setItem('gridMode', gridRadio);
+          const dimRadio = this.dimRadio();
+          this.dimColor.set(dimRadio);
+          localStorage.setItem('dimColor', dimRadio);
           this.redrawImageOnCanvas();
           this.currentPages.forEach(p => this.drawPage(p));
           this.showToast('Nastavení bylo uloženo.', { type: 'success' });
@@ -1420,7 +1425,9 @@ export class ImagesService {
 
     // Dimming color
     if (['c', 'C'].includes(key) && this.selectedPage && !dialogOpen) {
-      this.dimColor = this.dimColor === this.dimDefault ? this.dimRed : this.dimDefault;
+      this.dimColor.update(prev => prev === 'Černá' ? 'Červená' : 'Černá');
+      this.dimRadio.set(this.dimColor());
+      localStorage.setItem('dimColor', this.dimColor());
       this.redrawImageOnCanvas();
       this.currentPages.forEach(p => this.drawPage(p));
     }

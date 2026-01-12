@@ -3,7 +3,7 @@ import { provideRouter } from '@angular/router';
 import { routes } from './app.routes';
 import { provideHttpClient } from '@angular/common/http';
 import { EnvironmentService } from './services/environment.service';
-import { GridMode } from './app.types';
+import { DimColor, GridMode } from './app.types';
 
 export const defaultColor = '#00DDFF';
 export const warningColor = '#FF9500';
@@ -24,6 +24,11 @@ export const gridModeDict: Record<GridMode, string> = {
   'when-rotating': 'Při otáčení',
   'always': 'Vždy',
   'never': 'Nikdy'
+};
+
+export const dimColorDict: Record<DimColor, string> = {
+  'Černá': '0,0,0,0.45',
+  'Červená': '255,0,0,0.2'
 };
 
 export const appConfig: ApplicationConfig = {
