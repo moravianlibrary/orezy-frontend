@@ -30,16 +30,15 @@ export interface ImageItem {
   pages: Page[];
 }
 
-export interface DialogButton {
-  label: string;
-  primary?: boolean;
-  destructive?: boolean;
-  action?: () => void;
+export interface ImageRect {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
 }
 
 export type InputType = 'left' | 'top' | 'width' | 'height' | 'angle';
 export type PageType = 'single' | 'left' | 'right';
-export type ImgOrCanvas = 'image' | 'canvas';
 
 
 // Cursors
@@ -60,6 +59,12 @@ export interface HitInfo {
 // Dialog
 export type GridMode = 'always' | 'never' | 'when-rotating';
 export type DialogContentType = 'settings' | 'shortcuts';
+export interface DialogButton {
+  label: string;
+  primary?: boolean;
+  destructive?: boolean;
+  action?: () => void;
+}
 
 
 // Toast messages
@@ -69,4 +74,12 @@ export interface Toast {
   message: string;
   type?: ToastType;
   duration?: number;
+}
+
+
+// Zoom
+export interface Viewport {
+  x: number;
+  y: number;
+  scale: number;
 }

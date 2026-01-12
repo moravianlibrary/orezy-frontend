@@ -1,9 +1,5 @@
 <div id="main-container">
   @if (imagesService.loadingMain) { <app-loader /> }
-  <img
-    id="main-image"
-    [src]="imagesService.mainImageItem().url"
-  />
   <canvas id="main-canvas"></canvas>
   <app-toast-container />
 </div>

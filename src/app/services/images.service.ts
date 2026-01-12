@@ -1,6 +1,6 @@
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { computed, inject, Injectable, signal } from '@angular/core';
-import { DialogButton, DialogContentType, ExampleBook, GridMode, HitInfo, ImageItem, ImgOrCanvas, MousePos, Page, Toast, ToastType } from '../app.types';
+import { DialogButton, DialogContentType, ExampleBook, GridMode, HitInfo, ImageItem, ImageRect, MousePos, Page, Toast, ToastType, Viewport } from '../app.types';
 import { catchError, Observable, of } from 'rxjs';
 import { clamp, defer, degreeToRadian, getColor, scrollToSelectedImage } from '../utils/utils';
 import { EnvironmentService } from './environment.service';
@@ -21,10 +21,9 @@ export class ImagesService {
     STATE
   ------------------------------ */
   book = signal<string>('');
-  selectedFilter: string | null = null;
+  selectedFilter: string | null = 'all';
   selectedPageNumberFilter = signal<string | null>(null);
   clickedPageNumberFilter: boolean = false;
-  editable = signal<boolean>(false);
 
   images = signal<ImageItem[]>([]);
   originalImages = signal<ImageItem[]>([]);
@@ -37,6 +36,7 @@ export class ImagesService {
 
   c!: HTMLCanvasElement;
   ctx!: CanvasRenderingContext2D;
+  imageRect: ImageRect = { x: 0, y: 0, width: 0, height: 0 };
 
   currentIndex = computed<number>(() => this.displayedImagesFinal().findIndex(img => img._id === this.mainImageItem()._id));
   mainImage: HTMLImageElement | null = null;
@@ -52,8 +52,9 @@ export class ImagesService {
 
   pageId!: string;
   hitPage!: Page | null;
-  mousePos!: { x: number; y: number } | null;
   startHit: HitInfo | null = null;
+  mousePos!: { x: number; y: number } | null;
+  cursor: string = 'initial';
 
   // Hover
   lastPageCursorIsInside: Page | null = null;
@@ -83,14 +84,29 @@ export class ImagesService {
   lastTopInput: number = 0;
   lastWidthInput: number = 0;
   lastHeightInput: number = 0;
-  lastAngleInput: number = 0;
   increment: number = 0.001;
   incrementAngle: number = this.increment * 100;
   decimals: number = 2;
   rotationDirection: number = 1;
+  
+  // Zoom
+  viewport: Viewport = { x: 0, y: 0, scale: 1 };
+  zoomFactor: number = 0.005;
+  btnZoomFactor = this.zoomFactor * 40;
+  minZoom: number = 1;
+  maxZoom: number = 5;
+  snapped: boolean = false;
+  isPanning: boolean = false;
+  panPrevX: number = 0;
+  panPrevY: number = 0;
 
+  // Other
+  dimDefault: string = '0,0,0,0.45';
+  dimRed: string = '255,0,0,0.2';
+  dimColor: string = this.dimDefault;
   outlineTransparent: boolean = false;
   pageOutlineWidth: number = 3;
+  cornerOutlineWidth: number = this.pageOutlineWidth - 1;
   cornerSize: number = 6;
   maxPages: number = 2;
 
@@ -155,7 +171,8 @@ export class ImagesService {
     if (this.pageWasEdited) this.updateCurrentPagesWithEdited();
     if (this.imgWasEdited) this.updateImagesByEdited(this.mainImageItem()._id);
     this.selectedPage = null;
-    this.redrawImage();
+    this.resetZoom();
+    this.redrawImageOnCanvas();
     this.currentPages.forEach(p => this.drawPage(p));
     this.updateMainImageItemAndImages();
     
@@ -169,7 +186,6 @@ export class ImagesService {
       .subscribe({
         next: () => {
           this.selectedFilter = 'edited';
-          localStorage.setItem('filter', this.selectedFilter);
           this.setDisplayedImages();
           this.showToast('Proces byl úspěšně dokončen!', { type: 'success' });
         },
@@ -198,7 +214,6 @@ export class ImagesService {
         ? 'edited'
         : (mainImageItemAfter.flags.length ? 'flagged' : 'ok');
     }
-    localStorage.setItem('filter', this.selectedFilter ?? 'flagged');
     this.setDisplayedImages();
     scrollToSelectedImage();
     this.setMainImage(mainImageItemAfter);
@@ -263,7 +278,6 @@ export class ImagesService {
     this.updateImagesByCurrentPages();
     
     this.selectedFilter = filter;
-    localStorage.setItem('filter', this.selectedFilter);
     
     const mainImageItemId = this.mainImageItem()._id;
     if (this.imgWasEdited) {
@@ -300,14 +314,12 @@ export class ImagesService {
 
 
   /* ------------------------------
-    MAIN IMAGE LOGIC
+    MAIN IMAGE LOGIC & DRAWING
   ------------------------------ */
   setMainImage(img: ImageItem): void {
     this.loadingMain = true;
-    const mainImage = (document.getElementById('main-image') as HTMLElement).style;
-    const mainCanvas =(document.getElementById('main-canvas') as HTMLElement).style;
-    mainImage.visibility = 'hidden';
-    mainCanvas.visibility = 'hidden';
+
+    this.c.style.visibility = 'hidden';
 
     const applyFinalImage = (updated: ImageItem) => {
       const page = this.clickedDiffPage ? this.lastSelectedPage : this.selectedPage;
@@ -316,9 +328,8 @@ export class ImagesService {
         this.pageWasEdited = false;
       }
       this.selectedPage = null;
-      this.editable.set(false);
-      this.toggleMainImageOrCanvas();
-      this.renderFullImageAndCanvas(updated);
+      this.resetZoom();
+      this.renderCanvas(updated);
       this.loadingMain = false;
       defer(() => {
         this.setDisplayedImages();
@@ -351,52 +362,24 @@ export class ImagesService {
     });
   }
 
-  private renderFullImageAndCanvas(img: ImageItem): void {
-    ['image', 'canvas'].forEach(type =>
-      this.setMainFullImageOrCanvas(type as ImgOrCanvas, img)
-    );
-  }
-
-  toggleMainImageOrCanvas(): void {
-    const mainImage = document.getElementById('main-image') as HTMLElement;
-    const mainCanvas = this.c;
-
-    const showCanvas = this.editable() || !!this.selectedPage;
-    if (mainImage) mainImage.style.zIndex = showCanvas ? '5' : '10';
-    if (mainCanvas) mainCanvas.style.zIndex = showCanvas ? '10' : '5';
-  }
-
-
-  /* ------------------------------
-    MAIN IMAGE DRAWING
-  ------------------------------ */
-  private setMainFullImageOrCanvas(type: ImgOrCanvas, imgItem: ImageItem): void {
-    const mainImage = (document.getElementById('main-image') as HTMLElement).style;
-    const mainCanvas =(document.getElementById('main-canvas') as HTMLElement).style;
-    
+  private renderCanvas(imgItem: ImageItem): void {
     if (imgItem.url) {
       const img = new Image();
       img.crossOrigin = 'anonymous';
       img.src = imgItem.url;
       this.mainImage = img;
 
-      img.onload = () => this.fitAndDrawImage(img, imgItem, type);
+      img.onload = () => this.fitAndDrawImage(img, imgItem);
       img.onerror = () => console.error('Failed to load image.');
 
-      mainImage.visibility = 'visible';
-      mainCanvas.visibility = 'visible';
+      this.c.style.visibility = 'visible';
       return;
     }
 
-    mainImage.visibility = 'hidden';
-    mainCanvas.visibility = 'hidden';
+    this.c.style.visibility = 'hidden';
   }
 
-  private fitAndDrawImage(
-    img: HTMLImageElement,
-    imgItem: ImageItem,
-    type: ImgOrCanvas
-  ): void {
+  private fitAndDrawImage(img: HTMLImageElement, imgItem: ImageItem): void {
     const { c, ctx } = this;
 
     const appMain = document.querySelector('app-main') as HTMLElement;
@@ -417,52 +400,86 @@ export class ImagesService {
         parseFloat(appStyle.borderTopWidth) +
         parseFloat(appStyle.borderBottomWidth));
 
-    const imgRatio = img.width / img.height;
-    const appRectRatio = appRect.width / appRect.height;
-
     c.width = widthAvail;
     c.height = heightAvail;
 
-    imgRatio > appRectRatio
-      ? c.height = (img.height / img.width) * c.width
-      : c.width = imgRatio * c.height;
+    // const imgRatio = img.width / img.height;
+    // const appRectRatio = appRect.width / appRect.height;
 
-    ctx.drawImage(img, 0, 0, c.width, c.height);
+    // imgRatio > appRectRatio
+    //   ? c.height = (img.height / img.width) * c.width
+    //   : c.width = imgRatio * c.height;
 
+    const imgRatio = img.width / img.height;
+    const canvasRatio = c.width / c.height;
+
+    let drawWidth: number = c.width;
+    let drawHeight: number = c.height;
+
+    imgRatio > canvasRatio
+      ? drawHeight = c.width / imgRatio
+      : drawWidth = c.height * imgRatio;
+
+    const offsetX = (c.width - drawWidth) / 2;
+    const offsetY = (c.height - drawHeight) / 2;
+
+    // Store rect for pages / hit-testing:
+    this.imageRect = {
+      x: offsetX,
+      y: offsetY,
+      width: drawWidth,
+      height: drawHeight,
+    };
+
+    this.viewport = { x: 0, y: 0, scale: 1 };
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+    ctx.clearRect(0, 0, c.width, c.height);
+    
+    this.applyViewportTransform(ctx);
+    // ctx.drawImage(img, 0, 0, c.width, c.height);
+    ctx.drawImage(img, offsetX, offsetY, drawWidth, drawHeight);
+
+    // Pages
     this.currentPages = [];
     this.images()
       .find(img => img._id === imgItem._id)
       ?.pages
       ?.forEach(p => {
         this.currentPages.push(p);
-        this.drawSimplePage(p);
+        this.drawPageInitial(p);
       });
     
-    if (type === 'image') {
-      const lastMainImageItemName = this.mainImageItem()._id;
+    const lastMainImageItemName = this.mainImageItem()._id;
 
-      this.mainImageItem.set({ ...imgItem, url: c.toDataURL('image/jpeg') });
+    this.mainImageItem.set({ ...imgItem, url: c.toDataURL('image/jpeg') });
 
-      if (imgItem._id && lastMainImageItemName && imgItem._id !== lastMainImageItemName && this.imgWasEdited && !this.clickedPageNumberFilter) {
-        this.updateImagesByEdited(lastMainImageItemName);
-      }
+    if (
+      imgItem._id && lastMainImageItemName && imgItem._id !== lastMainImageItemName
+      && this.imgWasEdited && !this.clickedPageNumberFilter
+    ) {
+      this.updateImagesByEdited(lastMainImageItemName);
     }
   }
 
   private dimOutside(p: Page) {
     const { c, ctx } = this;
     
-    const [centerX, centerY] = [c.width * p.xc, c.height * p.yc];
-    const [width, height] = [c.width * p.width, c.height * p.height];
+    // const [centerX, centerY] = [c.width * p.xc, c.height * p.yc];
+    // const [width, height] = [c.width * p.width, c.height * p.height];
     const angle = degreeToRadian(p.angle);
 
     ctx.save();
 
+    // Outside rect
     ctx.beginPath();
-    ctx.rect(0, 0, c.width, c.height);
+    // ctx.rect(0, 0, c.width, c.height);
+    const { x, y, width: iw, height: ih } = this.imageRect;
+    ctx.rect(x, y, iw, ih);
 
     ctx.save();
 
+    // Inner rect
+    const { centerX, centerY, width, height } = this.getPageRectPx(p);
     ctx.translate(centerX, centerY);
     ctx.rotate(angle);
     ctx.rect(-width/2, -height/2, width, height);
@@ -470,17 +487,19 @@ export class ImagesService {
 
     ctx.clip('evenodd');
 
-    ctx.fillStyle = 'rgba(0,0,0,0.45)';
+    ctx.fillStyle = `rgba(${this.dimColor})`;
     ctx.fillRect(0, 0, c.width, c.height);
 
     ctx.restore();
   }
 
-  private drawSimplePage(p: Page): void {
-    const { c, ctx } = this;
+  private drawPageInitial(p: Page): void {
+    const { /* c,  */ctx } = this;
     
-    const [centerX, centerY] = [c.width * p.xc, c.height * p.yc];
-    const [width, height] = [c.width * p.width, c.height * p.height];
+    // const [centerX, centerY] = [c.width * p.xc, c.height * p.yc];
+    // const [width, height] = [c.width * p.width, c.height * p.height];
+
+    const { centerX, centerY, width, height } = this.getPageRectPx(p);
     
     ctx.save();
 
@@ -490,15 +509,290 @@ export class ImagesService {
     // Outline
     ctx.strokeStyle = getColor(p) + 'B2';
     ctx.lineWidth = this.pageOutlineWidth;
-    ctx.strokeRect(-width / 2 - this.pageOutlineWidth / 2, -height / 2 - this.pageOutlineWidth / 2, width + this.pageOutlineWidth, height + this.pageOutlineWidth);
+    ctx.strokeRect(
+      -width / 2 - this.pageOutlineWidth / 2,
+      -height / 2 - this.pageOutlineWidth / 2,
+      width + this.pageOutlineWidth,
+      height + this.pageOutlineWidth
+    );
 
     ctx.restore();
+  }
+
+  getPageRectPx(p: Page): { centerX: number; centerY: number; width: number; height: number } {
+    const { x, y, width, height } = this.imageRect;
+
+    const w = width * p.width;
+    const h = height * p.height;
+    const cx = x + width * p.xc;
+    const cy = y + height * p.yc;
+
+    return { centerX: cx, centerY: cy, width: w, height: h };
+  }
+
+
+  /* ------------------------------
+    ZOOMING
+  ------------------------------ */
+  private applyViewportTransform(ctx: CanvasRenderingContext2D): void {
+    const { x, y, scale } = this.viewport;
+    ctx.setTransform(scale, 0, 0, scale, x, y);
+  }
+
+  resetZoom(): void {
+    this.viewport = { x: 0, y: 0, scale: 1 };
+    this.snapped = false;
+
+    this.redrawImageOnCanvas();
+    this.currentPages.forEach(p => this.drawPage(p));
+  }
+
+  // Default zooming
+  setZoomAt(screenX: number, screenY: number, newScale: number): void {
+    const oldScale = this.viewport.scale;
+    const scale = clamp(newScale, this.minZoom, this.maxZoom);
+    
+    if (scale === oldScale) return;
+    if (scale <= 1) {
+      this.resetZoom();
+      return;
+    }
+
+    const worldX = (screenX - this.viewport.x) / oldScale;
+    const worldY = (screenY - this.viewport.y) / oldScale;
+
+    this.viewport.x = screenX - worldX * scale;
+    this.viewport.y = screenY - worldY * scale;
+    this.viewport.scale = scale;
+
+    this.clampViewportToMinZoomEnvelope();
+    this.redrawImageOnCanvas();
+    this.currentPages.forEach(p => this.drawPage(p));
+  }
+
+  panBy(dxScreen: number, dyScreen: number): void {
+    this.viewport.x += dxScreen;
+    this.viewport.y += dyScreen;
+
+    this.clampViewportToMinZoomEnvelope();
+    this.redrawImageOnCanvas();
+    this.currentPages.forEach(p => this.drawPage(p));
+  }
+
+  private clampViewportToMinZoomEnvelope(): void {
+    const { width: cw, height: ch } = this.c;
+
+    const s = this.viewport.scale;
+    const mz = this.minZoom;
+
+    const marginX = (cw / mz - cw) / 2;
+    const marginY = (ch / mz - ch) / 2;
+
+    const wx0 = -marginX;
+    const wx1 = cw + marginX;
+    const wy0 = -marginY;
+    const wy1 = ch + marginY;
+
+    const xA = -s * wx0;
+    const xB = cw - s * wx1;
+
+    const yA = -s * wy0;
+    const yB = ch - s * wy1;
+
+    const minX = Math.min(xA, xB);
+    const maxX = Math.max(xA, xB);
+    const minY = Math.min(yA, yB);
+    const maxY = Math.max(yA, yB);
+
+    this.viewport.x = clamp(this.viewport.x, minX, maxX);
+    this.viewport.y = clamp(this.viewport.y, minY, maxY);
+  }
+
+  // Buttons and keyboard shortcuts
+  zoom(type: 'in' | 'out'): void {
+    const x = this.c.width / 2;
+    const y = this.c.height / 2;
+    const scale = this.viewport.scale * (1 + (type === 'in' ? 1 : -1) * this.btnZoomFactor);
+
+    this.setZoomAt(x, y, scale);
+  }
+
+  // Zoom-snap to selected page
+  zoomSnap(type: 'in' | 'out'): void {
+    if (type === 'in') {
+      if (!this.selectedPage) return;
+      if (!this.snapped) this.snapZoomToSelectedPage();
+      return;
+    }
+
+    this.resetZoom();
+    this.snapped = false;
+  }
+
+  private snapZoomToSelectedPage(minPad: number = 30): void {
+    const { c } = this;
+    if (!c || !this.selectedPage) return;
+
+    const cw = c.width;
+    const ch = c.height;
+
+    // Page bounds in world coords
+    const { centerX, centerY, width: pw, height: ph } = this.getPageRectPx(this.selectedPage);
+    const pl = centerX - pw / 2;
+    const pr = centerX + pw / 2;
+    const pt = centerY - ph / 2;
+    const pb = centerY + ph / 2;
+
+    // Default (unzoomed, s=1) paddings in world px
+    const padL = pl;
+    const padR = cw - pr;
+    const padT = pt;
+    const padB = ch - pb;
+
+    // Snapping not allowed if 3–4 paddings are below minPad
+    const smallCount =
+      (padL < minPad ? 1 : 0) +
+      (padR < minPad ? 1 : 0) +
+      (padT < minPad ? 1 : 0) +
+      (padB < minPad ? 1 : 0);
+
+    if (smallCount >= 3) {
+      return;
+    }
+
+    // Determine scan orientation from how the image sits in the canvas:
+    // vertical scan: image fills height (no top/bottom margin), but not width
+    const eps = 1; // px tolerance
+    const verticalScan =
+      Math.abs(this.imageRect.y) <= eps &&
+      Math.abs((this.imageRect.y + this.imageRect.height) - ch) <= eps &&
+      this.imageRect.width < cw - eps;
+
+    const horizontalScan =
+      Math.abs(this.imageRect.x) <= eps &&
+      Math.abs((this.imageRect.x + this.imageRect.width) - cw) <= eps &&
+      this.imageRect.height < ch - eps;
+
+    // Primary axis: vertical scan => enforce vertical paddings, horizontal scan => enforce horizontal paddings
+    // If unclear, default to whichever dimension is closer to "fills"
+    const primary: 'y' | 'x' = verticalScan ? 'y' : horizontalScan ? 'x' : (this.imageRect.height >= this.imageRect.width ? 'y' : 'x');
+
+    // Helper: choose desired pads on an axis
+    const desiredPads = (a: number, b: number) => {
+      // a,b are the two default pads on that axis (e.g., top/bottom)
+      if (a >= minPad && b >= minPad) {
+        return { aKeep: minPad, bKeep: minPad };
+      }
+
+      if (a < minPad && b >= minPad) {
+        return { aKeep: a, bKeep: minPad };
+      }
+
+      if (a >= minPad && b < minPad) {
+        return { aKeep: minPad, bKeep: b };
+      }
+      
+      return { aKeep: a, bKeep: b };
+    };
+
+    // Compute scale from primary axis only
+    let s = 1;
+
+    if (primary === 'y') {
+      const { aKeep: tKeep, bKeep: bKeep } = desiredPads(padT, padB);
+      const desiredWorldH = ph + tKeep + bKeep;
+      s = ch / desiredWorldH;
+
+      // Ensure secondary axis keeps some padding too
+      const secPad = Math.min(minPad, padL, padR);
+      const maxSFromSecondary = cw / (pw + 2 * secPad);
+
+      s = Math.min(s, maxSFromSecondary);
+    } else {
+      const { aKeep: lKeep, bKeep: rKeep } = desiredPads(padL, padR);
+      const desiredWorldW = pw + lKeep + rKeep;
+      s = cw / desiredWorldW;
+
+      const secPad = Math.min(minPad, padT, padB);
+      const maxSFromSecondary = ch / (ph + 2 * secPad);
+
+      s = Math.min(s, maxSFromSecondary);
+    }
+    
+    // Don't zoom if snapping would create extra outer padding
+    if (s <= 1) return;
+
+    // World window size at this scale
+    const ww = cw / s;
+    const wh = ch / s;
+
+    // Now choose world window origin (vx, vy) per-axis:
+    //  - If one default pad < minPad, keep it EXACT (so origin is pinned).
+    //  - Else:
+    //     - On primary axis: enforce the chosen keep pad(s) (minPad or original).
+    //     - On secondary axis: try center; if impossible, clamp (keeps smaller default side).
+    let vx = 0;
+    let vy = 0;
+
+    // X axis positioning
+    {
+      if (padL < minPad) {
+        vx = 0; // left pad stays padL exactly
+      } else if (padR < minPad) {
+        vx = cw - ww; // right pad stays padR exactly
+      } else {
+        if (primary === 'x') {
+          // enforce left keep pad (minPad or original) by placing window so leftPad == lKeep
+          const { aKeep: lKeep } = desiredPads(padL, padR);
+          vx = pl - lKeep;
+        } else {
+          // secondary axis: try to center, then clamp (case 1 step 2/3)
+          const vxCentered = (pl + pr) / 2 - ww / 2;
+          vx = vxCentered;
+        }
+      }
+
+      // Must stay inside default canvas world
+      vx = clamp(vx, 0, cw - ww);
+    }
+
+    // Y axis positioning
+    {
+      if (padT < minPad) {
+        vy = 0; // top pad stays padT exactly
+      } else if (padB < minPad) {
+        vy = ch - wh; // bottom pad stays padB exactly
+      } else {
+        if (primary === 'y') {
+          const { aKeep: tKeep } = desiredPads(padT, padB);
+          vy = pt - tKeep;
+        } else {
+          // secondary axis: try to center, then clamp
+          const vyCentered = (pt + pb) / 2 - wh / 2;
+          vy = vyCentered;
+        }
+      }
+
+      vy = clamp(vy, 0, ch - wh);
+    }
+
+    // Convert world-window -> viewport transform
+    this.viewport = {
+      scale: s,
+      x: -vx * s,
+      y: -vy * s,
+    };
+
+    this.snapped = true;
+
+    this.redrawImageOnCanvas();
+    this.currentPages.forEach(p => this.drawPage(p));
   }
 
 
   /* ------------------------------
     PREV / NEXT IMAGE
-  ------------------------------ */    
+  ------------------------------ */
   showPrevImage(): void {
     if (this.currentIndex() === 0 || !this.displayedImagesFinal().length) return;
     this.updateImagesByCurrentPages();
@@ -570,9 +864,10 @@ export class ImagesService {
   }
 
   isPointInPage(x: number, y: number, p: Page): boolean {
-    const c = this.c;
-    const [centerX, centerY] = [c.width * p.xc, c.height * p.yc];
-    const [width, height] = [c.width * p.width, c.height * p.height];
+    // const c = this.c;
+    // const [centerX, centerY] = [c.width * p.xc, c.height * p.yc];
+    // const [width, height] = [c.width * p.width, c.height * p.height];
+    const { centerX, centerY, width, height } = this.getPageRectPx(p);
     const angle = degreeToRadian(p.angle);
     const [halfW, halfH] = [width / 2, height / 2];
     const dx = x - centerX;
@@ -585,7 +880,7 @@ export class ImagesService {
   }
 
   hoveringPage(hoveredPageId: string): void {
-    this.redrawImage();
+    this.redrawImageOnCanvas();
     this.currentPages.forEach(p => this.drawPage(p, hoveredPageId));
   }
 
@@ -594,7 +889,6 @@ export class ImagesService {
     if (!this.isDragging && !this.isRotating && insidePage) {
       this.pageId = this.pageIdCursorInside();
       this.lastPageCursorIsInside = this.currentPages.find(p => p._id === this.pageId) ?? null;
-      this.editable.set(insidePage);
       this.hoveringPage(this.hitPage?._id === this.selectedPage?._id ? this.selectedPage?._id ?? '' : this.pageId);
     }
   }
@@ -606,10 +900,13 @@ export class ImagesService {
     bottom: number
   } {
     const rad = degreeToRadian(angle);
-    const cw = this.c.width;
-    const ch = this.c.height;
-    const hw = (width * cw) / 2;
-    const hh = (height * ch) / 2;
+    const { x: ix, y: iy, width: iw, height: ih } = this.imageRect;
+    // const cw = this.c.width;
+    // const ch = this.c.height;
+    // const hw = (width * cw) / 2;
+    // const hh = (height * ch) / 2;
+    const hw = (width * iw) / 2;
+    const hh = (height * ih) / 2;
     const corners = [
       { x: -hw, y: -hh },
       { x: hw,  y: -hh },
@@ -618,26 +915,35 @@ export class ImagesService {
     ];
     const sin = Math.sin(rad);
     const cos = Math.cos(rad);
+    const centerX = ix + xc * iw;
+    const centerY = iy + yc * ih;
     const rotated = corners.map(pt => ({
-      x: xc * cw + pt.x * cos - pt.y * sin,
-      y: yc * ch + pt.x * sin + pt.y * cos,
+      // x: xc * cw + pt.x * cos - pt.y * sin,
+      // y: yc * ch + pt.x * sin + pt.y * cos,
+      x: centerX + pt.x * cos - pt.y * sin,
+      y: centerY + pt.x * sin + pt.y * cos,
     }));
     const xs = rotated.map(p => p.x);
     const ys = rotated.map(p => p.y);
 
     return {
-      left: Math.min(...xs) / cw,
-      right: Math.max(...xs) / cw,
-      top: Math.min(...ys) / ch,
-      bottom: Math.max(...ys) / ch
+      // left: Math.min(...xs) / cw,
+      // right: Math.max(...xs) / cw,
+      // top: Math.min(...ys) / ch,
+      // bottom: Math.max(...ys) / ch
+      left:  (Math.min(...xs) - ix) / iw,
+      right: (Math.max(...xs) - ix) / iw,
+      top:   (Math.min(...ys) - iy) / ih,
+      bottom:(Math.max(...ys) - iy) / ih,
     }
   }
   
   drawPage(p: Page, hoveredId?: string): void {
-    const { c, ctx } = this;
+    const { /* c,  */ctx } = this;
     
-    const [centerX, centerY] = [c.width * p.xc, c.height * p.yc];
-    const [width, height] = [c.width * p.width, c.height * p.height];
+    // const [centerX, centerY] = [c.width * p.xc, c.height * p.yc];
+    // const [width, height] = [c.width * p.width, c.height * p.height];
+    const { centerX, centerY, width, height } = this.getPageRectPx(p);
     const color = getColor(p);
     
     ctx.save();
@@ -646,11 +952,18 @@ export class ImagesService {
     ctx.rotate(degreeToRadian(p.angle));
 
     // Outline
-    ctx.strokeStyle = p._id === this.selectedPage?._id && this.outlineTransparent
-      ? transparentColor
-      : color + 'B2';
-    ctx.lineWidth = this.pageOutlineWidth;
-    ctx.strokeRect(-width / 2 - this.pageOutlineWidth / 2, -height / 2 - this.pageOutlineWidth / 2, width + this.pageOutlineWidth, height + this.pageOutlineWidth);
+    {
+      ctx.strokeStyle = p._id === this.selectedPage?._id && this.outlineTransparent
+        ? transparentColor
+        : color + 'B2';
+      ctx.lineWidth = this.pageOutlineWidth;
+      ctx.strokeRect(
+        -width / 2 - this.pageOutlineWidth / 2,
+        -height / 2 - this.pageOutlineWidth / 2,
+        width + this.pageOutlineWidth,
+        height + this.pageOutlineWidth
+      );
+    }
 
     // Hover
     if (p._id === hoveredId && this.selectedPage?._id !== p._id) {
@@ -675,7 +988,7 @@ export class ImagesService {
       ctx.save();
       ctx.beginPath();
 
-      // 1px lines that stay 1px even if you scaled elsewhere (optional, harmless if not scaled)
+      // 1px lines that stay 1px even if scaled elsewhere (optional, harmless if not scaled)
       const sx = Math.hypot(ctx.getTransform().a, ctx.getTransform().b) || 1;
       ctx.lineWidth = 1 / sx;
 
@@ -718,14 +1031,22 @@ export class ImagesService {
       ctx.strokeStyle = p._id === this.selectedPage?._id && this.outlineTransparent
         ? transparentColor
         : color + 'B2';
-      ctx.lineWidth = this.pageOutlineWidth - 1;
+      ctx.lineWidth = this.cornerOutlineWidth;
 
       for (const c of corners) {
-        const offsetX = c.x < 0 ? -this.cornerSize : 0;
-        const offsetY = c.y < 0 ? -this.cornerSize : 0;
+        const outlineOffset = this.outlineTransparent ? 0 : this.cornerOutlineWidth;
+        const negativeOffset = this.cornerSize + outlineOffset;
+
+        const offsetX = c.x < 0 ? -negativeOffset : outlineOffset;
+        const offsetY = c.y < 0 ? -negativeOffset : outlineOffset;
 
         ctx.fillRect(c.x + offsetX, c.y + offsetY, this.cornerSize, this.cornerSize);
-        ctx.strokeRect(c.x + offsetX, c.y + offsetY, this.cornerSize, this.cornerSize);
+        ctx.strokeRect(
+          c.x + offsetX - this.cornerOutlineWidth / 2,
+          c.y + offsetY - this.cornerOutlineWidth / 2,
+          this.cornerSize + this.cornerOutlineWidth,
+          this.cornerSize + this.cornerOutlineWidth
+        );
       }
     }
 
@@ -764,20 +1085,37 @@ export class ImagesService {
     this.currentPages.push(addedPage);
     this.selectedPage = this.currentPages[this.currentPages.length - 1];
     this.imgWasEdited = true;
-    this.redrawImage();
+    this.redrawImageOnCanvas();
     this.currentPages.forEach(p => this.drawPage(p));
-    this.toggleMainImageOrCanvas();
   }
 
   removePage(): void {
     this.currentPages = this.currentPages.filter(p => p !== this.selectedPage);
     if (this.currentPages.length) this.currentPages = this.currentPages.map(p => ({ ...p, type: 'single' }));
     this.selectedPage = null;
-    this.redrawImage();
+    this.redrawImageOnCanvas();
     this.currentPages.forEach(p => this.drawPage(p));
     this.updateMainImageItem();
     this.pageWasEdited = true;
     this.imgWasEdited = true;
+  }
+
+  redrawImageOnCanvas(): void {
+    const { c, ctx } = this;
+    
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+    ctx.clearRect(0, 0, c.width, c.height);
+    
+    if (!this.mainImage) return;
+
+    this.applyViewportTransform(ctx);
+    // ctx.drawImage(this.mainImage, 0, 0, c.width, c.height);
+    const { x, y, width, height } = this.imageRect;
+    ctx.drawImage(this.mainImage, x, y, width, height);
+
+    if (this.selectedPage) {
+      this.dimOutside(this.selectedPage);
+    }
   }
 
   updateCurrentPagesWithEdited(): void {
@@ -786,17 +1124,6 @@ export class ImagesService {
       : p
     );
     this.pageWasEdited = false;
-  }
-
-  redrawImage(): void {
-    const { c, ctx } = this;
-    ctx.clearRect(0, 0, c.width, c.height);
-    
-    if (!this.mainImage) return;
-    ctx.drawImage(this.mainImage, 0, 0, c.width, c.height);
-    if (this.selectedPage) {
-      this.dimOutside(this.selectedPage);
-    }
   }
 
   updateMainImageItemAndImages(): void {
@@ -998,13 +1325,15 @@ export class ImagesService {
       'PageDown', 'PageUp',                                 // (+ PageUp / PageDown)
       'm', 'M', 'g', 'G',                                   // Mřížka / grid
       'o', 'O',                                             // Obrys / outline
+      'c', 'C',                                             // Clona (barva)
       'Enter',                                              // Přesunout sken do OK, + control/cmd = dokončit
       'r', 'R',                                             // + control/cmd = reset změn skenu; + control/cmd + shift = reset změn dokumentu
       'F1', 'F2', 'F3', 'F4',                               // Filters
       'Shift',                                              // 1 -> 10
       'Control', 'Meta',                                    // + arrows = change width / height by 1
       'a', 'A', 's', 'S',                                   // Rotate by 1
-      'k', 'K'                                              // Shortcuts
+      'k', 'K',                                             // Shortcuts
+      'q', 'Q', 'w', 'W', 'e', 'E'                          // Zooming
     ].includes(key);
   }
 
@@ -1013,6 +1342,7 @@ export class ImagesService {
     if (!this.isHandledKey(key) || (event.target as HTMLElement).tagName === 'INPUT') return;
     event.preventDefault();
     event.stopPropagation();
+    const dialogOpen = this.dialogOpen();
 
     // Update hover page
     if (key === 'Shift') {
@@ -1021,7 +1351,7 @@ export class ImagesService {
     }
 
     // Select left / right page OR Filters number of pages
-    if ((key === '+' || key === 'ě' || key === 'Ě' || key === '1' || key === '2') && !event.ctrlKey && !this.dialogOpen()) {
+    if ((key === '+' || key === 'ě' || key === 'Ě' || key === '1' || key === '2') && !event.ctrlKey && !dialogOpen) {
       if (event.altKey || event.metaKey) {
         this.togglePageNumberFilter(['+', '1'].includes(key) ? 'single' : 'double');
         return;
@@ -1034,16 +1364,14 @@ export class ImagesService {
       this.selectedPage = this.currentPages.find(p => targetTypes.has(p.type)) ?? null;
       this.clickedDiffPage = this.lastSelectedPage && this.selectedPage && this.lastSelectedPage !== this.selectedPage;
       this.lastPageCursorIsInside = this.selectedPage;
-      this.editable.set(true);
-      this.redrawImage();
+      this.redrawImageOnCanvas();
       this.currentPages.forEach(p => this.drawPage(p));
-      this.toggleMainImageOrCanvas();
       this.updateMainImageItem();
     }
 
     // Unselect page
     if (key === 'Escape') {
-      if (this.dialogOpen()) {
+      if (dialogOpen) {
         this.dialogOpen.set(false);
         this.dialogOpened = false;
         if (this.dialogTitle() === 'Nastavení') this.gridRadio.set(this.gridMode());
@@ -1054,39 +1382,44 @@ export class ImagesService {
       this.lastSelectedPage = this.selectedPage;
       this.selectedPage = null;
       this.lastPageCursorIsInside = null;
-      this.editable.set(false);
-      this.redrawImage();
+      this.redrawImageOnCanvas();
       this.currentPages.forEach(p => this.drawPage(p));
       this.updateMainImageItem();
-      this.toggleMainImageOrCanvas();
     }
 
     // Remove selected page
-    if (['Backspace', 'Delete'].includes(key) && !this.dialogOpen() && this.selectedPage) this.removePage();
+    if (['Backspace', 'Delete'].includes(key) && !dialogOpen && this.selectedPage) this.removePage();
     
     // Add page
-    if (['p', 'P'].includes(key) && !this.dialogOpen() && this.currentPages.length < this.maxPages) this.addPage();
+    if (['p', 'P'].includes(key) && !dialogOpen && this.currentPages.length < this.maxPages) this.addPage();
 
     // Change grid mode
-    if (['m', 'M', 'g', 'G'].includes(key) && this.selectedPage &&!this.dialogOpen()) {
+    if (['m', 'M', 'g', 'G'].includes(key) && this.selectedPage &&!dialogOpen) {
       this.gridMode.set(!this.isRotating
         ? this.gridMode() === 'always' ? 'when-rotating' : 'always'
         : this.gridMode() === 'never' ? 'when-rotating' : 'never');
       this.gridRadio.set(this.gridMode());
       localStorage.setItem('gridMode', this.gridMode());
-      this.redrawImage();
+      this.redrawImageOnCanvas();
       this.currentPages.forEach(p => this.drawPage(p));
     };
 
     // Outline transparency
-    if (['o', 'O'].includes(key) && this.selectedPage && !this.dialogOpen()) {
+    if (['o', 'O'].includes(key) && this.selectedPage && !dialogOpen) {
       this.outlineTransparent = !this.outlineTransparent;
-      this.redrawImage();
+      this.redrawImageOnCanvas();
+      this.currentPages.forEach(p => this.drawPage(p));
+    }
+
+    // Outline transparency
+    if (['c', 'C'].includes(key) && this.selectedPage && !dialogOpen) {
+      this.dimColor = this.dimColor === this.dimDefault ? this.dimRed : this.dimDefault;
+      this.redrawImageOnCanvas();
       this.currentPages.forEach(p => this.drawPage(p));
     }
 
     // Prev/next scan
-    if (((['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].includes(key) && !this.selectedPage) || ['PageDown', 'PageUp'].includes(key)) && !this.dialogOpen()) {
+    if (((['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].includes(key) && !this.selectedPage) || ['PageDown', 'PageUp'].includes(key)) && !dialogOpen) {
       const prevKeys = new Set(['PageUp', 'ArrowLeft', 'ArrowUp']);
       const nextKeys = new Set(['PageDown', 'ArrowRight', 'ArrowDown']);
 
@@ -1097,7 +1430,7 @@ export class ImagesService {
     }
 
     // Drag/move page
-    if (['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].includes(key) && this.selectedPage && !event.altKey && !event.ctrlKey && !event.shiftKey && !event.metaKey &&!this.dialogOpen()) {
+    if (['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].includes(key) && this.selectedPage && !event.altKey && !event.ctrlKey && !event.shiftKey && !event.metaKey && !dialogOpen) {
       const start = this.selectedPage;
       const isHorizontal = ['ArrowLeft', 'ArrowRight'].includes(key);
       const sign = ['ArrowRight','ArrowDown'].includes(key) ? 1 : -1;
@@ -1138,12 +1471,12 @@ export class ImagesService {
       this.lastSelectedPage = updatedPage;
       this.currentPages = this.currentPages.map(p =>p._id === updatedPage._id ? updatedPage : p);
 
-      this.redrawImage();
+      this.redrawImageOnCanvas();
       this.currentPages.forEach(p => this.drawPage(p));
     }
 
     // Change page width / height
-    if (['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].includes(key) && event.shiftKey && this.selectedPage && !this.dialogOpen()) {
+    if (['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].includes(key) && event.shiftKey && this.selectedPage && !dialogOpen) {
       if (['ArrowLeft', 'ArrowRight'].includes(key)) {
         const cw = this.c.width;
         const ch = this.c.height;
@@ -1385,12 +1718,12 @@ export class ImagesService {
 
       this.pageWasEdited = true;
       this.imgWasEdited = true;
-      this.redrawImage();
+      this.redrawImageOnCanvas();
       this.currentPages.forEach(p => this.drawPage(p));
     }
 
     // Rotate
-    if (['a', 'A', 's', 'S'].includes(key) && this.selectedPage && !this.dialogOpen()) {
+    if (['a', 'A', 's', 'S'].includes(key) && this.selectedPage && !dialogOpen) {
       const page = this.selectedPage;
       const sign = ['s', 'S'].includes(key) ? 1 : -1;
       const delta = this.incrementAngle * sign/*  * (event.shiftKey ? 10 : 1) */;
@@ -1428,24 +1761,42 @@ export class ImagesService {
 
       this.pageWasEdited = true;
       this.imgWasEdited = true;
-      this.redrawImage();
+      this.redrawImageOnCanvas();
       this.currentPages.forEach(p => this.drawPage(p));
     }
     // if ( // Is rotating ON (to show grid if when-rotating)
     //   (((event.ctrlKey || event.metaKey) && key === 'Alt') || (['Control', 'Meta'].includes(key) && event.altKey))
-    //   && this.selectedPage && !this.dialogOpen()
+    //   && this.selectedPage && !dialogOpen
     // ) {
     //   this.isRotating = true;
     //   this.redrawImage();
     //   this.currentPages.forEach(p => this.drawPage(p));
     // }
 
+    // Zooming
+    if (['q', 'Q', 'w', 'W', 'e', 'E'].includes(key) && !dialogOpen) {
+      if (['q', 'Q'].includes(key)) {
+        this.selectedPage && event.shiftKey ? this.zoomSnap('in') : this.zoom('in');
+        return;
+      }
+      
+      if (['w', 'W'].includes(key)) {
+        event.shiftKey ? this.zoomSnap('out') : this.zoom('out');
+        return;
+      }
+
+      if (['e', 'E'].includes(key)) {
+        this.resetZoom();
+        return;
+      }
+    }
+
     // Přesunout sken do OK
-    if (key === 'Enter' && !event.ctrlKey && !event.metaKey && !this.dialogOpen()) this.markImageOK();
+    if (key === 'Enter' && !event.ctrlKey && !event.metaKey && !dialogOpen) this.markImageOK();
 
     // Dokončit
     if (key === 'Enter' && (event.ctrlKey || event.metaKey)) {
-      if (!this.dialogOpen()) {
+      if (!dialogOpen) {
         this.openFinish();
         return;
       }
@@ -1473,13 +1824,13 @@ export class ImagesService {
     // Reset změn dokumentu a skenu
     {
       if (
-        !this.dialogOpen() &&
+        !dialogOpen &&
         ((key === 'R' && event.ctrlKey && event.shiftKey && !event.metaKey && !event.altKey)
         || (key === 'R' && event.metaKey && event.shiftKey && !event.ctrlKey && !event.altKey))
       ) {
         // this.openResetDoc();
       } else if (
-        !this.dialogOpen() &&
+        !dialogOpen &&
         ((key === 'r' && event.metaKey && !event.ctrlKey && !event.shiftKey && !event.altKey)
         || (key === 'r' && event.ctrlKey && !event.metaKey && !event.shiftKey && !event.altKey))
       ) {
@@ -1488,7 +1839,7 @@ export class ImagesService {
     }
 
     // Switch filter
-    if (['F1', 'F2', 'F3', 'F4'].includes(key) && !this.dialogOpen()) {
+    if (['F1', 'F2', 'F3', 'F4'].includes(key) && !dialogOpen) {
       const filterByKey: { [filter: string]: string } = {
         F1: 'all',
         F2: 'flagged',
@@ -1499,20 +1850,21 @@ export class ImagesService {
       const filter = filterByKey[key];
       if (filter) {
         this.selectedFilter = filter;
-        localStorage.setItem('filter', this.selectedFilter);
         this.switchFilter(this.selectedFilter);
       }
     }
 
     // Toggle shortcuts
     if (['k', 'K'].includes(key)) {
-      if (this.dialogOpen() && this.dialogTitle() === 'Klávesové zkratky') {
+      if (dialogOpen && this.dialogTitle() === 'Klávesové zkratky') {
         this.dialogOpen.set(false);
         this.dialogOpened = false;
         return;
       }
 
-      this.openShortcuts();
+      if (!dialogOpen) {
+        this.openShortcuts();
+      }
     };
   }
 
@@ -1532,7 +1884,7 @@ export class ImagesService {
       && this.selectedPage && !this.dialogOpen()
     ) {
       this.isRotating = false;
-      this.redrawImage();
+      this.redrawImageOnCanvas();
       this.currentPages.forEach(p => this.drawPage(p));
     }
   }

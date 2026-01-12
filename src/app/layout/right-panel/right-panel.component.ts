@@ -371,7 +371,7 @@ export class RightPanelComponent {
     if (type === 'angle') {
       const imgSvc = this.imagesService;
       imgSvc.isRotating = true;
-      imgSvc.redrawImage();
+      imgSvc.redrawImageOnCanvas();
       imgSvc.currentPages.forEach(p => imgSvc.drawPage(p));
     }
   }
@@ -395,7 +395,7 @@ export class RightPanelComponent {
 
     if (type === 'angle') {
       imgSvc.isRotating = false;
-      imgSvc.redrawImage();
+      imgSvc.redrawImageOnCanvas();
       imgSvc.currentPages.forEach(p => imgSvc.drawPage(p));
     }
   }
@@ -444,7 +444,7 @@ export class RightPanelComponent {
     imgSvc.lastSelectedPage = page;
     imgSvc.currentPages = imgSvc.currentPages.map(p => (p._id === page._id ? page : p));
 
-    imgSvc.redrawImage();
+    imgSvc.redrawImageOnCanvas();
     imgSvc.currentPages.forEach(p => imgSvc.drawPage(p));
   }
 }

@@ -33,9 +33,19 @@ export class MainComponent {
     imgSvc.ctx = imgSvc.c.getContext('2d')!;
 
     // Attach event handlers
-    this.attachMainImageEvents();
     this.attachMainCanvasEvents();
-    ['#main-container', 'app-left-panel' , 'app-bottom-panel', 'app-right-panel'].forEach(el => this.attachEventsRest(document.querySelector(el)));
+    [
+      // '#main-container',
+      'app-left-panel',
+      'app-bottom-panel',
+      'app-right-panel'
+    ].forEach(el => this.attachEventsRest(document.querySelector(el)));
+    
+    document.onpointerup = (ev) => {
+      const tagName = (ev.target as HTMLElement).tagName;
+      if (tagName !== 'HTML') return;
+      this.stopDragRotateResize();
+    }
   }
 
   private attachEventsRest(el: HTMLElement | null): void {
@@ -52,64 +62,254 @@ export class MainComponent {
         imgSvc.dialogOpened = false;
         return;
       }
-      if (imgSvc.isDragging || imgSvc.isRotating || imgSvc.isResizing) {
-        imgSvc.isDragging = false;
-        imgSvc.dragStartPage = null;
-        imgSvc.dragStartMouse = null;
-        
-        imgSvc.isRotating = false;
-        imgSvc.rotationStartPage = null;
-        imgSvc.rotationStartMouseAngle = 0;
-      
-        imgSvc.isResizing = false;
-        imgSvc.resizeStartPage = null;
-        imgSvc.resizeStartMouse = null;
-        imgSvc.resizeMode = null;
-        
-        return;
-      } 
+      this.stopDragRotateResize();
 
       if (imgSvc.pageWasEdited) imgSvc.updateCurrentPagesWithEdited();
       imgSvc.lastSelectedPage = imgSvc.selectedPage;
       imgSvc.selectedPage = null;
       imgSvc.lastPageCursorIsInside = null;
-      imgSvc.editable.set(false);
-      imgSvc.redrawImage();
+      imgSvc.redrawImageOnCanvas();
       imgSvc.currentPages.forEach(p => imgSvc.drawPage(p));
       imgSvc.mainImageItem.set({ ...imgSvc.mainImageItem(), url: imgSvc.c.toDataURL('image/jpeg') });
-      imgSvc.toggleMainImageOrCanvas();
       imgSvc.hoveringPage('');
     };
 
-    el.onmousemove = (ev) => {
-      if (el.tagName === 'DIV' && (ev.target as HTMLElement).tagName !== 'DIV') return;
-      const pageId = this.pageIdCursorInside(ev);
-      const insidePage = Boolean(pageId);
-      this.imagesService.editable.set(insidePage);
-      this.imagesService.toggleMainImageOrCanvas();
-    };
-  }
-
-  private attachMainImageEvents(): void {
-    const el = document.getElementById('main-image');
-    if (!el) return;
-
-    el.onmousemove = (ev) => {
-      if ((ev.target as HTMLElement).tagName !== 'IMG') return;
-      const pageId = this.pageIdCursorInside(ev);
-      const insidePage = Boolean(pageId);
-      this.imagesService.editable.set(insidePage);
-      this.imagesService.toggleMainImageOrCanvas();
+    el.onmouseup = (ev) => {
+      if (!imgSvc.selectedPage) return;
+      this.stopDragRotateResize();
     };
   }
 
   private attachMainCanvasEvents(): void {
-    const el = document.getElementById('main-canvas');
-    if (!el) return;
+    const { c } = this.imagesService; 
 
-    ['mousedown', 'mousemove', 'mouseup'].forEach(eventType => {
-      el.addEventListener(eventType, (ev) => this.handleCanvasInteraction(ev as MouseEvent, el));
+    ['mousedown', 'mousemove', 'mouseup', 'mouseenter', 'mouseleave', 'wheel'].forEach(eventType => {
+      c.addEventListener(eventType, (ev) => this.handleCanvasInteraction(ev as (MouseEvent | WheelEvent), c));
     });
+  }
+
+  private handleCanvasInteraction(ev: MouseEvent | WheelEvent, el: HTMLElement): void {
+    if ((ev.target as HTMLElement).tagName !== 'CANVAS') return;
+    const imgSvc = this.imagesService;
+
+    const btn = ev.button;
+    const hit = this.hitTest(ev);
+    const pageId = this.pageIdCursorInside(ev);
+    imgSvc.pageId = pageId;
+    const insidePage = !!pageId;
+    const hitPage = hit.page ?? null;
+    imgSvc.hitPage = hitPage;
+    
+    const hoveringPage = () => imgSvc.hoveringPage(hitPage?._id === imgSvc.selectedPage?._id ? imgSvc.selectedPage?._id ?? '' : pageId);
+
+    // Hover
+    if (
+      ev.type === 'mousemove'
+      && (imgSvc.lastPageCursorIsInside?._id !== pageId || imgSvc.selectedPage)
+      && !imgSvc.isDragging && !imgSvc.isRotating && !imgSvc.isResizing && !imgSvc.isPanning
+    ) {
+      imgSvc.lastPageCursorIsInside = imgSvc.currentPages.find(p => p._id === pageId) ?? null;
+      hoveringPage();
+    }
+
+    // Zoomimg and panning
+    if (ev.type === 'wheel') {
+      ev.preventDefault();
+      
+      const wev = ev as WheelEvent;
+      const rect = el.getBoundingClientRect();
+      const sx = ev.clientX - rect.left;
+      const sy = ev.clientY - rect.top;
+
+      // Zooming: pinch OR ctrl/cmd + wheel
+      if (ev.ctrlKey || ev.metaKey) {
+        const factor = Math.exp(-wev.deltaY * imgSvc.zoomFactor);
+        imgSvc.setZoomAt(sx, sy, imgSvc.viewport.scale * factor);
+        hoveringPage();
+      }
+
+      // Panning: two-figer touch OR wheel
+      if (imgSvc.viewport.scale > 1 && !(ev.ctrlKey || ev.metaKey)) {
+        imgSvc.panBy(-wev.deltaX, -wev.deltaY);
+        hoveringPage();
+      }
+    }
+
+    // Assign cursor
+    {
+      imgSvc.cursor = insidePage ? (imgSvc.selectedPage?._id === hitPage?._id ? this.moveCursor : 'pointer') : 'initial';
+
+      if ((ev.type === 'mousedown' && btn === 1) || imgSvc.isPanning) {
+        imgSvc.cursor = 'grabbing';
+      } else if (hitPage && hitPage === imgSvc.selectedPage) {
+        if (hit.area === 'inside') {
+          imgSvc.cursor = hitPage && imgSvc.selectedPage?._id === hitPage._id
+            ? this.moveCursor
+            : 'pointer';
+        } else if (hit.area === 'edge' && hit.edgeOrientation && hitPage) {
+          imgSvc.cursor = this.getEdgeCursor(hitPage.angle, hit.edgeOrientation);
+        } else if (hit.area === 'corner' && hit.corner && hitPage) {
+          imgSvc.cursor = this.getCornerCursor(hitPage.angle, hit.corner);
+        } else if (hit.area === 'rotate') {
+          if (hit.corner === 'ne') imgSvc.cursor = this.rotateCursorTopRight;
+          if (hit.corner === 'nw') imgSvc.cursor = this.rotateCursorTopLeft;
+          if (hit.corner === 'se') imgSvc.cursor = this.rotateCursorBottomRight;
+          if (hit.corner === 'sw') imgSvc.cursor = this.rotateCursorBottomLeft;
+        }
+      }
+
+      el.style.cursor = imgSvc.cursor;
+    }
+
+    // Click
+    if (ev.type === 'mousedown' && btn === 0) {
+      if (imgSvc.pageWasEdited && (imgSvc.cursor === 'initial' || imgSvc.cursor === 'pointer')) {
+        imgSvc.updateCurrentPagesWithEdited();
+      }
+      imgSvc.isRotating = false;
+      imgSvc.lastSelectedPage = imgSvc.selectedPage;
+      imgSvc.selectedPage = hitPage;
+      imgSvc.clickedDiffPage = imgSvc.lastSelectedPage && imgSvc.selectedPage && imgSvc.lastSelectedPage !== imgSvc.selectedPage;
+      imgSvc.lastPageCursorIsInside = hitPage;
+      imgSvc.redrawImageOnCanvas();
+      imgSvc.currentPages.forEach(p => imgSvc.drawPage(p));
+      imgSvc.mainImageItem.set({ ...imgSvc.mainImageItem(), url: imgSvc.c.toDataURL('image/jpeg') });
+      imgSvc.hoveringPage(hitPage?._id ?? '');
+      // Don't return here to enable other mousedown interactions
+    }
+
+    // Panning
+    {
+      if (ev.type === 'mousedown' && btn === 1 && imgSvc.viewport.scale > 1) {
+        imgSvc.isPanning = true;
+        imgSvc.panPrevX = (ev as MouseEvent).clientX;
+        imgSvc.panPrevY = (ev as MouseEvent).clientY;
+        return;
+      }
+
+      if (ev.type === 'mousemove' && imgSvc.isPanning) {
+        const dx = (ev as MouseEvent).clientX - imgSvc.panPrevX;
+        const dy = (ev as MouseEvent).clientY - imgSvc.panPrevY;
+        imgSvc.panPrevX = (ev as MouseEvent).clientX;
+        imgSvc.panPrevY = (ev as MouseEvent).clientY;
+
+        imgSvc.panBy(dx, dy);
+        return;
+      }
+
+      if (ev.type === 'mouseup' && imgSvc.isPanning) {
+        imgSvc.isPanning = false;
+        hoveringPage();
+        el.style.cursor = insidePage ? (imgSvc.selectedPage?._id === hitPage?._id ? this.moveCursor : 'pointer') : 'initial';
+        imgSvc.mainImageItem.set({ ...imgSvc.mainImageItem(), url: imgSvc.c.toDataURL('image/jpeg') });
+        return;
+      }
+    }
+
+    // Drag
+    if (hit.area === 'inside' || imgSvc.isDragging) {
+      if (ev.type === 'mousedown' && btn === 0 && hitPage) {
+        imgSvc.isDragging = true;
+        // imgSvc.dragStartMouse = { x: ev.clientX, y: ev.clientY };
+        imgSvc.dragStartMouse = this.getMousePos(ev);
+        imgSvc.dragStartPage = structuredClone(hitPage);
+        return;
+      }
+
+      if (imgSvc.isDragging) {
+        if (ev.type === 'mousemove') {
+          el.style.cursor = this.moveCursor;
+          this.dragPage(ev);
+          return;
+        }
+
+        if (ev.type === 'mouseup') {
+          imgSvc.isDragging = false;
+          imgSvc.dragStartPage = null;
+
+          if (!imgSvc.imgWasEdited) return;
+          if (hitPage) imgSvc.hoveringPage(hitPage._id);
+          imgSvc.redrawImageOnCanvas();
+          imgSvc.currentPages.forEach(p => imgSvc.drawPage(p));
+          imgSvc.mainImageItem.set({ ...imgSvc.mainImageItem(), url: imgSvc.c.toDataURL('image/jpeg') });
+          return;
+        }
+      }
+    }
+
+    // Rotate
+    {
+      if (ev.type === 'mousedown' && btn === 0 && hit.area === 'rotate' && hitPage) {
+        imgSvc.startHit = hit;
+
+        const rect = el.getBoundingClientRect();
+        // const cx = imgSvc.c.width * hitPage.xc;
+        // const cy = imgSvc.c.height * hitPage.yc;
+        // const { x, y, width, height } = imgSvc.imageRect;
+        // const cx = x + width * hitPage.xc;
+        // const cy = y + height * hitPage.yc;
+
+        // const dx = ev.clientX - rect.left - cx;
+        // const dy = ev.clientY - rect.top - cy;
+
+        const { centerX, centerY } = imgSvc.getPageRectPx(hitPage);
+        const mouse = this.getMousePos(ev);
+        if (!mouse) return;
+
+        const dx = mouse.x - centerX;
+        const dy = mouse.y - centerY;
+
+        imgSvc.rotationStartMouseAngle = Math.atan2(dy, dx);
+        imgSvc.rotationStartPage = imgSvc.selectedPage;
+        imgSvc.isRotating = true;
+        return;
+      }
+
+      if (imgSvc.isRotating) {
+        if (ev.type === 'mousemove') {
+          this.rotatePage(imgSvc.cursor, ev, el);
+          return;
+        }
+
+        if (ev.type === 'mouseup') {
+          imgSvc.startHit = null;
+          imgSvc.isRotating = false;
+          imgSvc.rotationStartPage = null;
+          imgSvc.redrawImageOnCanvas();
+          imgSvc.currentPages.forEach(p => imgSvc.drawPage(p));
+          imgSvc.mainImageItem.set({ ...imgSvc.mainImageItem(), url: imgSvc.c.toDataURL('image/jpeg') });
+          return;
+        }
+      }
+    }
+
+    // Resize
+    {
+      if (ev.type === 'mousedown' && btn === 0 && (hit.area === 'edge' || hit.area === 'corner') && hitPage) {
+        imgSvc.resizeMode = hit;
+        imgSvc.resizeStartPage = imgSvc.selectedPage;
+        imgSvc.resizeStartMouse = this.getMousePos(ev);
+        imgSvc.resizeCursor = el.style.cursor;
+        return;
+      }
+
+      if (ev.type === 'mousemove' && imgSvc.resizeMode && imgSvc.resizeStartPage) {
+        imgSvc.isResizing = true;
+        this.resizePage(ev, el);
+        return;
+      }
+
+      if (ev.type === 'mouseup' && imgSvc.resizeMode) {
+        imgSvc.isResizing = false;
+        imgSvc.resizeMode = null;
+        imgSvc.resizeStartPage = null;
+        imgSvc.resizeStartMouse = null;
+        imgSvc.redrawImageOnCanvas();
+        imgSvc.currentPages.forEach(p => imgSvc.drawPage(p));
+        imgSvc.mainImageItem.set({ ...imgSvc.mainImageItem(), url: imgSvc.c.toDataURL('image/jpeg') });
+        return;
+      }
+    }
   }
 
   
@@ -118,7 +318,7 @@ export class MainComponent {
   ------------------------------ */
   private pageIdCursorInside(e: MouseEvent): string {
     const imgSvc = this.imagesService;
-    const pos = this.getMousePosOnMain(e);
+    const pos = this.getMousePos(e);
     imgSvc.mousePos = pos;
     if (!pos) return '';
 
@@ -126,7 +326,7 @@ export class MainComponent {
   }
 
   private hitTest(e: MouseEvent): HitInfo {
-    const pos = this.getMousePosOnMain(e);
+    const pos = this.getMousePos(e);
     if (!pos) return { area: 'none' };
 
     const imgSvc = this.imagesService;
@@ -151,9 +351,10 @@ export class MainComponent {
 
   private hitTestPage(x: number, y: number, p: Page): HitInfo {
     const imgSvc = this.imagesService;
-    const c = imgSvc.c;
-    const [centerX, centerY] = [c.width * p.xc, c.height * p.yc];
-    const [width, height] = [c.width * p.width, c.height * p.height];
+    // const c = imgSvc.c;
+    // const [centerX, centerY] = [c.width * p.xc, c.height * p.yc];
+    // const [width, height] = [c.width * p.width, c.height * p.height];
+    const { centerX, centerY, width, height } = imgSvc.getPageRectPx(p);
     const angle = degreeToRadian(p.angle);
 
     const hw = width / 2;
@@ -216,16 +417,12 @@ export class MainComponent {
       const localSide = localX > 0 ? 'right' : 'left';
       const userSide = this.localEdgeSideToUserSide(localSide, p.angle);
       return { area: 'edge', page: p, edgeOrientation: 'vertical', edgeSide: userSide };
-      // const isRight = localX > 0;
-      // return { area: 'edge', page: p, edgeOrientation: 'vertical', edgeSide: isRight ? 'right' : 'left' };
     }
 
     if (nearTopOrBottom && !nearLeftOrRight) {
       const localSide = localY > 0 ? 'bottom' : 'top';
       const userSide = this.localEdgeSideToUserSide(localSide, p.angle);
       return { area: 'edge', page: p, edgeOrientation: 'horizontal', edgeSide: userSide };
-      // const isBottom = localY > 0;
-      // return { area: 'edge', page: p, edgeOrientation: 'horizontal', edgeSide: isBottom ? 'bottom' : 'top' };
     }
 
     // Inside rect
@@ -324,175 +521,37 @@ export class MainComponent {
     return flip ? flippedForCorner : baseForCorner;
   }
 
-  private getMousePosOnMain(e: MouseEvent): { x: number; y: number } | null {
-    const mainElement = document.getElementById(this.imagesService.editable() ? 'main-canvas' : 'main-image') as HTMLElement;
-    if (!mainElement) return null;
-
-    const rect = mainElement.getBoundingClientRect();
-    return {
-      x: e.clientX - rect.left,
-      y: e.clientY - rect.top
-    };
-  }
-
-  private handleCanvasInteraction(ev: MouseEvent, el: HTMLElement): void {
-    if ((ev.target as HTMLElement).tagName !== 'CANVAS') return;
+  private getMousePos(e: MouseEvent): { x: number; y: number } | null {
     const imgSvc = this.imagesService;
-    
-    const hit = this.hitTest(ev);
-    const pageId = this.pageIdCursorInside(ev);
-    imgSvc.pageId = pageId;
-    const insidePage = Boolean(pageId);
-    const insideArea = hit.area !== 'none';
-    const hitPage = hit.page ?? null;
-    imgSvc.hitPage = hitPage;
 
-    // Hover
-    if (ev.type === 'mousemove') {
-      if (imgSvc.lastPageCursorIsInside?._id === pageId && !imgSvc.selectedPage) return;
-      if (!imgSvc.isDragging && !imgSvc.isRotating) {
-        imgSvc.lastPageCursorIsInside = imgSvc.currentPages.find(p => p._id === pageId) ?? null;
-        imgSvc.editable.set(insidePage);
-        imgSvc.toggleMainImageOrCanvas();
-        imgSvc.hoveringPage(hitPage?._id === imgSvc.selectedPage?._id ? imgSvc.selectedPage?._id ?? '' : pageId);
-      }
-    }
+    const rect = imgSvc.c.getBoundingClientRect();
+    const localX = e.clientX - rect.left;
+    const localY = e.clientY - rect.top;
 
-    // Change to correct cursor while having selected page
-    let cursor = insidePage ? (imgSvc.selectedPage?._id === hitPage?._id ? this.moveCursor : 'pointer') : 'initial';
-    if (hitPage && hitPage === imgSvc.selectedPage) {
-      if (hit.area === 'inside') {
-        cursor = hitPage && imgSvc.selectedPage?._id === hitPage._id
-          ? this.moveCursor
-          : 'pointer';
-      } else if (hit.area === 'edge' && hit.edgeOrientation && hitPage) {
-        cursor = this.getEdgeCursor(hitPage.angle, hit.edgeOrientation);
-      } else if (hit.area === 'corner' && hit.corner && hitPage) {
-        cursor = this.getCornerCursor(hitPage.angle, hit.corner);
-      } else if (hit.area === 'rotate') {
-        if (hit.corner === 'ne') cursor = this.rotateCursorTopRight;
-        if (hit.corner === 'nw') cursor = this.rotateCursorTopLeft;
-        if (hit.corner === 'se') cursor = this.rotateCursorBottomRight;
-        if (hit.corner === 'sw') cursor = this.rotateCursorBottomLeft;
-      }
-    }
-    el.style.cursor = cursor;
+    const { x, y, scale } = imgSvc.viewport;
 
-    // On mousedown
-    if (ev.type === 'mousedown') {
-      if (imgSvc.pageWasEdited && (cursor === 'initial' || cursor === 'pointer')) {
-        imgSvc.updateCurrentPagesWithEdited();
-      }
-      imgSvc.isRotating = false;
-      imgSvc.lastSelectedPage = imgSvc.selectedPage;
-      imgSvc.selectedPage = hitPage;
-      imgSvc.clickedDiffPage = imgSvc.lastSelectedPage && imgSvc.selectedPage && imgSvc.lastSelectedPage !== imgSvc.selectedPage;
-      imgSvc.lastPageCursorIsInside = hitPage;
-      imgSvc.editable.set(insideArea);
-      imgSvc.redrawImage();
-      imgSvc.currentPages.forEach(p => imgSvc.drawPage(p));
-      imgSvc.mainImageItem.set({ ...imgSvc.mainImageItem(), url: imgSvc.c.toDataURL('image/jpeg') });
-      imgSvc.toggleMainImageOrCanvas();
-      imgSvc.hoveringPage(hitPage?._id ?? '');
-    }    
-
-    // Drag
-    if (hit.area === 'inside' || imgSvc.isDragging) {
-      if (ev.type === 'mousedown' && hitPage) {
-        imgSvc.isDragging = true;
-        imgSvc.dragStartMouse = { x: ev.clientX, y: ev.clientY };
-        imgSvc.dragStartPage = structuredClone(hitPage);
-      }
-
-      if (imgSvc.isDragging) {
-        if (ev.type === 'mousemove') {
-          el.style.cursor = this.moveCursor;
-          this.dragPage(ev);
-        }
-
-        if (ev.type === 'mouseup' && hitPage) {
-          imgSvc.isDragging = false;
-          imgSvc.dragStartPage = null;
-
-          if (!imgSvc.imgWasEdited) return;
-          imgSvc.hoveringPage(hitPage._id);
-          imgSvc.redrawImage();
-          imgSvc.currentPages.forEach(p => imgSvc.drawPage(p));
-          imgSvc.mainImageItem.set({ ...imgSvc.mainImageItem(), url: imgSvc.c.toDataURL('image/jpeg') });
-        }
-      }
-    }
-
-    // Rotate
-    {
-      if (ev.type === 'mousedown' && hit.area === 'rotate' && hitPage) {
-        imgSvc.startHit = hit;
-
-        const rect = el.getBoundingClientRect();
-        const cx = imgSvc.c.width * hitPage.xc;
-        const cy = imgSvc.c.height * hitPage.yc;
-
-        const dx = ev.clientX - rect.left - cx;
-        const dy = ev.clientY - rect.top - cy;
-        imgSvc.rotationStartMouseAngle = Math.atan2(dy, dx);
-
-        imgSvc.rotationStartPage = imgSvc.selectedPage;
-        imgSvc.isRotating = true;
-      }
-
-      if (imgSvc.isRotating) {
-        if (ev.type === 'mousemove') {
-          this.rotatePage(cursor, ev, el);
-        }
-
-        if (ev.type === 'mouseup') {
-          imgSvc.startHit = null;
-          imgSvc.isRotating = false;
-          imgSvc.rotationStartPage = null;
-          imgSvc.redrawImage();
-          imgSvc.currentPages.forEach(p => imgSvc.drawPage(p));
-          imgSvc.mainImageItem.set({ ...imgSvc.mainImageItem(), url: imgSvc.c.toDataURL('image/jpeg') });
-        }
-      }
-    }
-
-    // Resize
-    {
-      if (ev.type === 'mousedown' && (hit.area === 'edge' || hit.area === 'corner') && hitPage) {
-        imgSvc.resizeMode = hit;
-        imgSvc.resizeStartPage = imgSvc.selectedPage;
-        imgSvc.resizeStartMouse = this.getMousePosOnMain(ev);
-        imgSvc.resizeCursor = el.style.cursor;
-      }
-
-      if (ev.type === 'mousemove' && imgSvc.resizeMode && imgSvc.resizeStartPage) {
-        imgSvc.isResizing = true;
-        this.resizePage(ev, el);
-      }
-
-      if (ev.type === 'mouseup' && imgSvc.resizeMode) {
-        imgSvc.isResizing = false;
-        imgSvc.resizeMode = null;
-        imgSvc.resizeStartPage = null;
-        imgSvc.resizeStartMouse = null;
-        imgSvc.redrawImage();
-        imgSvc.currentPages.forEach(p => imgSvc.drawPage(p));
-        imgSvc.mainImageItem.set({ ...imgSvc.mainImageItem(), url: imgSvc.c.toDataURL('image/jpeg') });
-      }
-    }
+    // Invert the viewport transform: screen = world * scale + (x,y)  =>  world = (screen - (x,y)) / scale
+    return {
+      x: (localX - x) / scale,
+      y: (localY - y) / scale,
+    };
   }
 
   private dragPage(e: MouseEvent): void {    
     const imgSvc = this.imagesService;
     if (!imgSvc.selectedPage) return;
 
-    const { width, height } = imgSvc.c;
+    // const { width, height } = imgSvc.c;
+    const { width, height } = imgSvc.imageRect;
     const start = imgSvc.dragStartPage;
-    if (!start || !imgSvc.dragStartMouse) return;
+    const mousePos = this.getMousePos(e);
+    if (!start || !mousePos || !imgSvc.dragStartMouse) return;
     const page = imgSvc.selectedPage;
 
-    const dx = (e.clientX - imgSvc.dragStartMouse.x) / width;
-    const dy = (e.clientY - imgSvc.dragStartMouse.y) / height;
+    // const dx = (e.clientX - imgSvc.dragStartMouse.x) / width;
+    // const dy = (e.clientY - imgSvc.dragStartMouse.y) / height;
+    const dx = (mousePos.x - imgSvc.dragStartMouse.x) / width;
+    const dy = (mousePos.y - imgSvc.dragStartMouse.y) / height;
 
     let newCx = start.xc + dx;
     let newCy = start.yc + dy;
@@ -540,7 +599,7 @@ export class MainComponent {
 
     imgSvc.pageWasEdited = true;
     imgSvc.imgWasEdited = true;
-    imgSvc.redrawImage();
+    imgSvc.redrawImageOnCanvas();
     imgSvc.currentPages.forEach(p => imgSvc.drawPage(p));
   }
 
@@ -556,12 +615,31 @@ export class MainComponent {
     
     const startPage = imgSvc.rotationStartPage;
     
-    const rect = el.getBoundingClientRect();
-    const cx = imgSvc.c.width * startPage.xc;
-    const cy = imgSvc.c.height * startPage.yc;
+    // const rect = el.getBoundingClientRect();
+    // const cx = imgSvc.c.width * startPage.xc;
+    // const cy = imgSvc.c.height * startPage.yc;
 
-    const dx = ev.clientX - rect.left - cx;
-    const dy = ev.clientY - rect.top - cy;
+    // const dx = ev.clientX - rect.left - cx;
+    // const dy = ev.clientY - rect.top - cy;
+
+    // const rect = el.getBoundingClientRect();
+    // const { x: ix, y: iy, width: iw, height: ih } = imgSvc.imageRect;
+
+    // const cx = ix + iw * startPage.xc;
+    // const cy = iy + ih * startPage.yc;
+
+    // const mouseX = ev.clientX - rect.left;
+    // const mouseY = ev.clientY - rect.top;
+
+    // const dx = mouseX - cx;
+    // const dy = mouseY - cy;
+
+    const { centerX, centerY } = imgSvc.getPageRectPx(startPage);
+    const mouse = this.getMousePos(ev);
+    if (!mouse) return;
+
+    const dx = mouse.x - centerX;
+    const dy = mouse.y - centerY;
 
     const currentMouseAngle = Math.atan2(dy, dx);
 
@@ -607,7 +685,7 @@ export class MainComponent {
 
     imgSvc.pageWasEdited = true;
     imgSvc.imgWasEdited = true;
-    imgSvc.redrawImage();
+    imgSvc.redrawImageOnCanvas();
     imgSvc.currentPages.forEach(p => imgSvc.drawPage(p));
   }
 
@@ -635,14 +713,17 @@ export class MainComponent {
 
   // TO DO: REFACTOR!
   private applyEdgeResize(p: Page, start: Page, userSide: EdgeSide, ev: MouseEvent) {
-    const c = this.imagesService.c;
-    const cw = c.width;
-    const ch = c.height;
+    // const c = this.imagesService.c;
+    // const cw = c.width;
+    // const ch = c.height;
+    const rect = this.imagesService.imageRect;
+    const cw = rect.width;
+    const ch = rect.height;
     const ratio = cw / ch;
     const inverseRatio = ch / cw;
 
     const startMouse = this.imagesService.resizeStartMouse;
-    const mouse = this.getMousePosOnMain(ev);
+    const mouse = this.getMousePos(ev);
     if (!mouse || !startMouse) return;
 
     const mx = mouse.x - startMouse.x;
@@ -1428,20 +1509,23 @@ export class MainComponent {
     const imgSvc = this.imagesService;
     imgSvc.selectedPage = p;
     imgSvc.currentPages = imgSvc.currentPages.map(page => page._id === p._id ? p : page);
-    imgSvc.redrawImage();
+    imgSvc.redrawImageOnCanvas();
     imgSvc.currentPages.forEach(p => imgSvc.drawPage(p));
   }
 
   // TO DO: REFACTOR!
   private applyCornerResize(p: Page, start: Page, userCorner: CornerName, ev: MouseEvent) {
-    const c = this.imagesService.c;
-    const cw = c.width;
-    const ch = c.height;
+    // const c = this.imagesService.c;
+    // const cw = c.width;
+    // const ch = c.height;
+    const rect = this.imagesService.imageRect;
+    const cw = rect.width;
+    const ch = rect.height;
     const ratio = cw / ch;
     const inverseRatio = ch / cw;
     
     const startMouse = this.imagesService.resizeStartMouse;
-    const mouse = this.getMousePosOnMain(ev);
+    const mouse = this.getMousePos(ev);
     if (!mouse || !startMouse) return;
 
     const mx = mouse.x - startMouse.x;
@@ -2383,7 +2467,29 @@ export class MainComponent {
     const imgSvc = this.imagesService;
     imgSvc.selectedPage = p;
     imgSvc.currentPages = imgSvc.currentPages.map(page => page._id === p._id ? p : page);
-    imgSvc.redrawImage();
+    imgSvc.redrawImageOnCanvas();
     imgSvc.currentPages.forEach(p => imgSvc.drawPage(p));
+  }
+
+  private stopDragRotateResize(): void {
+    const imgSvc = this.imagesService;
+    if (imgSvc.isDragging || imgSvc.isRotating || imgSvc.isResizing) {
+      imgSvc.isDragging = false;
+      imgSvc.dragStartPage = null;
+      imgSvc.dragStartMouse = null;
+      
+      imgSvc.isRotating = false;
+      imgSvc.rotationStartPage = null;
+      imgSvc.rotationStartMouseAngle = 0;
+    
+      imgSvc.isResizing = false;
+      imgSvc.resizeStartPage = null;
+      imgSvc.resizeStartMouse = null;
+      imgSvc.resizeMode = null;
+      
+      imgSvc.redrawImageOnCanvas();
+      imgSvc.currentPages.forEach(p => imgSvc.drawPage(p));  
+      return;
+    }
   }
 }
