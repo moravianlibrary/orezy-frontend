@@ -3,7 +3,7 @@ import { provideRouter } from '@angular/router';
 import { routes } from './app.routes';
 import { provideHttpClient } from '@angular/common/http';
 import { EnvironmentService } from './services/environment.service';
-import { DimColor, GridMode } from './app.types';
+import { DimColor, GridMode, PageNumberType, ScanType } from './app.types';
 
 export const defaultColor = '#00DDFF';
 export const warningColor = '#FF9500';
@@ -29,6 +29,19 @@ export const gridModeDict: Record<GridMode, string> = {
 export const dimColorDict: Record<DimColor, string> = {
   'Černá': '0,0,0,0.45',
   'Červená': '255,0,0,0.2'
+};
+
+export const filterScanTypeStartDict: Record<ScanType, string> = {
+  'all': 'Vše',
+  'flagged': 'Podezřelé',
+  'edited': 'Upravené',
+  'ok': 'OK'
+};
+
+export const filterPageNumberStartDict: Record<PageNumberType, string> = {
+  'all': 'Vše',
+  'single': 'Jeden',
+  'double': 'Dva'
 };
 
 export const appConfig: ApplicationConfig = {

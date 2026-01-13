@@ -90,6 +90,15 @@
       @include font(450, var(--font-size-x2), var(--spacing-x6), var(--text-base));
     }
 
+    .sublabel {
+      @include font(450, var(--font-size-x1-5), var(--spacing-x4), var(--text-light));
+      margin-bottom: -2px;
+    }
+
+    .last-sublabel {
+      margin-top: var(--spacing-x1);
+    }
+
     .radios-wrapper {
       display: flex;
       flex-direction: column;
@@ -101,7 +110,7 @@
         gap: var(--spacing-x2);
         cursor: pointer;
         
-        .grid-value {
+        .radio-value {
           @include font(450, var(--font-size-x1-5), var(--spacing-x5), var(--text-secondary));
         }
       }
@@ -117,14 +126,14 @@
       }
 
       /* icon holder lives on the text span */
-      .radio > input[type="radio"] + .grid-value{
+      .radio > input[type="radio"] + .radio-value{
         display: inline-flex;
         align-items: center;
         gap: 8px;
       }
 
       /* base (unchecked): outer circle */
-      .radio > input[type="radio"] + .grid-value::before{
+      .radio > input[type="radio"] + .radio-value::before{
         content: "";
         width: 16px;
         height: 16px;
@@ -137,14 +146,14 @@
       }
 
       /* checked: outer stroke + inner dot */
-      .radio > input[type="radio"]:checked + .grid-value::before{
+      .radio > input[type="radio"]:checked + .radio-value::before{
         border-color: var(--primary);
         /* inner dot (3px radius) */
         background: radial-gradient(circle at center, var(--primary) 0 3px, transparent 3px);
       }
 
       /* keyboard focus ring */
-      .radio > input[type="radio"]:focus-visible + .grid-value::before{
+      .radio > input[type="radio"]:focus-visible + .radio-value::before{
         outline: 2px solid rgba(0,128,168,.35);
         outline-offset: 2px;
       }

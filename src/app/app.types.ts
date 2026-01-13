@@ -37,8 +37,10 @@ export interface ImageRect {
   height: number;
 }
 
-export type InputType = 'left' | 'top' | 'width' | 'height' | 'angle';
+export type ScanType = 'all' | 'flagged' | 'edited' | 'ok';
+export type PageNumberType = 'all' | 'single' | 'double';
 export type PageType = 'single' | 'left' | 'right';
+export type InputType = 'left' | 'top' | 'width' | 'height' | 'angle';
 
 
 // Cursors

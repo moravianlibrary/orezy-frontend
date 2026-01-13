@@ -6,7 +6,7 @@ import { LeftPanelComponent } from '../../layout/left-panel/left-panel.component
 import { RightPanelComponent } from '../../layout/right-panel/right-panel.component';
 import { ActivatedRoute } from '@angular/router';
 import { catchError, map, of, Subscription, switchMap, tap } from 'rxjs';
-import { ExampleBook, GridMode, ImageItem, Page } from '../../app.types';
+import { ExampleBook, GridMode, ImageItem, Page, PageNumberType, ScanType } from '../../app.types';
 import { roundToDecimals } from '../../utils/utils';
 
 @Component({
@@ -69,7 +69,10 @@ export class EditorComponent {
         imgSvc.gridMode.set(localStorage.getItem('gridMode') as GridMode ?? 'when-rotating');
         imgSvc.gridRadio.set(imgSvc.gridMode());
         imgSvc.outlineTransparent = localStorage.getItem('outlineTransparent') === 'true';
-        imgSvc.selectedPageNumberFilter.set(localStorage.getItem('filterPageNumber') || null);
+        imgSvc.selectedFilter = localStorage.getItem('filterScanTypeStart') as ScanType ?? 'all';
+        imgSvc.scanTypeRadio.set(imgSvc.selectedFilter);
+        imgSvc.selectedPageNumberFilter.set(localStorage.getItem('filterPageNumberStart') as PageNumberType ?? null);
+        imgSvc.pageNumberRadio.set(imgSvc.selectedPageNumberFilter() ?? 'all');
         imgSvc.setDisplayedImages();
         
         const imageList = imgSvc.displayedImagesFinal();

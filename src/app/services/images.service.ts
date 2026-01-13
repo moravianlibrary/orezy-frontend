@@ -1,6 +1,6 @@
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { computed, inject, Injectable, signal } from '@angular/core';
-import { DialogButton, DialogContentType, DimColor, ExampleBook, GridMode, HitInfo, ImageItem, ImageRect, MousePos, Page, Toast, ToastType, Viewport } from '../app.types';
+import { DialogButton, DialogContentType, DimColor, ExampleBook, GridMode, HitInfo, ImageItem, ImageRect, MousePos, Page, PageNumberType, ScanType, Toast, ToastType, Viewport } from '../app.types';
 import { catchError, Observable, of } from 'rxjs';
 import { clamp, defer, degreeToRadian, getColor, scrollToSelectedImage } from '../utils/utils';
 import { EnvironmentService } from './environment.service';
@@ -21,8 +21,8 @@ export class ImagesService {
     STATE
   ------------------------------ */
   book = signal<string>('');
-  selectedFilter: string | null = 'all';
-  selectedPageNumberFilter = signal<string | null>(null);
+  selectedFilter: ScanType | null = 'all';
+  selectedPageNumberFilter = signal<PageNumberType | null>(null);
   clickedPageNumberFilter: boolean = false;
 
   images = signal<ImageItem[]>([]);
@@ -70,7 +70,6 @@ export class ImagesService {
   rotationStartPage: Page | null = null;
   rotationStartMouseAngle: number = 0;
   gridMode = signal<GridMode>('when-rotating');
-  gridRadio = signal<GridMode>('when-rotating');
 
   // Resize
   isResizing: boolean = false;
@@ -100,9 +99,14 @@ export class ImagesService {
   panPrevX: number = 0;
   panPrevY: number = 0;
 
+  // Settings
+  gridRadio = signal<GridMode>('when-rotating');
+  dimRadio = signal<DimColor>('Černá');
+  scanTypeRadio = signal<ScanType>('all');
+  pageNumberRadio = signal<PageNumberType>('all');
+
   // Other
   dimColor = signal<DimColor>('Černá');
-  dimRadio = signal<DimColor>('Černá');
   outlineTransparent: boolean = false;
   pageOutlineWidth: number = 3;
   cornerOutlineWidth: number = this.pageOutlineWidth - 1;
@@ -205,14 +209,10 @@ export class ImagesService {
       )
     );
 
-    if (['single', 'double'].includes(this.selectedFilter ?? '')) {
-      if (this.selectedFilter === 'single' && mainImageItemAfter.pages.length === 2) this.selectedFilter = 'double';
-      if (this.selectedFilter === 'double' && mainImageItemAfter.pages.length === 1) this.selectedFilter = 'single';
-    } else {
-      this.selectedFilter = mainImageItemAfter.edited && this.editedImages().length
-        ? 'edited'
-        : (mainImageItemAfter.flags.length ? 'flagged' : 'ok');
-    }
+    
+    this.selectedFilter = mainImageItemAfter.edited && this.editedImages().length
+      ? 'edited'
+      : (mainImageItemAfter.flags.length ? 'flagged' : 'ok');
     this.setDisplayedImages();
     scrollToSelectedImage();
     this.setMainImage(mainImageItemAfter);
@@ -261,6 +261,9 @@ export class ImagesService {
     }
 
     switch (this.selectedPageNumberFilter()) {
+      case 'all':
+        this.displayedImagesPages.set(this.displayedImages());
+        break;
       case 'single':
         this.displayedImagesPages.set(this.displayedImages().filter(img => img.pages.length === 1));
         break;
@@ -273,7 +276,7 @@ export class ImagesService {
     }
   }
 
-  switchFilter(filter: string): void {
+  switchFilter(filter: ScanType): void {
     this.updateImagesByCurrentPages();
     
     this.selectedFilter = filter;
@@ -293,12 +296,11 @@ export class ImagesService {
     scrollToSelectedImage();
   }
 
-  togglePageNumberFilter(filter: string | null): void {
+  togglePageNumberFilter(filter: PageNumberType | null): void {
     this.clickedPageNumberFilter = true;
     this.updateImagesByCurrentPages();
     
     this.selectedPageNumberFilter.update(prev => prev === filter ? null : filter);
-    localStorage.setItem('filterPageNumber', this.selectedPageNumberFilter() ?? '');
     
     const mainImageItemId = this.mainImageItem()._id;
 
@@ -1203,6 +1205,10 @@ export class ImagesService {
           this.dimColor.set('Černá');
           this.dimRadio.set('Černá');
           localStorage.setItem('dimColor', 'Černá');
+          this.scanTypeRadio.set('all');
+          localStorage.setItem('filterScanTypeStart', 'all');
+          this.pageNumberRadio.set('all');
+          localStorage.setItem('filterPageNumberStart', 'all');
           this.redrawImageOnCanvas();
           this.currentPages.forEach(p => this.drawPage(p));
           this.showToast('Nastavení bylo resetováno.', { type: 'success' });
@@ -1225,6 +1231,8 @@ export class ImagesService {
     const dimRadio = this.dimRadio();
     this.dimColor.set(dimRadio);
     localStorage.setItem('dimColor', dimRadio);
+    localStorage.setItem('filterScanTypeStart', this.scanTypeRadio());
+    localStorage.setItem('filterPageNumberStart', this.pageNumberRadio());
     this.redrawImageOnCanvas();
     this.currentPages.forEach(p => this.drawPage(p));
     this.showToast('Nastavení bylo uloženo.', { type: 'success' });
@@ -1855,7 +1863,7 @@ export class ImagesService {
 
     // Switch filter
     if (['F1', 'F2', 'F3', 'F4'].includes(key) && !dialogOpen) {
-      const filterByKey: { [filter: string]: string } = {
+      const filterByKey: { [filter: string]: ScanType } = {
         F1: 'all',
         F2: 'flagged',
         F3: 'edited',

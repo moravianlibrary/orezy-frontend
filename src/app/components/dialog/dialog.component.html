@@ -31,7 +31,7 @@
                     [checked]="gridMode === imagesService.gridRadio()"
                     (change)="imagesService.gridRadio.set(gridMode)"
                   />
-                  <span class="grid-value">{{ gridModeDict[gridMode] }}</span>
+                  <span class="radio-value">{{ gridModeDict[gridMode] }}</span>
                 </label>
               }
             </span>
@@ -47,7 +47,7 @@
               Zobrazení obrysu vybraného výřezu
             </label>
           </div>
-          <div class="settings-block last">
+          <div class="settings-block">
             <div class="settings-block-label">Barva clony</div>
             <span class="radios-wrapper">
               @for (dimColor of dimColorDictKeys; track dimColor) {
@@ -58,7 +58,38 @@
                     [checked]="dimColor === imagesService.dimRadio()"
                     (change)="imagesService.dimRadio.set(dimColor)"
                   />
-                  <span class="grid-value">{{ dimColor }}</span>
+                  <span class="radio-value">{{ dimColor }}</span>
+                </label>
+              }
+            </span>
+          </div>
+          <div class="settings-block last">
+            <div class="settings-block-label">Aktivní filtry při startu aplikace</div>
+            <div class="sublabel">Typ skenů</div>
+            <span class="radios-wrapper">
+              @for (scanType of filterScanTypeStartDictKeys; track scanType) {
+                <label class="radio">
+                  <input
+                    type="radio"
+                    name="scan-type"
+                    [checked]="scanType === imagesService.scanTypeRadio()"
+                    (change)="imagesService.scanTypeRadio.set(scanType)"
+                  />
+                  <span class="radio-value">{{ filterScanTypeStartDict[scanType] }}</span>
+                </label>
+              }
+            </span>
+            <div class="sublabel last-sublabel">Počet výřezů</div>
+            <span class="radios-wrapper">
+              @for (pageNumber of filterPageNumberStartDictKeys; track pageNumber) {
+                <label class="radio">
+                  <input
+                    type="radio"
+                    name="page-number"
+                    [checked]="pageNumber === imagesService.pageNumberRadio()"
+                    (change)="imagesService.pageNumberRadio.set(pageNumber)"
+                  />
+                  <span class="radio-value">{{ filterPageNumberStartDict[pageNumber] }}</span>
                 </label>
               }
             </span>
