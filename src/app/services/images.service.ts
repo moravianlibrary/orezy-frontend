@@ -1199,6 +1199,7 @@ export class ImagesService {
           this.gridMode.set('when-rotating');
           localStorage.setItem('gridMode', 'when-rotating');
           this.outlineTransparent = false;
+          localStorage.setItem('outlineTransparent', 'false');
           this.dimColor.set('Černá');
           this.dimRadio.set('Černá');
           localStorage.setItem('dimColor', 'Černá');
@@ -1210,21 +1211,23 @@ export class ImagesService {
       {
         label: 'Uložit',
         primary: true,
-        action: () => {
-          const gridRadio = this.gridRadio();
-          this.gridMode.set(gridRadio);
-          localStorage.setItem('gridMode', gridRadio);
-          const dimRadio = this.dimRadio();
-          this.dimColor.set(dimRadio);
-          localStorage.setItem('dimColor', dimRadio);
-          this.redrawImageOnCanvas();
-          this.currentPages.forEach(p => this.drawPage(p));
-          this.showToast('Nastavení bylo uloženo.', { type: 'success' });
-        }
+        action: () => this.saveSettings()
       }
     ]);
 
     this.openDialog();
+  }
+
+  saveSettings(): void {
+    const gridRadio = this.gridRadio();
+    this.gridMode.set(gridRadio);
+    localStorage.setItem('gridMode', gridRadio);
+    const dimRadio = this.dimRadio();
+    this.dimColor.set(dimRadio);
+    localStorage.setItem('dimColor', dimRadio);
+    this.redrawImageOnCanvas();
+    this.currentPages.forEach(p => this.drawPage(p));
+    this.showToast('Nastavení bylo uloženo.', { type: 'success' });
   }
 
   openShortcuts(): void {
@@ -1817,9 +1820,7 @@ export class ImagesService {
       
       switch (this.dialogTitle()) {
         case 'Nastavení':
-          const gridRadio = this.gridRadio();  
-          this.gridMode.set(gridRadio);
-          localStorage.setItem('gridMode', gridRadio);
+          this.saveSettings();
           break;
         case 'Opravdu chcete resetovat změny dokumentu?':
           this.resetDoc();
