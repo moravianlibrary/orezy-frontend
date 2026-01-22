@@ -14,7 +14,6 @@ export class ImagesService {
   private envService = inject(EnvironmentService);
   
   private get apiUrl(): string { return this.envService.get('serverBaseUrl') };
-  private get token(): string { return this.envService.get('authToken') as string };
 
 
   /* ------------------------------
@@ -131,13 +130,13 @@ export class ImagesService {
 
     return new HttpHeaders({
       accept: type === 'json' ? 'application/json' : '*/*',
-      Authorization: `${authType} ${this.token}`,
+      Authorization: `${authType} ${localStorage.getItem('access_token')}`,
       ...(contentType && { 'Content-Type': 'application/json' })
     });
   }
 
-  fetchAllTitleIds(): Observable<ExampleBook[]> {
-    return this.http.get<ExampleBook[]>(`${this.apiUrl}/title-ids`, { headers: this.headers() });
+  fetchAllTitles(): Observable<ExampleBook[]> {
+    return this.http.get<ExampleBook[]>(`${this.apiUrl}/titles`, { headers: this.headers() });
   }
 
   fetchScans(id: string): Observable<ImageItem[]> {

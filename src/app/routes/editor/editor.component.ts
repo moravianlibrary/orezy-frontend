@@ -29,7 +29,7 @@ export class EditorComponent {
     this.paramsOnBookId = this.activatedRoute.paramMap
       .pipe(
         map(params => params.get('id') || '' ),
-        switchMap(id => id === '' ? imgSvc.fetchAllTitleIds(): of([{ _id: id, created_at: '', modified_at: '', state: '' }])),
+        switchMap(id => id === '' ? imgSvc.fetchAllTitles(): of([{ _id: id, created_at: '', modified_at: '', state: '' }])),
         tap((idArr: ExampleBook[]) => {
           imgSvc.book.set(idArr[0]._id);
           imgSvc.loadingLeft = true;
@@ -37,7 +37,7 @@ export class EditorComponent {
         }),
         switchMap(() => imgSvc.fetchScans(imgSvc.book())),
         map((imgItems: ImageItem[]) => {
-          
+          // console.log(imgItems);
           const enrichedImgItems = imgItems.map(imgItem => {
             const newPages: Page[] = [];
             

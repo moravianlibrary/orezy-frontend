@@ -18,7 +18,7 @@ export class ExamplesComponent {
   loading = signal<boolean>(true);
   
   ngOnInit(): void {
-    this.imageService.fetchAllTitleIds().pipe(
+    this.imageService.fetchAllTitles().pipe(
       tap(() => this.loading.set(true)),
       catchError(err => {
         console.error('Fetch error:', err);
