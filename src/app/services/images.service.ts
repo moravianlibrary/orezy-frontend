@@ -1,10 +1,11 @@
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { computed, inject, Injectable, signal } from '@angular/core';
-import { DialogButton, DialogContentType, DimColor, ExampleBook, GridMode, HitInfo, ImageItem, ImageRect, MousePos, Page, PageNumberType, ScanType, Toast, ToastType, Viewport } from '../app.types';
+import { DialogButton, DialogContentType, DimColor, GridMode, HitInfo, ImageItem, ImageRect, MousePos, Page, PageNumberType, ScanType, Toast, ToastType, Viewport } from '../app.types';
 import { catchError, Observable, of } from 'rxjs';
 import { clamp, defer, degreeToRadian, getColor, scrollToSelectedImage } from '../utils/utils';
 import { EnvironmentService } from './environment.service';
 import { dimColorDict, gridColor, transparentColor } from '../app.config';
+import { AuthService } from './auth.service';
 
 @Injectable({
   providedIn: 'root'
@@ -12,6 +13,7 @@ import { dimColorDict, gridColor, transparentColor } from '../app.config';
 export class ImagesService {
   private http = inject(HttpClient);
   private envService = inject(EnvironmentService);
+  private authSvc = inject(AuthService);
   
   private get apiUrl(): string { return this.envService.get('serverBaseUrl') };
 
@@ -125,44 +127,30 @@ export class ImagesService {
   /* ------------------------------
     API
   ------------------------------ */
-  private headers(type: string = 'json', contentType: boolean = false): HttpHeaders {
-    const authType = 'Bearer';
-
-    return new HttpHeaders({
-      accept: type === 'json' ? 'application/json' : '*/*',
-      Authorization: `${authType} ${localStorage.getItem('access_token')}`,
-      ...(contentType && { 'Content-Type': 'application/json' })
-    });
-  }
-
-  fetchAllTitles(): Observable<ExampleBook[]> {
-    return this.http.get<ExampleBook[]>(`${this.apiUrl}/titles`, { headers: this.headers() });
-  }
-
   fetchScans(id: string): Observable<ImageItem[]> {
-    return this.http.get<ImageItem[]>(`${this.apiUrl}/${id}/scans`, { headers: this.headers() });
+    return this.http.get<ImageItem[]>(`${this.apiUrl}/${id}/scans`, { headers: this.authSvc.authHeaders('json', true) });
   }
 
   fetchThumbnail(id: string): Observable<Blob> {
     return this.http.get(`${this.apiUrl}/${this.book()}/thumbnails?scan_id=${id}`, { 
       responseType: 'blob',
-      headers: this.headers('*/*')
+      headers: this.authSvc.authHeaders('*/*')
     });
   }
 
   fetchImage(id: string): Observable<Blob> {
     return this.http.get(`${this.apiUrl}/${this.book()}/files?scan_id=${id}`, { 
       responseType: 'blob',
-      headers: this.headers('*/*')
+      headers: this.authSvc.authHeaders('*/*')
     });
   }
 
   updatePages(id: string, payload: any[]): any {
-    return this.http.patch(`${this.apiUrl}/${id}/update-pages`, payload, { headers: this.headers('json', true) });
+    return this.http.patch(`${this.apiUrl}/${id}/update-pages`, payload, { headers: this.authSvc.authHeaders('json', true) });
   }
 
   reset(id: string): Observable<ImageItem[]> {
-    return this.http.patch<ImageItem[]>(`${this.apiUrl}/${id}/reset`, {}, { headers: this.headers('json', false) });
+    return this.http.patch<ImageItem[]>(`${this.apiUrl}/${id}/reset`, {}, { headers: this.authSvc.authHeaders() });
   }
 
 
@@ -227,9 +215,9 @@ export class ImagesService {
         console.error('Fetch error:', err);
         return of([]);
       })
-    ).subscribe((response: ImageItem[]) => {
-      this.images.set(response);
-      this.originalImages.set(response);
+    ).subscribe((res: ImageItem[]) => {
+      this.images.set(res);
+      this.originalImages.set(res);
       
       if (this.selectedFilter === 'edited') this.selectedFilter = 'flagged';
       this.setDisplayedImages();
@@ -382,7 +370,7 @@ export class ImagesService {
   private fitAndDrawImage(img: HTMLImageElement, imgItem: ImageItem): void {
     const { c, ctx } = this;
 
-    const appMain = document.querySelector('app-main') as HTMLElement;
+    const appMain = document.querySelector('app-main-editor') as HTMLElement;
     const appStyle = getComputedStyle(appMain);
     const appRect = appMain.getBoundingClientRect();
 

@@ -9,7 +9,7 @@ import { MenuComponent } from '../../components/menu/menu.component';
 import { flagMessages } from '../../app.config';
 
 @Component({
-  selector: 'app-right-panel',
+  selector: 'app-right-panel-editor',
   imports: [MenuComponent, DecimalPipe, FormsModule],
   templateUrl: './right-panel.component.html',
   styleUrl: './right-panel.component.scss'

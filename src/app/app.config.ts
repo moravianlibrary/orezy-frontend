@@ -3,7 +3,7 @@ import { provideRouter } from '@angular/router';
 import { routes } from './app.routes';
 import { provideHttpClient } from '@angular/common/http';
 import { EnvironmentService } from './services/environment.service';
-import { DimColor, GridMode, PageNumberType, ScanType } from './app.types';
+import { DimColor, GridMode, PageNumberType, Role, ScanType } from './app.types';
 
 export const defaultColor = '#00DDFF';
 export const warningColor = '#FF9500';
@@ -42,6 +42,11 @@ export const filterPageNumberStartDict: Record<PageNumberType, string> = {
   'all': 'Vše',
   'single': 'Jeden',
   'double': 'Dva'
+};
+
+export const userRolesDict: Record<Role, string> = {
+  'admin': 'Admin',
+  'user': 'Uživatel'
 };
 
 export const appConfig: ApplicationConfig = {

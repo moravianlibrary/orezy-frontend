@@ -6,7 +6,7 @@ import { LoaderComponent } from '../../components/loader/loader.component';
 import { ToastComponent } from '../../components/toast/toast.component';
 
 @Component({
-  selector: 'app-main',
+  selector: 'app-main-editor',
   imports: [LoaderComponent, ToastComponent],
   templateUrl: './main.component.html',
   styleUrl: './main.component.scss'

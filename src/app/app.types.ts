@@ -1,10 +1,35 @@
-export interface ExampleBook {
+// Dashboard
+export interface Group {
+  _id: string;
+  short_name: string;
+  full_name: string;
+  description: string;
+  title_ids: string[];
+}
+
+export interface Title {
   _id: string;
   created_at: string;
   modified_at: string;
   state: string;
 }
 
+export interface Permission {
+  group_id: string;
+  permission: string;
+  created_at: string;
+}
+
+export interface User {
+  _id: string;
+  email: string;
+  full_name: string;
+  role: Role;
+  permissions: Permission[];
+}
+
+
+// Editor
 export interface Page {
   _id: string;
   xc: number;
@@ -41,6 +66,7 @@ export type ScanType = 'all' | 'flagged' | 'edited' | 'ok';
 export type PageNumberType = 'all' | 'single' | 'double';
 export type PageType = 'single' | 'left' | 'right';
 export type InputType = 'left' | 'top' | 'width' | 'height' | 'angle';
+export type Role = 'admin' | 'user';
 
 
 // Cursors

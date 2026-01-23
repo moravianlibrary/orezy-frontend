@@ -3,6 +3,7 @@ import { inject, Injectable, signal } from '@angular/core';
 import { EnvironmentService } from './environment.service';
 import { ActivatedRouteSnapshot, Router, RouterStateSnapshot } from '@angular/router';
 import { catchError, of } from 'rxjs';
+import { Role, User } from '../app.types';
 
 @Injectable({
   providedIn: 'root'
@@ -16,16 +17,22 @@ export class AuthService {
   password = signal<string>('');
   error = signal<string>('');
 
+  userFullName = signal<string>('');
+  userRole = signal<Role>('user');
+
   get baseUri(): string {
     let baseUri = `${window.location.protocol}//${window.location.hostname}`;
     if (window.location.port) baseUri += `:${window.location.port}`;
     return baseUri;
   }
-  private get apiUrl(): string { return this.envService.get('serverBaseUrl') };
-  private get authHeaders(): HttpHeaders {
+  get apiUrl(): string { return this.envService.get('serverBaseUrl') };
+  authHeaders(type: string = 'json', contentType: boolean = false): HttpHeaders {
+    const authType = 'Bearer';
+
     return new HttpHeaders({
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${localStorage.getItem('access_token')}`
+      accept: type === 'json' ? 'application/json' : '*/*',
+      Authorization: `${authType} ${localStorage.getItem('access_token')}`,
+      ...(contentType && { 'Content-Type': 'application/json' })
     });
   }
   private get loginHeaders(): HttpHeaders {
@@ -50,8 +57,11 @@ export class AuthService {
 
           console.error('Token verification failed: ', err);
           throw err;
-        }),
-      );
+        })
+      ).subscribe((res: User) => {
+        this.userFullName.set(res.full_name ?? 'Neznámé jméno');
+        this.userRole.set(res.role ?? 'user');
+      });
     }
 
     this.redirectToLogin();
@@ -59,14 +69,14 @@ export class AuthService {
   }
 
   private verifyToken(): any {
-    return this.http.get(`${this.apiUrl}/users/current-user`, { headers: this.authHeaders })
+    return this.http.get(`${this.apiUrl}/users/current-user`, { headers: this.authHeaders('json', true) })
   }
 
   private redirectToLogin(): void {
     window.location.href = `${this.baseUri}/login`;
   }
 
-  login(): any {
+  login(): void {
     localStorage.removeItem('access_token');
     this.error.set('');
 
@@ -75,14 +85,14 @@ export class AuthService {
         console.log('Token fetch failed: ', err);
         return of(null);
       })
-    ).subscribe((response: any) => {
-      if (!response?.access_token) {
+    ).subscribe((res: any) => {
+      if (!res?.access_token) {
         console.warn('No access_token in response');
         this.error.set('Nesprávný e-mail nebo heslo');
         return;
       }
 
-      localStorage.setItem('access_token', response.access_token);
+      localStorage.setItem('access_token', res.access_token);
 
       this.redirectToStoredUri();
     })
@@ -97,5 +107,10 @@ export class AuthService {
 
   private redirectToStoredUri(): void {
     window.location.href = `${this.baseUri}${localStorage.getItem('redirectUri') || '/'}`;
+  }
+
+  logout(): void {
+    localStorage.removeItem('access_token');
+    window.location.href = `${this.baseUri}/login`;
   }
 }

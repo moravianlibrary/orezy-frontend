@@ -2,7 +2,7 @@ import { Component, inject } from '@angular/core';
 import { ImagesService } from '../../services/images.service';
 
 @Component({
-  selector: 'app-bottom-panel',
+  selector: 'app-bottom-panel-editor',
   imports: [],
   templateUrl: './bottom-panel.component.html',
   styleUrl: './bottom-panel.component.scss'

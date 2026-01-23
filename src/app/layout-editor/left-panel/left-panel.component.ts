@@ -7,7 +7,7 @@ import { MenuComponent } from "../../components/menu/menu.component";
 import { flagMessages } from '../../app.config';
 
 @Component({
-  selector: 'app-left-panel',
+  selector: 'app-left-panel-editor',
   imports: [LoaderComponent, NgClass, MenuComponent],
   templateUrl: './left-panel.component.html',
   styleUrl: './left-panel.component.scss'

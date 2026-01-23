@@ -1,12 +1,12 @@
 import { Component, ElementRef, inject, ViewChild } from '@angular/core';
 import { ImagesService } from '../../services/images.service';
-import { MainComponent } from '../../layout/main/main.component';
-import { BottomPanelComponent } from '../../layout/bottom-panel/bottom-panel.component';
-import { LeftPanelComponent } from '../../layout/left-panel/left-panel.component';
-import { RightPanelComponent } from '../../layout/right-panel/right-panel.component';
+import { MainComponent } from '../../layout-editor/main/main.component';
+import { BottomPanelComponent } from '../../layout-editor/bottom-panel/bottom-panel.component';
+import { LeftPanelComponent } from '../../layout-editor/left-panel/left-panel.component';
+import { RightPanelComponent } from '../../layout-editor/right-panel/right-panel.component';
 import { ActivatedRoute } from '@angular/router';
 import { catchError, map, of, Subscription, switchMap, tap } from 'rxjs';
-import { ExampleBook, GridMode, ImageItem, Page, PageNumberType, ScanType } from '../../app.types';
+import { GridMode, ImageItem, Page, PageNumberType, ScanType } from '../../app.types';
 import { roundToDecimals } from '../../utils/utils';
 import { AuthService } from '../../services/auth.service';
 
@@ -30,16 +30,20 @@ export class EditorComponent {
     // Subscribe to params
     this.paramsOnBookId = this.activatedRoute.paramMap
       .pipe(
-        map(params => params.get('id') || '' ),
-        switchMap(id => id === '' ? imgSvc.fetchAllTitles(): of([{ _id: id, created_at: '', modified_at: '', state: '' }])),
-        tap((idArr: ExampleBook[]) => {
-          imgSvc.book.set(idArr[0]._id);
+        map(params => params.get('id') || ''),
+        tap(id => {
+          if (!id) {
+            window.location.href = `${this.authSvc.baseUri}/not-found`;
+            return;
+          };
+
+          imgSvc.book.set(id);
           imgSvc.loadingLeft = true;
           imgSvc.loadingMain = true;
         }),
         switchMap(() => imgSvc.fetchScans(imgSvc.book())),
         map((imgItems: ImageItem[]) => {
-          console.log(imgItems);
+
           const enrichedImgItems = imgItems.map(imgItem => {
             const newPages: Page[] = [];
             
@@ -60,7 +64,7 @@ export class EditorComponent {
         }),
         catchError(err => {
           console.error('Fetch error:', err);
-          window.location.href = `${this.authSvc.baseUri}/not-found`
+          window.location.href = `${this.authSvc.baseUri}/not-found`;
           return of([]);
         })
       )
