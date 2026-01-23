@@ -144,14 +144,14 @@ export class ImagesService {
   }
 
   fetchThumbnail(id: string): Observable<Blob> {
-    return this.http.get(`${this.apiUrl}/${this.book()}/thumbnails/${id}`, { 
+    return this.http.get(`${this.apiUrl}/${this.book()}/thumbnails?scan_id=${id}`, { 
       responseType: 'blob',
       headers: this.headers('*/*')
     });
   }
 
   fetchImage(id: string): Observable<Blob> {
-    return this.http.get(`${this.apiUrl}/${this.book()}/files/${id}`, { 
+    return this.http.get(`${this.apiUrl}/${this.book()}/files?scan_id=${id}`, { 
       responseType: 'blob',
       headers: this.headers('*/*')
     });

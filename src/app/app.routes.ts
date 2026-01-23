@@ -5,38 +5,33 @@ export const routes: Routes = [
   {
     path: '',
     pathMatch: 'full',
-    redirectTo: 'groups'
+    loadComponent: () => import('./routes/groups/groups.component').then((m) => m.GroupsComponent),
+    title: 'Skupiny | Skeny',
+    canActivate: [ AuthService ]
   },
   {
-    path: 'book/:id',
+    path: 'admin',
     pathMatch: 'full',
-    loadComponent: () => import('./routes/editor/editor.component').then((m) => m.EditorComponent),
-    title: 'Kontrola a úpravy | AI Ořezy',
+    loadComponent: () => import('./routes/admin/admin.component').then((m) => m.AdminComponent),
+    title: 'Admin | Skeny',
     canActivate: [ AuthService ]
   },
   {
     path: 'login',
     pathMatch: 'full',
     loadComponent: () => import('./routes/login/login.component').then((m) => m.LoginComponent),
-    title: 'Přihlášení | AI Ořezy'
+    title: 'Přihlášení | Skeny'
   },
   {
-    path: 'admin',
+    path: 'book/:id',
     pathMatch: 'full',
-    loadComponent: () => import('./routes/admin/admin.component').then((m) => m.AdminComponent),
-    title: 'Admin | AI Ořezy',
+    loadComponent: () => import('./routes/editor/editor.component').then((m) => m.EditorComponent),
+    title: 'Kontrola a úpravy | Skeny',
     canActivate: [ AuthService ]
-  },
-  {
-    path: 'groups',
-    pathMatch: 'full',
-    loadComponent: () => import('./routes/groups/groups.component').then((m) => m.GroupsComponent),
-    title: 'Skupiny | AI Ořezy',
-    canActivate: [ AuthService ]
-  },
+  },  
   {
     path: '**',
     loadComponent: () => import('./routes/not-found/not-found.component').then((m) => m.NotFoundComponent),
-    title: 'Stránka nenalezena | AI Ořezy'
+    title: 'Stránka nenalezena | Skeny'
   }
 ];

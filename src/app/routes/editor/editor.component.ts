@@ -8,6 +8,7 @@ import { ActivatedRoute } from '@angular/router';
 import { catchError, map, of, Subscription, switchMap, tap } from 'rxjs';
 import { ExampleBook, GridMode, ImageItem, Page, PageNumberType, ScanType } from '../../app.types';
 import { roundToDecimals } from '../../utils/utils';
+import { AuthService } from '../../services/auth.service';
 
 @Component({
   selector: 'app-editor',
@@ -17,6 +18,7 @@ import { roundToDecimals } from '../../utils/utils';
 })
 export class EditorComponent {
   imagesService = inject(ImagesService);
+  authSvc = inject(AuthService);
   private activatedRoute = inject(ActivatedRoute);
   private paramsOnBookId = new Subscription();
 
@@ -37,14 +39,14 @@ export class EditorComponent {
         }),
         switchMap(() => imgSvc.fetchScans(imgSvc.book())),
         map((imgItems: ImageItem[]) => {
-          // console.log(imgItems);
+          console.log(imgItems);
           const enrichedImgItems = imgItems.map(imgItem => {
             const newPages: Page[] = [];
             
             imgItem.pages.forEach(p => {
               newPages.push({ 
                 ...p,
-                angle: roundToDecimals(p.angle, 2)
+                // angle: roundToDecimals(p.angle, 2)
               });
             });
 
@@ -58,6 +60,7 @@ export class EditorComponent {
         }),
         catchError(err => {
           console.error('Fetch error:', err);
+          window.location.href = `${this.authSvc.baseUri}/not-found`
           return of([]);
         })
       )
