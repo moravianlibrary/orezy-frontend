@@ -43,33 +43,14 @@ export class EditorComponent {
           edtSvc.loadingMain = true;
         }),
         switchMap(() => edtSvc.fetchScans(edtSvc.book())),
-        map((title: TitleDetail) => {
-          const imgItems: ImageItem[] = title.scans;
-
-          const enrichedImgItems = imgItems.map(imgItem => {
-            const newPages: Page[] = [];
-            
-            imgItem.pages.forEach(p => {
-              newPages.push({ 
-                ...p,
-              });
-            });
-
-            return {
-              ...imgItem,
-              pages: newPages
-            }
-          })
-          
-          return enrichedImgItems
-        }),
         catchError(err => {
           console.error('Fetch error:', err);
           this.router.navigate(['/not-found']);
-          return of([]);
+          return of();
         })
       )
-      .subscribe((imgItems: ImageItem[]) => {
+      .subscribe((title: TitleDetail) => {
+        const imgItems: ImageItem[] = title.scans;
         edtSvc.loadingLeft = false;
         edtSvc.images.set(imgItems);
         edtSvc.originalImages.set(imgItems);

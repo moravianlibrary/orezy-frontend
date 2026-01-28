@@ -433,8 +433,14 @@ export class EditorService {
       .find(img => img._id === imgItem._id)
       ?.pages
       ?.forEach(p => {
-        this.currentPages.push(p);
-        this.drawPageInitial(p);
+        const { left, right, top, bottom } = this.computeBounds(p.xc, p.yc, p.width, p.height, p.angle);
+        const updatedPage = {
+          ...p,
+          left, right, top, bottom
+        }
+        
+        this.currentPages.push(updatedPage);
+        this.drawPageInitial(updatedPage);
       });
     
     const lastMainImageItemName = this.mainImageItem()._id;
