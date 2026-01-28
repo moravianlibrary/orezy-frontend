@@ -1,9 +1,10 @@
-@mixin font($font-weight, $font-size, $line-height) {
+@mixin font($font-weight, $font-size, $line-height, $color) {
   font-family: 'IBM Plex Sans', sans-serif;
   letter-spacing: 0%;
   font-weight: $font-weight;
   font-size: $font-size;
   line-height: $line-height;
+  color: $color;
 }
 
 :host {
@@ -30,14 +31,23 @@
     align-items: center;
     justify-content: space-between;
 
-    h1 {
-      @include font(500, var(--font-size-x3), var(--spacing-x8));
+    .title {
+      display: flex;
+      align-items: center;
+      gap: var(--spacing-x3);
+
+      svg {
+        fill: var(--icon-dark);
+
+        &:hover { cursor: pointer; }
+      }
+
+      h1 { @include font(500, var(--font-size-x3), var(--spacing-x8), var(--text-base)); }
     }
   }
 
   h2 {
-    @include font(400, var(--font-size-x1-5), var(--spacing-x4));
-    color: var(--text-light);
+    @include font(400, var(--font-size-x1-5), var(--spacing-x4), var(--text-light));
     margin-block: 6px;
   }
 
@@ -48,21 +58,16 @@
     max-width: 100%;
 
     .filter {
-      @include font(400, var(--font-size-x1-5), var(--spacing-x5));
+      @include font(400, var(--font-size-x1-5), var(--spacing-x5), var(--text-base));
       padding: var(--spacing-x1) var(--spacing-x2);
       background-color: var(--bg-base);
       border: 1px solid var(--border-tertiary-color);
       border-radius: 4px;
       white-space: nowrap;
 
-      &:hover {
-        cursor: pointer;
-      }
+      &:hover { cursor: pointer; }
 
-      .filter-number {
-        @include font(400, var(--font-size-x1-5), var(--spacing-x5));
-        color: var(--text-light);
-      }
+      .filter-number { @include font(400, var(--font-size-x1-5), var(--spacing-x5), var(--text-light)); }
     }
 
     .selected-filter {
@@ -93,9 +98,7 @@
   border-radius: 4px;
   position: relative;
 
-  &:hover {
-    cursor: pointer;
-  }
+  &:hover { cursor: pointer; }
 
   img {
     max-height: 100%;
@@ -111,9 +114,7 @@
     border-radius: 50%;
     outline: 2px solid var(--bg-bright);
 
-    &:hover {
-      outline-color: var(--icon-white);
-    }
+    &:hover { outline-color: var(--icon-white); }
 
     &::before {
       content: "";
@@ -164,27 +165,15 @@
     }
   }
 
-  .success {
-    background-color: var(--status-icon-success);
-  }
+  .success { background-color: var(--status-icon-success); }
 
-  .warning {
-    background-color: var(--status-icon-warning);
-  }
+  .warning { background-color: var(--status-icon-warning); }
 
-  .edited {
-    background-color: var(--status-icon-edited);
-  }
+  .edited { background-color: var(--status-icon-edited); }
 
-  .error {
-    background-color: var(--status-icon-error);
-  }
+  .error { background-color: var(--status-icon-error); }
 }
 
-.selected {
-  border-color: var(--primary);
-}
+.selected { border-color: var(--primary); }
 
-app-loader {
-  margin-top: var(--spacing-x5);
-}
+app-loader { margin-top: var(--spacing-x5); }

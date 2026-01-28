@@ -1,51 +1,60 @@
 <div class="header">
   <div class="title-menu-wrapper">
-    <h1>Skeny k revizi</h1>
+    <div class="title">
+      <svg
+        width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"
+        (click)="edtSvc.backToMyGroupTitles()"
+      >
+        <path fill-rule="evenodd" clip-rule="evenodd" d="M10.1003 5.39936C10.3932 5.69225 10.3932 6.16712 10.1003 6.46002L4.56066 11.9997L10.1003 17.5394C10.3932 17.8322 10.3932 18.3071 10.1003 18.6C9.80744 18.8929 9.33256 18.8929 9.03967 18.6L2.96967 12.53C2.82902 12.3894 2.75 12.1986 2.75 11.9997C2.75 11.8008 2.82902 11.61 2.96967 11.4694L9.03967 5.39936C9.33256 5.10646 9.80744 5.10646 10.1003 5.39936Z" />
+        <path fill-rule="evenodd" clip-rule="evenodd" d="M2.91992 12C2.91992 11.5858 3.25571 11.25 3.66992 11.25H20.4999C20.9141 11.25 21.2499 11.5858 21.2499 12C21.2499 12.4142 20.9141 12.75 20.4999 12.75H3.66992C3.25571 12.75 2.91992 12.4142 2.91992 12Z" />
+      </svg>
+      <h1>Skeny</h1>
+    </div>
     <app-menu [type]="'menu-primary'" />
   </div>
   <div class="filters">
     <span
       class="filter"
-      [class.selected-filter]="imagesService.selectedFilter === 'all'"
-      (click)="imagesService.switchFilter('all')"
-    >Vše <span class="filter-number">({{ imagesService.images().length }})</span></span>
+      [class.selected-filter]="edtSvc.selectedFilter === 'all'"
+      (click)="edtSvc.switchFilter('all')"
+    >Vše <span class="filter-number">({{ edtSvc.images().length }})</span></span>
     <span
       class="filter"
-      [class.selected-filter]="imagesService.selectedFilter === 'flagged'"
-      (click)="imagesService.switchFilter('flagged')"
-    >Podezřelé <span class="filter-number">({{ imagesService.flaggedImages().length }})</span></span>
+      [class.selected-filter]="edtSvc.selectedFilter === 'flagged'"
+      (click)="edtSvc.switchFilter('flagged')"
+    >Podezřelé <span class="filter-number">({{ edtSvc.flaggedImages().length }})</span></span>
     <span
       class="filter"
-      [class.selected-filter]="imagesService.selectedFilter === 'edited'"
-      (click)="imagesService.switchFilter('edited')"
-    >Upravené <span class="filter-number">({{ imagesService.editedImages().length }})</span></span>
+      [class.selected-filter]="edtSvc.selectedFilter === 'edited'"
+      (click)="edtSvc.switchFilter('edited')"
+    >Upravené <span class="filter-number">({{ edtSvc.editedImages().length }})</span></span>
     <span
       class="filter"
-      [class.selected-filter]="imagesService.selectedFilter === 'ok'"
-      (click)="imagesService.switchFilter('ok')"
-    >OK <span class="filter-number">({{ imagesService.notFlaggedImages().length }})</span></span>
+      [class.selected-filter]="edtSvc.selectedFilter === 'ok'"
+      (click)="edtSvc.switchFilter('ok')"
+    >OK <span class="filter-number">({{ edtSvc.notFlaggedImages().length }})</span></span>
   </div>
   <div>
     <h2>Počet výřezů</h2>
     <div class="filters">
       <span
         class="filter"
-        [class.selected-filter]="imagesService.selectedPageNumberFilter() === 'single'"
-        (click)="imagesService.togglePageNumberFilter('single')"
+        [class.selected-filter]="edtSvc.selectedPageNumberFilter() === 'single'"
+        (click)="edtSvc.togglePageNumberFilter('single')"
       >Jeden <span class="filter-number">({{ pageImagesNumber(1) }})</span></span>
       <span
         class="filter"
-        [class.selected-filter]="imagesService.selectedPageNumberFilter() === 'double'"
-        (click)="imagesService.togglePageNumberFilter('double')"
+        [class.selected-filter]="edtSvc.selectedPageNumberFilter() === 'double'"
+        (click)="edtSvc.togglePageNumberFilter('double')"
       >Dva <span class="filter-number">({{ pageImagesNumber(2) }})</span></span>
     </div>
   </div>
 </div>
 
-@if (imagesService.displayedImagesFinal().length) {
+@if (edtSvc.displayedImagesFinal().length) {
   <div class="thumbnails-wrapper">
-    @for (image of imagesService.displayedImagesFinal(); track image._id) {
-      @let mainImageItem = imagesService.mainImageItem();
+    @for (image of edtSvc.displayedImagesFinal(); track image._id) {
+      @let mainImageItem = edtSvc.mainImageItem();
       <div
         class="thumbnail-wrapper"
         [class.selected]="mainImageItem._id === image._id"
@@ -61,5 +70,5 @@
     }
   </div>
 } @else {
-  @if (imagesService.loadingLeft) { <app-loader /> }
+  @if (edtSvc.loadingLeft) { <app-loader /> }
 }

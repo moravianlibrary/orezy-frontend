@@ -1,8 +1,8 @@
 <div 
   #mainWrapper
   class="main-wrapper"
-  (keydown)="imagesService.onKeyDown($event)"
-  (keyup)="imagesService.onKeyUp($event)"
+  (keydown)="edtSvc.onKeyDown($event)"
+  (keyup)="edtSvc.onKeyUp($event)"
   tabindex="0"
 >
   <app-left-panel-editor></app-left-panel-editor>
@@ -11,4 +11,11 @@
     <app-bottom-panel-editor></app-bottom-panel-editor>
   </div>
   <app-right-panel-editor></app-right-panel-editor>
+
+  <!-- DIALOG -->
+  @if (edtSvc.dialogOpen()) {
+    <app-dialog
+      (closed)="edtSvc.closeDialog()"
+    />
+  }
 </div>

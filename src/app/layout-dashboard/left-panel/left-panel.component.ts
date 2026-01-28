@@ -2,6 +2,7 @@ import { Component, inject } from '@angular/core';
 import { MenuComponent } from "../../components/menu/menu.component";
 import { AuthService } from '../../services/auth.service';
 import { userRolesDict } from '../../app.config';
+import { DashboardService } from '../../services/dashboard.service';
 
 @Component({
   selector: 'app-left-panel-groups',
@@ -11,6 +12,7 @@ import { userRolesDict } from '../../app.config';
 })
 export class LeftPanelComponent {
   authSvc = inject(AuthService);
+  dashSvc = inject(DashboardService);
 
   userRolesDict = userRolesDict;
 }

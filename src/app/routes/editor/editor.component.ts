@@ -1,48 +1,50 @@
 import { Component, ElementRef, inject, ViewChild } from '@angular/core';
-import { ImagesService } from '../../services/images.service';
+import { EditorService } from '../../services/editor.service';
 import { MainComponent } from '../../layout-editor/main/main.component';
 import { BottomPanelComponent } from '../../layout-editor/bottom-panel/bottom-panel.component';
 import { LeftPanelComponent } from '../../layout-editor/left-panel/left-panel.component';
 import { RightPanelComponent } from '../../layout-editor/right-panel/right-panel.component';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { catchError, map, of, Subscription, switchMap, tap } from 'rxjs';
-import { GridMode, ImageItem, Page, PageNumberType, ScanType } from '../../app.types';
-import { roundToDecimals } from '../../utils/utils';
+import { GridMode, ImageItem, Page, PageNumberType, ScanType, TitleDetail } from '../../app.types';
 import { AuthService } from '../../services/auth.service';
+import { DialogComponent } from '../../components/dialog/dialog.component';
 
 @Component({
   selector: 'app-editor',
-  imports: [MainComponent, BottomPanelComponent, LeftPanelComponent, RightPanelComponent],
+  imports: [MainComponent, BottomPanelComponent, LeftPanelComponent, RightPanelComponent, DialogComponent],
   templateUrl: './editor.component.html',
   styleUrl: './editor.component.scss'
 })
 export class EditorComponent {
-  imagesService = inject(ImagesService);
+  edtSvc = inject(EditorService);
   authSvc = inject(AuthService);
+  private router = inject(Router);
   private activatedRoute = inject(ActivatedRoute);
   private paramsOnBookId = new Subscription();
 
   @ViewChild('mainWrapper', { static: true }) mainWrapper!: ElementRef<HTMLElement>;
 
   ngOnInit() {
-    const imgSvc = this.imagesService;
+    const edtSvc = this.edtSvc;
     
     // Subscribe to params
     this.paramsOnBookId = this.activatedRoute.paramMap
       .pipe(
-        map(params => params.get('id') || ''),
-        tap(id => {
-          if (!id) {
-            window.location.href = `${this.authSvc.baseUri}/not-found`;
+        map(params => params.get('book_id') || ''),
+        tap(book_id => {
+          if (!book_id) {
+            this.router.navigate(['/not-found']);
             return;
           };
 
-          imgSvc.book.set(id);
-          imgSvc.loadingLeft = true;
-          imgSvc.loadingMain = true;
+          edtSvc.book.set(book_id);
+          edtSvc.loadingLeft = true;
+          edtSvc.loadingMain = true;
         }),
-        switchMap(() => imgSvc.fetchScans(imgSvc.book())),
-        map((imgItems: ImageItem[]) => {
+        switchMap(() => edtSvc.fetchScans(edtSvc.book())),
+        map((title: TitleDetail) => {
+          const imgItems: ImageItem[] = title.scans;
 
           const enrichedImgItems = imgItems.map(imgItem => {
             const newPages: Page[] = [];
@@ -50,7 +52,6 @@ export class EditorComponent {
             imgItem.pages.forEach(p => {
               newPages.push({ 
                 ...p,
-                // angle: roundToDecimals(p.angle, 2)
               });
             });
 
@@ -64,28 +65,28 @@ export class EditorComponent {
         }),
         catchError(err => {
           console.error('Fetch error:', err);
-          window.location.href = `${this.authSvc.baseUri}/not-found`;
+          this.router.navigate(['/not-found']);
           return of([]);
         })
       )
       .subscribe((imgItems: ImageItem[]) => {
-        imgSvc.loadingLeft = false;
-        imgSvc.images.set(imgItems);
-        imgSvc.originalImages.set(imgItems);
+        edtSvc.loadingLeft = false;
+        edtSvc.images.set(imgItems);
+        edtSvc.originalImages.set(imgItems);
 
-        imgSvc.gridMode.set(localStorage.getItem('gridMode') as GridMode ?? 'when-rotating');
-        imgSvc.gridRadio.set(imgSvc.gridMode());
-        imgSvc.outlineTransparent = localStorage.getItem('outlineTransparent') === 'true';
-        imgSvc.selectedFilter = localStorage.getItem('filterScanTypeStart') as ScanType ?? 'all';
-        imgSvc.scanTypeRadio.set(imgSvc.selectedFilter);
-        imgSvc.selectedPageNumberFilter.set(localStorage.getItem('filterPageNumberStart') as PageNumberType ?? null);
-        imgSvc.pageNumberRadio.set(imgSvc.selectedPageNumberFilter() ?? 'all');
-        imgSvc.setDisplayedImages();
+        edtSvc.gridMode.set(localStorage.getItem('gridMode') as GridMode ?? 'when-rotating');
+        this.edtSvc.gridRadio.set(edtSvc.gridMode());
+        edtSvc.outlineTransparent = localStorage.getItem('outlineTransparent') === 'true';
+        edtSvc.selectedFilter = localStorage.getItem('filterScanTypeStart') as ScanType ?? 'all';
+        this.edtSvc.scanTypeRadio.set(edtSvc.selectedFilter);
+        edtSvc.selectedPageNumberFilter.set(localStorage.getItem('filterPageNumberStart') as PageNumberType ?? null);
+        this.edtSvc.pageNumberRadio.set(edtSvc.selectedPageNumberFilter() ?? 'all');
+        edtSvc.setDisplayedImages();
         
-        const imageList = imgSvc.displayedImagesFinal();
-        if (!imageList.length) imgSvc.loadingMain = false;;
-        const newImage = imageList.find(img => img._id === imgSvc.mainImageItem()._id) || imageList[0] || { url: '' };
-        imgSvc.setMainImage(newImage);
+        const imageList = edtSvc.displayedImagesFinal();
+        if (!imageList.length) edtSvc.loadingMain = false;;
+        const newImage = imageList.find(img => img._id === edtSvc.mainImageItem()._id) || imageList[0] || { url: '' };
+        edtSvc.setMainImage(newImage);
       });
   }
 

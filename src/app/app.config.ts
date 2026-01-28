@@ -3,7 +3,7 @@ import { provideRouter } from '@angular/router';
 import { routes } from './app.routes';
 import { provideHttpClient } from '@angular/common/http';
 import { EnvironmentService } from './services/environment.service';
-import { DimColor, GridMode, PageNumberType, Role, ScanType } from './app.types';
+import { DimColor, GridMode, PageNumberType, PermissionType, Role, ScanType, TitleState } from './app.types';
 
 export const defaultColor = '#00DDFF';
 export const warningColor = '#FF9500';
@@ -48,6 +48,21 @@ export const userRolesDict: Record<Role, string> = {
   'admin': 'Admin',
   'user': 'Uživatel'
 };
+
+export const permissionDict: Record<PermissionType, string> = {
+  'read': 'Čtení',
+  'write': 'Úpravy',
+  'manage': 'Správa'
+};
+
+export const titleStateDict: Record<TitleState, string> = {
+  scheduled: 'Bude se zpracovávat',
+  in_progress: 'Zpracovává se',
+  failed: 'Chyba',
+  ready: 'Nové',
+  user_approved: 'Uloženo',
+  completed: 'Uloženo'
+}
 
 export const appConfig: ApplicationConfig = {
   providers: [

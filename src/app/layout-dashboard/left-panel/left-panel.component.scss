@@ -8,13 +8,12 @@
 }
 
 :host {
-  max-width: 250px;
+  min-width: 250px;
   flex-basis: 250px;
   flex: 1;
   display: flex;
   flex-direction: column;
   gap: var(--spacing-x4);
-  border-right: 1px solid var(--border-color);
   height: 100dvh;
   padding: var(--spacing-x4);
 }

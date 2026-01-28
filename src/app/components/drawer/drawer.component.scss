@@ -1,0 +1,61 @@
+@mixin font($font-weight, $font-size, $line-height, $color) {
+  font-family: 'IBM Plex Sans', sans-serif;
+  letter-spacing: 0%;
+  font-weight: $font-weight;
+  font-size: $font-size;
+  line-height: $line-height;
+  color: $color;
+}
+
+:host {
+  display: flex;
+  flex-direction: column;
+  position: absolute;
+  right: -593px;
+  height: 100dvh;
+  min-width: 593px;
+  z-index: 1000;
+  background-color: var(--bg-base);
+  border-right: 1px solid var(--border-color);
+  box-shadow: 1px 0 24px 0 #0000001A;  
+  visibility: hidden;
+  transition: right .3s ease-out, visibility .3s ease-out;
+}
+
+:host(.open) {
+  right: 0;
+  visibility: visible;
+}
+
+.drawer-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--spacing-x3) var(--spacing-x4);
+
+  h2 {
+    @include font(450, var(--font-size-x3), var(--spacing-x8), var(--text-base));
+  }
+
+  svg {
+    fill: var(--icon-dark);
+  }
+}
+
+.drawer-body {
+  border-top: 1px solid var(--border-color);
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.drawer-close {
+  cursor: pointer;
+}
+
+.drawer-footer {
+  display: flex;
+  justify-content: center;
+  gap: var(--spacing-x4);
+  border-top: 1px solid var(--border-color);
+}

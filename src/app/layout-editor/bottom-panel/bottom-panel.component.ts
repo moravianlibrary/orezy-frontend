@@ -1,5 +1,5 @@
 import { Component, inject } from '@angular/core';
-import { ImagesService } from '../../services/images.service';
+import { EditorService } from '../../services/editor.service';
 
 @Component({
   selector: 'app-bottom-panel-editor',
@@ -8,9 +8,9 @@ import { ImagesService } from '../../services/images.service';
   styleUrl: './bottom-panel.component.scss'
 })
 export class BottomPanelComponent {
-  imagesService = inject(ImagesService);
+  edtSvc = inject(EditorService);
 
   get wasAnyPageEdited(): boolean {
-    return Boolean(this.imagesService.currentPages.find(p => p.edited));
+    return Boolean(this.edtSvc.currentPages.find(p => p.edited));
   }
 }

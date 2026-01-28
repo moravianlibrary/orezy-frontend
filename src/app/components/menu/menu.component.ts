@@ -1,17 +1,16 @@
 import { CdkConnectedOverlay, CdkOverlayOrigin, ConnectedPosition } from '@angular/cdk/overlay';
 import { Component, ElementRef, HostListener, inject, input, ViewChild } from '@angular/core';
 import { NgClass } from '../../../../node_modules/@angular/common';
-import { ImagesService } from '../../services/images.service';
-import { DialogComponent } from '../dialog/dialog.component';
+import { EditorService } from '../../services/editor.service';
 
 @Component({
   selector: 'app-menu',
-  imports: [CdkConnectedOverlay, CdkOverlayOrigin, NgClass, DialogComponent],
+  imports: [CdkConnectedOverlay, CdkOverlayOrigin, NgClass],
   templateUrl: './menu.component.html',
   styleUrl: './menu.component.scss'
 })
 export class MenuComponent {
-  imagesService = inject(ImagesService);
+  edtSvc = inject(EditorService);
   type = input('menu-primary');
 
 

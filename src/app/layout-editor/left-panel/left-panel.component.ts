@@ -1,5 +1,5 @@
 import { Component, ElementRef, inject, QueryList, ViewChildren } from '@angular/core';
-import { ImagesService } from '../../services/images.service';
+import { EditorService } from '../../services/editor.service';
 import { ImageItem } from '../../app.types';
 import { LoaderComponent } from '../../components/loader/loader.component';
 import { NgClass } from '../../../../node_modules/@angular/common';
@@ -13,10 +13,10 @@ import { flagMessages } from '../../app.config';
   styleUrl: './left-panel.component.scss'
 })
 export class LeftPanelComponent {
-  imagesService = inject(ImagesService);
+  edtSvc = inject(EditorService);
 
   pageImagesNumber(number: number): number {
-    return this.imagesService.displayedImages().filter(img => img.pages.length === number).length;
+    return this.edtSvc.displayedImages().filter(img => img.pages.length === number).length;
   }
 
 
@@ -31,7 +31,7 @@ export class LeftPanelComponent {
 
       const img = entry.target as HTMLImageElement;
       const id = img.dataset['id']!;
-      const targetImg = this.imagesService.images().find(img => img._id === id);
+      const targetImg = this.edtSvc.images().find(img => img._id === id);
 
       if (targetImg?.thumbnailUrl) {
         img.src = targetImg.thumbnailUrl;
@@ -39,12 +39,12 @@ export class LeftPanelComponent {
         return;
       }
 
-      this.imagesService.fetchThumbnail(id).subscribe(thumbnail => {
+      this.edtSvc.fetchThumbnail(id).subscribe(thumbnail => {
         const thumbnailUrl = URL.createObjectURL(thumbnail);
 
         img.src = thumbnailUrl;
 
-        this.imagesService.images.update(prev =>
+        this.edtSvc.images.update(prev =>
           prev.map(img =>
             img._id === id
               ? {
@@ -63,6 +63,10 @@ export class LeftPanelComponent {
   ngAfterViewInit(): void {
     this.images.changes.subscribe(() => this.observeNewImages());
   }
+  
+  ngOnDestroy(): void {
+    this.observer.disconnect();
+  }
 
   private observeNewImages(): void {
     this.images.forEach(img => this.observer.observe(img.nativeElement));
@@ -73,11 +77,11 @@ export class LeftPanelComponent {
     CLICKS
   ------------------------------ */
   clickThumbnail(image: ImageItem): void {
-    const imgSvc = this.imagesService;
-    if (image._id === imgSvc.mainImageItem()._id) return;
+    const edtSvc = this.edtSvc;
+    if (image._id === edtSvc.mainImageItem()._id) return;
     
-    imgSvc.updateImagesByCurrentPages();
-    imgSvc.setMainImage(image);
+    edtSvc.updateImagesByCurrentPages();
+    edtSvc.setMainImage(image);
   }
 
   getStatus(image: ImageItem): 'edited' | 'error' | 'warning' | 'success' {

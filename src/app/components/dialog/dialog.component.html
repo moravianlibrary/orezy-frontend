@@ -2,7 +2,7 @@
 
 <div class="dialog-container">
   <header class="dialog-header">
-    <h2>{{ imagesService.dialogTitle() }}</h2>
+    <h2>{{ edtSvc.dialogTitle() }}</h2>
 
     <svg
       width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"
@@ -14,11 +14,11 @@
     </svg>
   </header>
 
-  @if (imagesService.dialogContent()) {
+  @if (edtSvc.dialogContent()) {
     <section class="dialog-body">
 
       <!-- Setting -->
-      @if (imagesService.dialogContentType() === 'settings') {
+      @if (edtSvc.dialogContentType() === 'settings') {
         <div class="settings-content-wrapper">
           <div class="settings-block">
             <div class="settings-block-label">Zobrazení mřížky</div>
@@ -28,8 +28,8 @@
                   <input
                     type="radio"
                     name="grid-mode"
-                    [checked]="gridMode === imagesService.gridRadio()"
-                    (change)="imagesService.gridRadio.set(gridMode)"
+                    [checked]="gridMode === edtSvc.gridRadio()"
+                    (change)="edtSvc.gridRadio.set(gridMode)"
                   />
                   <span class="radio-value">{{ gridModeDict[gridMode] }}</span>
                 </label>
@@ -40,7 +40,7 @@
             <label class="settings-block-label toggle-switch">
               <input
                 type="checkbox"
-                [checked]="!imagesService.outlineTransparent"
+                [checked]="!edtSvc.outlineTransparent"
                 (click)="toggleOutline()"
               />
               <span class="slider"></span>
@@ -55,8 +55,8 @@
                   <input
                     type="radio"
                     name="dim-color"
-                    [checked]="dimColor === imagesService.dimRadio()"
-                    (change)="imagesService.dimRadio.set(dimColor)"
+                    [checked]="dimColor === edtSvc.dimRadio()"
+                    (change)="edtSvc.dimRadio.set(dimColor)"
                   />
                   <span class="radio-value">{{ dimColor }}</span>
                 </label>
@@ -72,8 +72,8 @@
                   <input
                     type="radio"
                     name="scan-type"
-                    [checked]="scanType === imagesService.scanTypeRadio()"
-                    (change)="imagesService.scanTypeRadio.set(scanType)"
+                    [checked]="scanType === edtSvc.scanTypeRadio()"
+                    (change)="edtSvc.scanTypeRadio.set(scanType)"
                   />
                   <span class="radio-value">{{ filterScanTypeStartDict[scanType] }}</span>
                 </label>
@@ -86,8 +86,8 @@
                   <input
                     type="radio"
                     name="page-number"
-                    [checked]="pageNumber === imagesService.pageNumberRadio()"
-                    (change)="imagesService.pageNumberRadio.set(pageNumber)"
+                    [checked]="pageNumber === edtSvc.pageNumberRadio()"
+                    (change)="edtSvc.pageNumberRadio.set(pageNumber)"
                   />
                   <span class="radio-value">{{ filterPageNumberStartDict[pageNumber] }}</span>
                 </label>
@@ -98,7 +98,7 @@
       }
 
       <!-- Shortcuts -->
-      @if (imagesService.dialogContentType() === 'shortcuts') {
+      @if (edtSvc.dialogContentType() === 'shortcuts') {
         <div class="shortcuts-content-wrapper">
           <table cellspacing="0" cellpadding="0">
             <tr><th>Vybrat výřez</th><td>1, 2</td></tr>
@@ -127,12 +127,12 @@
         </div>
       }
     </section>
-  } @else if (imagesService.dialogDescription()) {
-    <p class="dialog-description single">{{ imagesService.dialogDescription() }}</p>
+  } @else if (edtSvc.dialogDescription()) {
+    <p class="dialog-description single">{{ edtSvc.dialogDescription() }}</p>
   }
 
   <footer class="dialog-footer">
-    @for (btn of imagesService.dialogButtons(); track btn) {
+    @for (btn of edtSvc.dialogButtons(); track btn) {
       <span
         (click)="btn.action ? btn.action() : null; close()"
         class="button real-button"

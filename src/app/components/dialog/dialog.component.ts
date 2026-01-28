@@ -1,6 +1,6 @@
 import { Component, inject, output } from '@angular/core';
 import { DimColor, GridMode, PageNumberType, ScanType } from '../../app.types';
-import { ImagesService } from '../../services/images.service';
+import { EditorService } from '../../services/editor.service';
 import { dimColorDict, filterPageNumberStartDict, filterScanTypeStartDict, gridModeDict } from '../../app.config';
 
 @Component({
@@ -10,7 +10,7 @@ import { dimColorDict, filterPageNumberStartDict, filterScanTypeStartDict, gridM
   styleUrl: './dialog.component.scss'
 })
 export class DialogComponent {
-  imagesService = inject(ImagesService);
+  edtSvc = inject(EditorService);
   
   closed = output<void>();
   backdropClick = output<void>();
@@ -35,13 +35,13 @@ export class DialogComponent {
     this.backdropClick.emit();
     this.close();
 
-    const imgSvc = this.imagesService;
-    if (imgSvc.dialogTitle() === 'Nastavení') imgSvc.gridRadio.set(imgSvc.gridMode());
+    const edtSvc = this.edtSvc;
+    if (this.edtSvc.dialogTitle() === 'Nastavení') this.edtSvc.gridRadio.set(edtSvc.gridMode());
   }
 
   toggleOutline(): void {
-    const imgSvc = this.imagesService
-    imgSvc.outlineTransparent = !imgSvc.outlineTransparent;
-    localStorage.setItem('outlineTransparent', `${imgSvc.outlineTransparent}`);
+    const edtSvc = this.edtSvc;
+    edtSvc.outlineTransparent = !edtSvc.outlineTransparent;
+    localStorage.setItem('outlineTransparent', `${edtSvc.outlineTransparent}`);
   }
 }

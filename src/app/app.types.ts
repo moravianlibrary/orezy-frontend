@@ -1,17 +1,43 @@
-// Dashboard
+/* ------------------------------
+    DASHBOARD
+  ------------------------------ */
+export type DashboardPage = 'my-groups' | 'my-groups-titles' | 'groups' | 'users';
+export type PermissionType = 'read' | 'write' | 'manage';
+
 export interface Group {
   _id: string;
-  short_name: string;
-  full_name: string;
+  name: string;
   description: string;
-  title_ids: string[];
+  created_at: string;
+  modified_at: string;
+  title_count: number;
+  permission: PermissionType;
+}
+
+export interface GroupDetail {
+  _id: string;
+  name: string;
+  description: string;
+  created_at: string;
+  modified_at: string;
+  titles: Title[];
 }
 
 export interface Title {
   _id: string;
   created_at: string;
   modified_at: string;
-  state: string;
+  state: TitleState;
+}
+
+export interface TitleDetail {
+  _id: string;
+  crop_method: string;
+  created_at: string;
+  modified_at: string;
+  modified_by: string;
+  state: TitleState;
+  scans: ImageItem[];
 }
 
 export interface Permission {
@@ -29,7 +55,10 @@ export interface User {
 }
 
 
-// Editor
+
+/* ------------------------------
+    EDITOR
+  ------------------------------ */
 export interface Page {
   _id: string;
   xc: number;
@@ -67,7 +96,9 @@ export type PageNumberType = 'all' | 'single' | 'double';
 export type PageType = 'single' | 'left' | 'right';
 export type InputType = 'left' | 'top' | 'width' | 'height' | 'angle';
 export type Role = 'admin' | 'user';
-
+export type GridMode = 'always' | 'never' | 'when-rotating';
+export type DimColor = 'Černá' | 'Červená';
+export type TitleState = 'scheduled' | 'in_progress' | 'failed' | 'ready' | 'user_approved' | 'completed';
 
 // Cursors
 export type MousePos = { x: number, y: number };
@@ -83,10 +114,29 @@ export interface HitInfo {
   corner?: CornerName;
 }
 
+// Zoom
+export interface Viewport {
+  x: number;
+  y: number;
+  scale: number;
+}
+
+
+
+/* ------------------------------
+    UI
+  ------------------------------ */
+
+// Drawer
+export type DrawerContentType = 'groups' | 'users';
+export interface DrawerButton {
+  label: string;
+  primary?: boolean;
+  destructive?: boolean;
+  action?: () => void;
+}
 
 // Dialog
-export type GridMode = 'always' | 'never' | 'when-rotating';
-export type DimColor = 'Černá' | 'Červená';
 export type DialogContentType = 'settings' | 'shortcuts';
 export interface DialogButton {
   label: string;
@@ -95,7 +145,6 @@ export interface DialogButton {
   action?: () => void;
 }
 
-
 // Toast messages
 export type ToastType = 'info' | 'success' | 'error';
 export interface Toast {
@@ -103,12 +152,4 @@ export interface Toast {
   message: string;
   type?: ToastType;
   duration?: number;
-}
-
-
-// Zoom
-export interface Viewport {
-  x: number;
-  y: number;
-  scale: number;
 }

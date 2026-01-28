@@ -1,8 +1,8 @@
 <div class="left-part button-group">
   <span
     class="button secondary"
-    [class.disabled]="imagesService.currentIndex() === 0 || !imagesService.displayedImagesFinal().length"
-    (click)="imagesService.showPrevImage()"
+    [class.disabled]="edtSvc.currentIndex() === 0 || !edtSvc.displayedImagesFinal().length"
+    (click)="edtSvc.showPrevImage()"
   >
     <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
       <path fill-rule="evenodd" clip-rule="evenodd" d="M6.73347 3.59957C6.92873 3.79483 6.92873 4.11142 6.73347 4.30668L3.04036 7.99979L6.73347 11.6929C6.92873 11.8882 6.92873 12.2048 6.73347 12.4C6.53821 12.5953 6.22163 12.5953 6.02637 12.4L1.9797 8.35335C1.88593 8.25958 1.83325 8.1324 1.83325 7.99979C1.83325 7.86718 1.88593 7.74001 1.9797 7.64624L6.02637 3.59957C6.22163 3.40431 6.53821 3.40431 6.73347 3.59957Z" />
@@ -11,19 +11,19 @@
   </span>
   <span
     class="button secondary"
-    [class.disabled]="imagesService.currentIndex() === imagesService.displayedImagesFinal().length - 1 || !imagesService.displayedImagesFinal().length"
-    (click)="imagesService.showNextImage()"
+    [class.disabled]="edtSvc.currentIndex() === edtSvc.displayedImagesFinal().length - 1 || !edtSvc.displayedImagesFinal().length"
+    (click)="edtSvc.showNextImage()"
   >
     <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
       <path fill-rule="evenodd" clip-rule="evenodd" d="M9.26616 3.59957C9.46142 3.40431 9.778 3.40431 9.97326 3.59957L14.0199 7.64624C14.1137 7.74001 14.1664 7.86718 14.1664 7.99979C14.1664 8.1324 14.1137 8.25958 14.0199 8.35335L9.97326 12.4C9.778 12.5953 9.46142 12.5953 9.26616 12.4C9.0709 12.2048 9.0709 11.8882 9.26616 11.6929L12.9593 7.99979L9.26616 4.30668C9.0709 4.11142 9.0709 3.79483 9.26616 3.59957Z" />
       <path fill-rule="evenodd" clip-rule="evenodd" d="M1.83325 8C1.83325 7.72386 2.05711 7.5 2.33325 7.5H13.5533C13.8294 7.5 14.0533 7.72386 14.0533 8C14.0533 8.27614 13.8294 8.5 13.5533 8.5H2.33325C2.05711 8.5 1.83325 8.27614 1.83325 8Z" />
     </svg>
   </span>
-  @if (imagesService.selectedFilter === 'flagged') {
+  @if (edtSvc.selectedFilter === 'flagged') {
     <span
       class="button secondary mark-ok"
-      [class.disabled]="wasAnyPageEdited || imagesService.imgWasEdited || !imagesService.displayedImagesFinal().length"
-      (click)="imagesService.markImageOK()"
+      [class.disabled]="wasAnyPageEdited || edtSvc.imgWasEdited || !edtSvc.displayedImagesFinal().length"
+      (click)="edtSvc.markImageOK()"
       title="Přesune sken do OK. Použijte v případě, že by sken neměl být podezřelý. Sken je možné přesunout pouze bez jakýchkoliv uživatelských úprav."
     >
       Přesunout sken do OK
@@ -37,8 +37,8 @@
 <div class="middle-part button-group">
   <span
     class="button secondary"
-    [class.disabled]="imagesService.viewport.scale === imagesService.maxZoom"
-    (click)="imagesService.isShiftActive ? imagesService.zoomSnap('in') : imagesService.zoom('in')"
+    [class.disabled]="edtSvc.viewport.scale === edtSvc.maxZoom"
+    (click)="edtSvc.isShiftActive ? edtSvc.zoomSnap('in') : edtSvc.zoom('in')"
   >
     <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
       <path fill-rule="evenodd" clip-rule="evenodd" d="M5.63338 7.80017C5.63338 7.52403 5.85724 7.30017 6.13338 7.30017H9.46672C9.74286 7.30017 9.96672 7.52403 9.96672 7.80017C9.96672 8.07631 9.74286 8.30017 9.46672 8.30017H6.13338C5.85724 8.30017 5.63338 8.07631 5.63338 7.80017Z" />
@@ -49,8 +49,8 @@
   </span>
   <span
     class="button secondary"
-    [class.disabled]="imagesService.viewport.scale === 1"
-    (click)="imagesService.isShiftActive ? imagesService.zoomSnap('out') : imagesService.zoom('out')"
+    [class.disabled]="edtSvc.viewport.scale === 1"
+    (click)="edtSvc.isShiftActive ? edtSvc.zoomSnap('out') : edtSvc.zoom('out')"
   >
     <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
       <path fill-rule="evenodd" clip-rule="evenodd" d="M5.49992 7.80017C5.49992 7.52403 5.72378 7.30017 5.99992 7.30017H9.33325C9.6094 7.30017 9.83325 7.52403 9.83325 7.80017C9.83325 8.07631 9.6094 8.30017 9.33325 8.30017H5.99992C5.72378 8.30017 5.49992 8.07631 5.49992 7.80017Z" />
@@ -60,8 +60,8 @@
   </span>
   <span
     class="button secondary"
-    [class.disabled]="imagesService.viewport.scale === 1"
-    (click)="imagesService.resetZoom()"
+    [class.disabled]="edtSvc.viewport.scale === 1"
+    (click)="edtSvc.resetZoom()"
   >
     <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
       <path fill-rule="evenodd" clip-rule="evenodd" d="M1.5 14.6666C1.5 14.3904 1.72386 14.1666 2 14.1666H14C14.2761 14.1666 14.5 14.3904 14.5 14.6666C14.5 14.9427 14.2761 15.1666 14 15.1666H2C1.72386 15.1666 1.5 14.9427 1.5 14.6666Z" />

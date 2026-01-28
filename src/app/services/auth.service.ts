@@ -21,9 +21,7 @@ export class AuthService {
   userRole = signal<Role>('user');
 
   get baseUri(): string {
-    let baseUri = `${window.location.protocol}//${window.location.hostname}`;
-    if (window.location.port) baseUri += `:${window.location.port}`;
-    return baseUri;
+    return window.location.origin;
   }
   get apiUrl(): string { return this.envService.get('serverBaseUrl') };
   authHeaders(type: string = 'json', contentType: boolean = false): HttpHeaders {
@@ -73,7 +71,7 @@ export class AuthService {
   }
 
   private redirectToLogin(): void {
-    window.location.href = `${this.baseUri}/login`;
+    this.router.navigate(['/login']);
   }
 
   login(): void {
@@ -106,11 +104,11 @@ export class AuthService {
   }
 
   private redirectToStoredUri(): void {
-    window.location.href = `${this.baseUri}${localStorage.getItem('redirectUri') || '/'}`;
+    this.router.navigate([`${localStorage.getItem('redirectUri') || '/'}`]);
   }
 
   logout(): void {
     localStorage.removeItem('access_token');
-    window.location.href = `${this.baseUri}/login`;
+    this.router.navigate(['/login']);
   }
 }

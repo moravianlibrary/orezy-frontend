@@ -1,5 +1,5 @@
 import { Component, inject } from '@angular/core';
-import { AuthService } from '../../services/auth.service';
+import { Router } from '@angular/router';
 
 @Component({
   selector: 'app-not-found',
@@ -8,9 +8,9 @@ import { AuthService } from '../../services/auth.service';
   styleUrl: './not-found.component.scss'
 })
 export class NotFoundComponent {
-  private authSvc = inject(AuthService);
+  private router = inject(Router);
   
   goHome(): void {
-    window.location.href = this.authSvc.baseUri;
+    this.router.navigate(['/']);
   }
 }

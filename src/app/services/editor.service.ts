@@ -1,19 +1,21 @@
-import { HttpClient, HttpHeaders } from '@angular/common/http';
+import { HttpClient } from '@angular/common/http';
 import { computed, inject, Injectable, signal } from '@angular/core';
-import { DialogButton, DialogContentType, DimColor, GridMode, HitInfo, ImageItem, ImageRect, MousePos, Page, PageNumberType, ScanType, Toast, ToastType, Viewport } from '../app.types';
+import { DialogButton, DialogContentType, DimColor, GridMode, HitInfo, ImageItem, ImageRect, MousePos, Page, PageNumberType, ScanType, TitleDetail, Toast, ToastType, Viewport } from '../app.types';
 import { catchError, Observable, of } from 'rxjs';
-import { clamp, defer, degreeToRadian, getColor, scrollToSelectedImage } from '../utils/utils';
+import { clamp, defer, degreeToRadian, focusMainWrapper, getColor, scrollToSelectedImage } from '../utils/utils';
 import { EnvironmentService } from './environment.service';
 import { dimColorDict, gridColor, transparentColor } from '../app.config';
 import { AuthService } from './auth.service';
+import { Location } from '@angular/common';
 
 @Injectable({
   providedIn: 'root'
 })
-export class ImagesService {
+export class EditorService {
   private http = inject(HttpClient);
   private envService = inject(EnvironmentService);
   private authSvc = inject(AuthService);
+  private location = inject(Location);
   
   private get apiUrl(): string { return this.envService.get('serverBaseUrl') };
 
@@ -100,12 +102,6 @@ export class ImagesService {
   panPrevX: number = 0;
   panPrevY: number = 0;
 
-  // Settings
-  gridRadio = signal<GridMode>('when-rotating');
-  dimRadio = signal<DimColor>('Černá');
-  scanTypeRadio = signal<ScanType>('all');
-  pageNumberRadio = signal<PageNumberType>('all');
-
   // Other
   dimColor = signal<DimColor>('Černá');
   outlineTransparent: boolean = false;
@@ -127,8 +123,8 @@ export class ImagesService {
   /* ------------------------------
     API
   ------------------------------ */
-  fetchScans(id: string): Observable<ImageItem[]> {
-    return this.http.get<ImageItem[]>(`${this.apiUrl}/${id}/scans`, { headers: this.authSvc.authHeaders('json', true) });
+  fetchScans(id: string): Observable<TitleDetail> {
+    return this.http.get<TitleDetail>(`${this.apiUrl}/${id}/scans`, { headers: this.authSvc.authHeaders('json', true) });
   }
 
   fetchThumbnail(id: string): Observable<Blob> {
@@ -231,6 +227,10 @@ export class ImagesService {
   /* ------------------------------
     LEFT PANEL
   ------------------------------ */
+  backToMyGroupTitles(): void {
+    this.location.back();
+  }
+  
   setDisplayedImages(): void {
     switch (this.selectedFilter) {
       case 'all':
@@ -1160,14 +1160,15 @@ export class ImagesService {
   dialogDescription = signal<string | null>(null);
   dialogButtons = signal<DialogButton[]>([]);
 
-  focusMainWrapper(): void {
-    defer(() => (document.querySelector('.main-wrapper') as HTMLElement).focus());
-  }
+  gridRadio = signal<GridMode>('when-rotating');
+  dimRadio = signal<DimColor>('Černá');
+  scanTypeRadio = signal<ScanType>('all');
+  pageNumberRadio = signal<PageNumberType>('all');
   
   openDialog(): void {
     this.dialogOpen.set(true);
     this.dialogOpened = true;
-    if (document.activeElement?.className !== 'main-wrapper') this.focusMainWrapper();
+    if (document.activeElement?.className !== 'main-wrapper') focusMainWrapper();
   }
 
   closeDialog(): void {
@@ -1312,7 +1313,7 @@ export class ImagesService {
 
   dismissToast(id: string) {
     this.toasts.update((prev) => prev.filter((t) => t.id !== id));
-    this.focusMainWrapper();
+    focusMainWrapper();
   }
 
   clearAllToasts() {

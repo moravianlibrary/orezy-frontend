@@ -28,6 +28,10 @@ export function defer(fn: () => void, delay: number = 0) {
   return setTimeout(fn, delay);
 }
 
+export function focusMainWrapper(): void {
+  defer(() => (document.querySelector('.main-wrapper') as HTMLElement).focus());
+}
+
 export function scrollToSelectedImage(timeout: number = 100): void {
   defer(() => {
     const element = document.querySelector('.thumbnail-wrapper.selected');
