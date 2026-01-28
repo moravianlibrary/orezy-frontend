@@ -5,6 +5,7 @@ import { LoaderComponent } from '../../components/loader/loader.component';
 import { NgClass } from '../../../../node_modules/@angular/common';
 import { MenuComponent } from "../../components/menu/menu.component";
 import { flagMessages } from '../../app.config';
+import { Subscription } from 'rxjs';
 
 @Component({
   selector: 'app-left-panel-editor',
@@ -23,9 +24,10 @@ export class LeftPanelComponent {
   /* ------------------------------
     LAZY IMAGES LOADING
   ------------------------------ */
-  @ViewChildren('lazyImg') images!: QueryList<ElementRef>;
+  @ViewChildren('lazyImg') images!: QueryList<ElementRef<HTMLImageElement>>;
 
-  observer = new IntersectionObserver(entries => {
+  private imagesSub?: Subscription;
+  private observer = new IntersectionObserver(entries => {
     entries.forEach(entry => {
       if (!entry.isIntersecting) return;
 
@@ -61,10 +63,12 @@ export class LeftPanelComponent {
   });
 
   ngAfterViewInit(): void {
-    this.images.changes.subscribe(() => this.observeNewImages());
+    this.observeNewImages();
+    this.imagesSub = this.images.changes.subscribe(() => this.observeNewImages());
   }
-  
+
   ngOnDestroy(): void {
+    this.imagesSub?.unsubscribe();
     this.observer.disconnect();
   }
 
