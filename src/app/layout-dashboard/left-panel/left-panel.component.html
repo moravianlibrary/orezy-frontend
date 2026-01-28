@@ -3,7 +3,7 @@
   <!-- <app-menu [type]="'menu-primary'" /> -->
 </div>
 
-@let isManager = dashSvc.groups().length;
+@let isManager = authSvc.isManager();
 <div class="user-info">
   @let user = authSvc.user();
   <div class="user-name">{{ user?.full_name }}</div>

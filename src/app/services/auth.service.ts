@@ -18,6 +18,7 @@ export class AuthService {
   error = signal<string>('');
 
   user = signal<User | null>(null);
+  isManager = signal<Boolean>(false);
 
   get baseUri(): string {
     return window.location.origin;
@@ -58,6 +59,7 @@ export class AuthService {
       ).subscribe((res: User) => {
         const user = res;
         this.user.set(user);
+        this.isManager.set(!!user.permissions.filter(p => p.permission === 'manage').length);
       });
     }
 
