@@ -1,8 +1,9 @@
-import { Component, inject } from '@angular/core';
+import { Component, inject, signal } from '@angular/core';
 import { DashboardService } from '../../services/dashboard.service';
 import { FormsModule } from '@angular/forms';
 import { AuthService } from '../../services/auth.service';
 import { permissionDict, titleStateDict } from '../../app.config';
+import { Group, UserInGroup } from '../../app.types';
 
 @Component({
   selector: 'app-main-groups',
@@ -14,19 +15,21 @@ export class MainComponent {
   dashSvc = inject(DashboardService);
   authSvc = inject(AuthService);
 
+  maxUsers: number = 3;
+
 
   /* ------------------------------
     MY GROUPS
   ------------------------------ */
   permissionDict = permissionDict;
   
-  get totalGroupsLabel(): string {
-    const length = this.dashSvc.displayedGroups().length;
+  get totalMyGroupsLabel(): string {
+    const length = this.dashSvc.displayedMyGroups().length;
     return `Celkem ${length} skupin${length === 1 ? 'a' : [2, 3, 4].includes(length) ? 'y' : '' }`;
   }
 
-  filterGroups(): void {
-    this.dashSvc.displayedGroups.set(this.dashSvc.groups().filter(g => g.name.toLowerCase().includes(this.dashSvc.searchGroups())));
+  filterMyGroups(): void {
+    this.dashSvc.displayedMyGroups.set(this.dashSvc.myGroups().filter(g => g.name.toLowerCase().includes(this.dashSvc.searchMyGroups())));
   }
 
 
@@ -61,5 +64,26 @@ export class MainComponent {
       })
       .replace(/\. /g, '.')
       .split(' ');
+  }
+
+
+  /* ------------------------------
+    GROUPS
+  ------------------------------ */
+  get totalGroupsLabel(): string {
+    const length = this.dashSvc.displayedGroups().length;
+    return `Celkem ${length} skupin${length === 1 ? 'a' : [2, 3, 4].includes(length) ? 'y' : '' }`;
+  }
+
+  filterGroups(): void {
+    this.dashSvc.displayedGroups.set(this.dashSvc.groups().filter(g => g.name.toLowerCase().includes(this.dashSvc.searchGroups())));
+  }
+
+  getUsersShort(group: Group): UserInGroup[] {
+    return group.users?.slice(0,this.maxUsers) ?? [];
+  }
+
+  getUsersLong(group: Group): UserInGroup[] {
+    return group.users ?? [];
   }
 }

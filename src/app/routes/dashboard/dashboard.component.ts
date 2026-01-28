@@ -39,8 +39,8 @@ export class DashboardComponent {
               return this.dashSvc.fetchGroups().pipe(
                 tap((res: Group[]) => {
                   this.dashSvc.dashboardPage.set('my-groups');
-                  this.dashSvc.groups.set(res);
-                  this.dashSvc.displayedGroups.set(res);
+                  this.dashSvc.myGroups.set(res);
+                  this.dashSvc.displayedMyGroups.set(res);
                 }),
                 catchError(err => {
                   console.error('Fetching groups failed:', err);
@@ -53,7 +53,7 @@ export class DashboardComponent {
               return this.dashSvc.fetchTitles(group_id).pipe(
                 tap((res: GroupDetail) => {
                   this.dashSvc.dashboardPage.set('my-groups-titles');
-                  this.dashSvc.selectedGroup.set(res);
+                  this.dashSvc.selectedMyGroup.set(res);
                   this.dashSvc.titles.set(res.titles);
                   this.dashSvc.displayedTitles.set(res.titles);
                 }),
@@ -64,8 +64,18 @@ export class DashboardComponent {
               );
 
             // Groups
-            // case 'groups':
-              // some fetching
+            case 'groups':
+              return this.dashSvc.fetchGroups().pipe(
+                tap((res: Group[]) => {
+                  this.dashSvc.dashboardPage.set('groups');
+                  this.dashSvc.myGroups.set(res);
+                  this.dashSvc.displayedGroups.set(this.dashSvc.groups());
+                }),
+                catchError(err => {
+                  console.error('Fetching groups failed:', err);
+                  throw err;
+                })
+              );
 
             // Users
             // case 'users':

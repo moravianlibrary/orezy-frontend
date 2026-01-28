@@ -92,7 +92,7 @@
 
     .table-body-scroll {
       overflow-y: auto;
-      overflow-x: hidden;
+      overflow-x: auto;
     }
 
     table {
@@ -167,6 +167,14 @@
               .tag-label {
                 @include font(500, var(--font-size-x1-5), var(--spacing-x4), var(--text-base));
               }
+
+              svg {
+                background-color: transparent;
+              }
+            }
+
+            .common {
+              border: 1px solid var(--border-color);
             }
 
             .info {
@@ -204,6 +212,11 @@
               @include font(400, var(--font-size-x1-5), var(--spacing-x5), var(--text-light));
             }
           }
+
+          .users {
+            display: flex;
+            gap: var(--spacing-x2);
+          }
         }
 
         .clickable:hover {
@@ -220,7 +233,6 @@
 
       tr {
         th, td {
-          width: 25%;
           overflow-x: hidden;
           text-overflow: ellipsis;
           white-space: nowrap;

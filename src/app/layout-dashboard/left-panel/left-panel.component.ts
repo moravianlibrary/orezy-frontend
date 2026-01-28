@@ -3,6 +3,7 @@ import { MenuComponent } from "../../components/menu/menu.component";
 import { AuthService } from '../../services/auth.service';
 import { userRolesDict } from '../../app.config';
 import { DashboardService } from '../../services/dashboard.service';
+import { Router } from '@angular/router';
 
 @Component({
   selector: 'app-left-panel-groups',
@@ -13,6 +14,7 @@ import { DashboardService } from '../../services/dashboard.service';
 export class LeftPanelComponent {
   authSvc = inject(AuthService);
   dashSvc = inject(DashboardService);
+  router = inject(Router);
 
   userRolesDict = userRolesDict;
 }

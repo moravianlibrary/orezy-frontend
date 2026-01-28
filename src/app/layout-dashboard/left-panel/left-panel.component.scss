@@ -46,6 +46,7 @@
   .items {
     display: flex;
     flex-direction: column;
+    gap: var(--spacing-x1);
   }
 
   .logout {

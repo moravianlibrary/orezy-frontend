@@ -12,6 +12,7 @@ export interface Group {
   modified_at: string;
   title_count: number;
   permission: PermissionType;
+  users?: UserInGroup[];
 }
 
 export interface GroupDetail {
@@ -52,6 +53,14 @@ export interface User {
   full_name: string;
   role: Role;
   permissions: Permission[];
+}
+
+export interface UserInGroup {
+  _id: string;
+  // email: string;
+  full_name: string;
+  // role: Role;
+  permission: PermissionType;
 }
 
 

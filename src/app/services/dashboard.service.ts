@@ -1,5 +1,5 @@
 import { HttpClient } from '@angular/common/http';
-import { inject, Injectable, signal } from '@angular/core';
+import { computed, inject, Injectable, signal } from '@angular/core';
 import { Observable } from 'rxjs';
 import { AuthService } from './auth.service';
 import { DashboardPage, DrawerButton, DrawerContentType, Group, GroupDetail, Title } from '../app.types';
@@ -18,13 +18,18 @@ export class DashboardService {
   dashboardPage = signal<DashboardPage>('my-groups');
 
   // My groups
-  groups = signal<Group[]>([]);
-  displayedGroups = signal<Group[]>([]);
-  searchGroups = signal<string>('');
-  selectedGroup = signal<GroupDetail | null>(null);
+  myGroups = signal<Group[]>([]);
+  displayedMyGroups = signal<Group[]>([]);
+  searchMyGroups = signal<string>('');
+  selectedMyGroup = signal<GroupDetail | null>(null);
   titles = signal<Title[]>([]);
   displayedTitles = signal<Title[]>([]);
   searchTitles = signal<string>('');
+
+  // Groups
+  groups = computed(() => this.myGroups().filter(g => g.permission === 'manage'));
+  displayedGroups = signal<Group[]>([]);
+  searchGroups = signal<string>('');
 
 
   /* ------------------------------
@@ -42,6 +47,11 @@ export class DashboardService {
   /* ------------------------------
     DASHBOARD PAGES
   ------------------------------ */
+  navigateToMyGroups(): void {
+    this.dashboardPage.set('my-groups');
+    this.router.navigate(['/']);
+  }
+  
   openMyGroupsTitles(group: Group): void {
     this.dashboardPage.set('my-groups-titles');
     this.router.navigate(['/group', group._id]);
@@ -54,6 +64,11 @@ export class DashboardService {
 
   openTitle(bookId: string): void {
     this.router.navigate(['/book', bookId]);
+  }
+
+  navigateToGroups(): void {
+    this.dashboardPage.set('groups');
+    this.router.navigate(['/groups']);
   }
 
 
@@ -73,5 +88,10 @@ export class DashboardService {
 
   closeDrawer(): void {
     this.drawerOpen.set(false);
+  }
+
+  openGroupDetail(group: Group): void {
+
+    this.openDrawer;
   }
 }

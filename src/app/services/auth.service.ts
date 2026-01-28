@@ -3,7 +3,7 @@ import { inject, Injectable, signal } from '@angular/core';
 import { EnvironmentService } from './environment.service';
 import { ActivatedRouteSnapshot, Router, RouterStateSnapshot } from '@angular/router';
 import { catchError, of } from 'rxjs';
-import { Role, User } from '../app.types';
+import { User } from '../app.types';
 
 @Injectable({
   providedIn: 'root'
@@ -11,19 +11,18 @@ import { Role, User } from '../app.types';
 export class AuthService {
   private http = inject(HttpClient);
   private router = inject(Router);
-  private envService = inject(EnvironmentService);
+  private envSvc = inject(EnvironmentService);
 
   username = signal<string>('');
   password = signal<string>('');
   error = signal<string>('');
 
-  userFullName = signal<string>('');
-  userRole = signal<Role>('user');
+  user = signal<User | null>(null);
 
   get baseUri(): string {
     return window.location.origin;
   }
-  get apiUrl(): string { return this.envService.get('serverBaseUrl') };
+  get apiUrl(): string { return this.envSvc.get('serverBaseUrl') };
   authHeaders(type: string = 'json', contentType: boolean = false): HttpHeaders {
     const authType = 'Bearer';
 
@@ -57,8 +56,8 @@ export class AuthService {
           throw err;
         })
       ).subscribe((res: User) => {
-        this.userFullName.set(res.full_name ?? 'Neznámé jméno');
-        this.userRole.set(res.role ?? 'user');
+        const user = res;
+        this.user.set(user);
       });
     }
 
