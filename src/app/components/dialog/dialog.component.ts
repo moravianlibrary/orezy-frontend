@@ -2,14 +2,17 @@ import { Component, inject, output } from '@angular/core';
 import { DimColor, GridMode, PageNumberType, ScanType } from '../../app.types';
 import { EditorService } from '../../services/editor.service';
 import { dimColorDict, filterPageNumberStartDict, filterScanTypeStartDict, gridModeDict } from '../../app.config';
+import { FormsModule } from '@angular/forms';
+import { DashboardService } from '../../services/dashboard.service';
 
 @Component({
   selector: 'app-dialog',
-  imports: [],
+  imports: [FormsModule],
   templateUrl: './dialog.component.html',
   styleUrl: './dialog.component.scss'
 })
 export class DialogComponent {
+  dashSvc = inject(DashboardService);
   edtSvc = inject(EditorService);
   
   closed = output<void>();

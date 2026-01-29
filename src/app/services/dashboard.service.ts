@@ -1,10 +1,11 @@
 import { HttpClient } from '@angular/common/http';
 import { computed, inject, Injectable, signal } from '@angular/core';
-import { Observable } from 'rxjs';
+import { catchError, Observable, switchMap, tap } from 'rxjs';
 import { AuthService } from './auth.service';
 import { DashboardPage, DrawerButton, DrawerContentType, Group, GroupDetail, Title } from '../app.types';
 import { Router } from '@angular/router';
 import { Location } from '@angular/common';
+import { EditorService } from './editor.service';
 
 @Injectable({
   providedIn: 'root'
@@ -12,6 +13,7 @@ import { Location } from '@angular/common';
 export class DashboardService {
   private http = inject(HttpClient);
   private authSvc = inject(AuthService);
+  private edtSvc = inject(EditorService);
   private router = inject(Router);
   private location = inject(Location)
 
@@ -31,7 +33,9 @@ export class DashboardService {
   displayedGroups = signal<Group[]>([]);
   searchGroups = signal<string>('');
   selectedGroup = signal<Group | null>(null);
-  groupName = signal<string>('');
+  selectedGroupId = signal<string>('');
+  newGroupName = signal<string>('');
+  newGroupDescription = signal<string>('');
 
 
   /* ------------------------------
@@ -43,6 +47,18 @@ export class DashboardService {
 
   fetchTitles(group_id: string): Observable<GroupDetail> {
     return this.http.get<GroupDetail>(`${this.authSvc.apiUrl}/groups/${group_id}`, { headers: this.authSvc.authHeaders() });
+  }
+
+  createGroup(): Observable<{ id: string }> {
+    const payload = {
+      name: this.newGroupName(),
+      description: this.newGroupDescription()
+    };
+    return this.http.post<{ id: string }>(`${this.authSvc.apiUrl}/groups`, payload, { headers: this.authSvc.authHeaders('json', true) });
+  }
+
+  deleteGroup(group_id: string): Observable<void> {
+    return this.http.delete<void>(`${this.authSvc.apiUrl}/groups/${group_id}`, { headers: this.authSvc.authHeaders() });
   }
 
 
@@ -97,17 +113,10 @@ export class DashboardService {
     if (this.dashboardPage() === 'groups') this.selectedGroup.set(null);
   }
 
-  addGroup(): void {
-    console.log('add group');
-  }
-
-  deleteGroup(): void {
-    console.log('delete group');
-  }
-
-  openGroupDetail(group: Group): void {
+  openGroupDetail(group: Group | null): void {
+    if (!group) return;
+    
     this.selectedGroup.set(group);
-    this.groupName.set(group.name);
     this.drawerTitle.set(group.name);
     this.drawerContent.set(true);
     this.drawerContentType.set('groups');
@@ -126,6 +135,66 @@ export class DashboardService {
     ])
 
     this.openDrawer();
+  }
+
+  createGroupDialog(): void {
+    const edtSvc = this.edtSvc;
+    
+    edtSvc.dialogTitle.set('Nová skupina');
+    edtSvc.dialogContent.set(true);
+    edtSvc.dialogContentType.set('new-group');
+    edtSvc.dialogButtons.set([
+      { label: 'Zrušit' },
+      {
+        label: 'Vytvořit',
+        primary: true,
+        action: () => this.createGroup().pipe(
+          tap((res: { id: string }) => this.selectedGroupId.set(res.id)),
+          switchMap(() => this.fetchGroups()),
+          tap((res: Group[]) => {
+            this.myGroups.set(res);
+            this.displayedGroups.set(res);
+            this.selectedGroup.set(this.displayedGroups().find(g => g._id === this.selectedGroupId()) ?? null);
+          }),
+          catchError(err => {
+            console.error(err);
+            throw err;
+          })
+        ).subscribe(() => this.openGroupDetail(this.selectedGroup()))
+      }
+    ])
+
+    this.closeDrawer();
+    edtSvc.openDialog();
+  }
+
+  deleteGroupDialog(group: Group | null): void {
+    const edtSvc = this.edtSvc;
+    
+    edtSvc.dialogTitle.set('Smazat skupinu');
+    edtSvc.dialogDescription.set(`Opravdu chcete smazat skupinu${' ' + group?.name}?`);
+    edtSvc.dialogButtons.set([
+      { label: 'Zrušit' },
+      {
+        label: 'Smazat skupinu',
+        primary: true,
+        destructive: true,
+        action: () => this.deleteGroup(group?._id ?? '').pipe(
+          switchMap(() => this.fetchGroups()),
+          tap((res: Group[]) => {
+            this.myGroups.set(res);
+            this.displayedGroups.set(res);
+            this.selectedGroup.set(null);
+          }),
+          catchError(err => {
+            console.error(err);
+            throw err;
+          })
+        ).subscribe(() => this.closeDrawer())
+      }
+    ])
+
+    edtSvc.openDialog();
   }
 
   copy(text: string) {

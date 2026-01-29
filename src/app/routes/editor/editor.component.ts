@@ -46,7 +46,7 @@ export class EditorComponent {
         catchError(err => {
           console.error('Fetch error:', err);
           this.router.navigate(['/not-found']);
-          return of();
+          throw err;
         })
       )
       .subscribe((title: TitleDetail) => {

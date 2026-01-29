@@ -126,6 +126,35 @@
           </table>
         </div>
       }
+
+      <!-- New group -->
+      @if (edtSvc.dialogContentType() === 'new-group') {
+        <div class="new-group-content-wrapper">
+          <div class="block">
+            <label for="new-group-name">
+              NÁZEV
+              <input
+                id="new-group-name"
+                name="new-group-name"
+                type="text"
+                [(ngModel)]="dashSvc.newGroupName"
+              />
+            </label>
+          </div>
+
+          <div class="block">
+            <label for="new-group-description">
+              POPIS
+              <input
+                id="new-group-description"
+                name="new-group-description"
+                type="text"
+                [(ngModel)]="dashSvc.newGroupDescription"
+              />
+            </label>
+          </div>
+        </div>
+      }
     </section>
   } @else if (edtSvc.dialogDescription()) {
     <p class="dialog-description single">{{ edtSvc.dialogDescription() }}</p>

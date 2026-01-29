@@ -147,7 +147,7 @@ export interface DrawerButton {
 }
 
 // Dialog
-export type DialogContentType = 'settings' | 'shortcuts';
+export type DialogContentType = 'settings' | 'shortcuts' | 'new-group' | 'delete-group';
 export interface DialogButton {
   label: string;
   primary?: boolean;

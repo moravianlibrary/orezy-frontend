@@ -7,16 +7,19 @@ import { catchError, map, of, Subscription, switchMap, tap } from 'rxjs';
 import { ActivatedRoute, Router } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
 import { Group, GroupDetail } from '../../app.types';
+import { EditorService } from '../../services/editor.service';
+import { DialogComponent } from '../../components/dialog/dialog.component';
 
 @Component({
   selector: 'app-dashboard',
-  imports: [LeftPanelComponent, MainComponent, DrawerComponent],
+  imports: [LeftPanelComponent, MainComponent, DrawerComponent, DialogComponent],
   templateUrl: './dashboard.component.html',
   styleUrl: './dashboard.component.scss'
 })
 export class DashboardComponent {
   dashSvc = inject(DashboardService);
   authSvc = inject(AuthService);
+  edtSvc = inject(EditorService);
   private router = inject(Router);
   private activatedRoute = inject(ActivatedRoute);
   private paramsOnGroupId = new Subscription();

@@ -45,6 +45,7 @@
   padding: var(--spacing-x4);
   border-top: 1px solid var(--border-color);
   border-bottom: 1px solid var(--border-color);
+  min-height: 360px;
   max-height: 100%;
   overflow-y: auto;
 }
@@ -65,7 +66,7 @@
 .dialog-footer {
   display: flex;
   justify-content: center;
-  gap: var(--spacing-x4);
+  gap: var(--spacing-x3);
 }
 
 
@@ -217,28 +218,78 @@
 /* ------------------------------
   SHORTCUTS DIALOG
 ------------------------------ */
-table {
-  width: 100%;
-  border: none;
+.shortcuts-content-wrapper {
+  table {
+    width: 100%;
+    border: none;
+  }
+
+  tr {
+    height: 40px;
+    width: 100%;
+    padding: var(--spacing-x2);
+  }
+
+  tr:nth-child(odd) {
+    background-color: var(--bg-main-light);
+  }
+
+  th {
+    text-align: left;
+    padding-left: var(--spacing-x2);
+    @include font(450, var(--font-size-x2), var(--spacing-x6), var(--text-base));
+  }
+
+  td {
+    padding-right: var(--spacing-x2);
+    @include font(400, var(--font-size-x2), var(--spacing-x6), var(--text-light));
+  }
 }
 
-tr {
-  height: 40px;
-  width: 100%;
-  padding: var(--spacing-x2);
-}
 
-tr:nth-child(odd) {
-  background-color: var(--bg-main-light);
-}
+/* ------------------------------
+  NEW GROUP DIALOG
+------------------------------ */
+.new-group-content-wrapper {
+  .block {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-x1);
+    padding-block: var(--spacing-x2);
 
-th {
-  text-align: left;
-  padding-left: var(--spacing-x2);
-  @include font(450, var(--font-size-x2), var(--spacing-x6), var(--text-base));
-}
+    label, .label {
+      display: flex;
+      align-items: center;
+      gap: var(--spacing-x2);
+      @include font(400, var(--font-size-x1), var(--spacing-x5), var(--text-light));
 
-td {
-  padding-right: var(--spacing-x2);
-  @include font(400, var(--font-size-x2), var(--spacing-x6), var(--text-light));
+      svg {
+        fill: var(--primary);
+
+        &:hover { cursor: pointer }
+      }
+    }
+
+    label {
+      flex-direction: column;
+      align-items: flex-start;
+
+      input {
+        background-color: var(--bg-base);
+        padding: var(--spacing-x3) var(--spacing-x4);
+        width: 100%;
+        border: 1px solid var(--border-tertiary-color);
+        border-radius: var(--spacing-x1);
+
+        &:focus {
+          border-color: var(--primary);
+          outline: none;
+        }
+      }
+    }
+  }
+
+  & > :first-child {
+    padding-top: 0;
+  }
 }

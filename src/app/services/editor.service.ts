@@ -204,7 +204,7 @@ export class EditorService {
     this.reset(this.book()).pipe(
       catchError(err => {
         console.error('Fetch error:', err);
-        return of();
+        throw err;
       })
     ).subscribe((res: TitleDetail) => {
       const images: ImageItem[] = res.scans;
@@ -1174,7 +1174,7 @@ export class EditorService {
   openDialog(): void {
     this.dialogOpen.set(true);
     this.dialogOpened = true;
-    if (document.activeElement?.className !== 'main-wrapper') focusMainWrapper();
+    if (document.activeElement?.className !== 'main-wrapper' && document.querySelector('.main-wrapper')) focusMainWrapper();
   }
 
   closeDialog(): void {
