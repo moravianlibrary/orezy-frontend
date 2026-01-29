@@ -1,9 +1,10 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { DashboardService } from '../../services/dashboard.service';
 import { FormsModule } from '@angular/forms';
 import { AuthService } from '../../services/auth.service';
 import { permissionDict, titleStateDict } from '../../app.config';
 import { Group, UserInGroup } from '../../app.types';
+import { getDate } from '../../utils/utils';
 
 @Component({
   selector: 'app-main-groups',
@@ -14,6 +15,8 @@ import { Group, UserInGroup } from '../../app.types';
 export class MainComponent {
   dashSvc = inject(DashboardService);
   authSvc = inject(AuthService);
+
+  getDate = getDate;
 
   maxUsers: number = 3;
 
@@ -49,21 +52,6 @@ export class MainComponent {
 
   shouldHaveLink(state: string): boolean {
     return ['ready', 'user_approved', 'completed'].includes(state);
-  }
-
-  getDate(input: string): string[] {
-    const date = new Date(input);
-    return date
-      .toLocaleString('cs-CZ', {
-        year: 'numeric',
-        month: '2-digit',
-        day: '2-digit',
-        hour: '2-digit',
-        minute: '2-digit',
-        second: '2-digit',
-      })
-      .replace(/\. /g, '.')
-      .split(' ');
   }
 
 

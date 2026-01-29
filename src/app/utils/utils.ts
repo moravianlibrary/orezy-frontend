@@ -22,6 +22,25 @@ export function clamp(value: number, min: number = 0, max: number = 1): number {
 
 
 /* ------------------------------
+  FORMATTING
+------------------------------ */
+export function getDate(input: string): string[] {
+  const date = new Date(input);
+  return date
+    .toLocaleString('cs-CZ', {
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit',
+    })
+    .replace(/\. /g, '.')
+    .split(' ');
+}
+
+
+/* ------------------------------
   UI
 ------------------------------ */
 export function defer(fn: () => void, delay: number = 0) {
@@ -38,6 +57,7 @@ export function scrollToSelectedImage(timeout: number = 100): void {
     if (element) (element as HTMLElement).scrollIntoView({ behavior: 'smooth', block: 'nearest' });
   }, timeout);
 }
+
 
 /* ------------------------------
     PAGES

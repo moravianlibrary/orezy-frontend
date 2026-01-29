@@ -46,7 +46,113 @@
   border-top: 1px solid var(--border-color);
   display: flex;
   flex-direction: column;
-  min-height: 0;
+
+  .manager-group-content-wrapper {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-x2);
+    padding: var(--spacing-x3) var(--spacing-x4);
+
+    .many-blocks {
+      display: flex;
+      gap: 40px;
+    }
+
+    .block {
+      display: flex;
+      flex-direction: column;
+      gap: var(--spacing-x1);
+      padding-block: var(--spacing-x2);
+
+      .label {
+        display: flex;
+        align-items: center;
+        gap: var(--spacing-x2);
+        @include font(400, var(--font-size-x1), var(--spacing-x5), var(--text-light));
+
+        svg {
+          fill: var(--primary);
+
+          &:hover { cursor: pointer }
+        }
+      }
+
+      .value {
+        @include font(400, var(--font-size-x2), var(--spacing-x6), var(--text-base));
+
+        .date {
+          @include font(400, var(--font-size-x2), var(--spacing-x6), var(--text-base));
+        }
+
+        .time {
+          @include font(400, var(--font-size-x2), var(--spacing-x6), var(--text-light));
+        }
+      }
+
+      .user {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding-block: var(--spacing-x2);
+        
+        &:not(:last-child) {
+          border-bottom: 1px solid var(--border-color);
+        }
+
+        .user-fullname {
+          @include font(500, var(--font-size-x1-5), var(--spacing-x4), var(--text-base));
+        }
+
+        .tag {
+          display: flex;
+          gap: var(--spacing-x2);
+          width: fit-content;
+          @include font(500, var(--font-size-x1-5), var(--spacing-x4), var(--text-base));
+          border-radius: var(--spacing-x1);
+          padding: var(--spacing-x1) var(--spacing-x2);
+
+          .tag-label {
+            @include font(500, var(--font-size-x1-5), var(--spacing-x4), var(--text-base));
+          }
+
+          svg {
+            background-color: transparent;
+          }
+        }
+
+        .common {
+          border: 1px solid var(--border-color);
+        }
+
+        .info {
+          color: #08203C;
+          background-color: #007BFF1A;
+          .tag-label { color: inherit; }
+        }
+
+        .success {
+          fill: #3F764D;
+          color: #00310D;
+          background-color: #34C7591A;
+          .tag-label { color: inherit; }
+        }
+        
+        .pending {
+          fill: #775A32;
+          color: #362000;
+          background-color: #FF95001A;
+          .tag-label { color: inherit; }
+        }
+
+        .error {
+          fill: #853D38;
+          color: #390400;
+          background-color: #FF3A301A;
+          .tag-label { color: inherit; }
+        }
+      }
+    }
+  }
 }
 
 .drawer-close {

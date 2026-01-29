@@ -50,6 +50,12 @@
     width: 100%;
     height: min-content;
 
+    .left-part {
+      display: flex;
+      align-items: center;
+      gap: var(--spacing-x2);
+    }
+
     label {
       position: relative;
 
@@ -143,14 +149,18 @@
             }
           }
 
-          // &.active {
-          //   border-radius: var(--spacing-x1);
-          //   box-shadow: 0 0 0 1px var(--primary);
+          &.active {
+            outline: 1px solid var(--primary);
+            outline-offset: -1px;
+
+            &:last-child {
+              border-radius: 0 0 var(--spacing-x1) var(--spacing-x1);
+            }
             
-          //   td:first-child, td:nth-child(2) {
-          //     font-weight: 500;
-          //   }
-          // }
+            &:first-child, &:nth-child(2) {
+              font-weight: 500;
+            }
+          }
 
           td {
             @include font(400, var(--font-size-x1-5), var(--spacing-x5), var(--text-base));

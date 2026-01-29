@@ -1,5 +1,7 @@
 import { Component, inject } from '@angular/core';
 import { DashboardService } from '../../services/dashboard.service';
+import { getDate } from '../../utils/utils';
+import { permissionDict } from '../../app.config';
 
 @Component({
   selector: 'app-drawer',
@@ -10,4 +12,7 @@ import { DashboardService } from '../../services/dashboard.service';
 })
 export class DrawerComponent {
   dashSvc = inject(DashboardService);
+
+  getDate = getDate;
+  permissionDict = permissionDict;
 }

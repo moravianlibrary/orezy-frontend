@@ -1,4 +1,4 @@
-import { HttpClient, HttpHeaders } from '@angular/common/http';
+import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
 import { inject, Injectable, signal } from '@angular/core';
 import { EnvironmentService } from './environment.service';
 import { ActivatedRouteSnapshot, Router, RouterStateSnapshot } from '@angular/router';
@@ -93,15 +93,22 @@ export class AuthService {
 
       localStorage.setItem('access_token', res.access_token);
 
-      this.redirectToStoredUri();
+      window.location.href = `${this.baseUri}`;
+      // this.redirectToStoredUri();
     })
   }
 
-  private getToken(): any {
+  private getToken() {
     const url = `${this.apiUrl}/users/login`;
-    const payload = `grant_type=password&username=${this.username()}&password=${this.password()}&scope=&client_id=null&client_secret=null`;
+    const body = new HttpParams()
+      .set('grant_type', 'password')
+      .set('username', this.username())
+      .set('password', this.password())
+      .set('scope', '')
+      .set('client_id', '')
+      .set('client_secret', '');
 
-    return this.http.post(url, payload, { headers: this.loginHeaders });
+    return this.http.post(url, body.toString(), { headers: this.loginHeaders });
   }
 
   private redirectToStoredUri(): void {
@@ -110,6 +117,7 @@ export class AuthService {
 
   logout(): void {
     localStorage.removeItem('access_token');
-    this.router.navigate(['/login']);
+    window.location.href = `${this.baseUri}/login`;
+    // this.router.navigate(['/login']);
   }
 }

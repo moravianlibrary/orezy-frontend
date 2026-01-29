@@ -7,6 +7,7 @@ export type PermissionType = 'read' | 'write' | 'manage';
 export interface Group {
   _id: string;
   name: string;
+  api?: string;
   description: string;
   created_at: string;
   modified_at: string;
@@ -137,7 +138,7 @@ export interface Viewport {
   ------------------------------ */
 
 // Drawer
-export type DrawerContentType = 'groups' | 'users';
+export type DrawerContentType = 'manager-groups' | 'admin-groups' | 'users';
 export interface DrawerButton {
   label: string;
   primary?: boolean;

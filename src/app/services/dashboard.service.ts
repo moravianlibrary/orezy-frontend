@@ -30,6 +30,7 @@ export class DashboardService {
   groups = computed(() => this.myGroups().filter(g => g.permission === 'manage'));
   displayedGroups = signal<Group[]>([]);
   searchGroups = signal<string>('');
+  selectedGroup = signal<Group | null>(null);
 
 
   /* ------------------------------
@@ -48,6 +49,7 @@ export class DashboardService {
     DASHBOARD PAGES
   ------------------------------ */
   navigateToMyGroups(): void {
+    this.closeDrawer();
     this.dashboardPage.set('my-groups');
     this.router.navigate(['/']);
   }
@@ -63,10 +65,12 @@ export class DashboardService {
   }
 
   openTitle(bookId: string): void {
-    this.router.navigate(['/book', bookId]);
+    window.location.href = `${this.authSvc.baseUri}/book/${bookId}`;
+    // this.router.navigate(['/book', bookId]);
   }
 
   navigateToGroups(): void {
+    this.closeDrawer();
     this.dashboardPage.set('groups');
     this.router.navigate(['/groups']);
   }
@@ -88,10 +92,20 @@ export class DashboardService {
 
   closeDrawer(): void {
     this.drawerOpen.set(false);
+
+    if (this.dashboardPage() === 'groups') this.selectedGroup.set(null);
   }
 
   openGroupDetail(group: Group): void {
+    this.selectedGroup.set(group);
+    this.drawerTitle.set(group.name);
+    this.drawerContent.set(true);
+    this.drawerContentType.set('manager-groups');
 
-    this.openDrawer;
+    this.openDrawer();
+  }
+
+  copy(text: string) {
+    navigator.clipboard.writeText(text);
   }
 }
