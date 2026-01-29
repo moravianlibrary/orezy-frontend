@@ -21,7 +21,7 @@
       @if (dashSvc.drawerContentType() === 'groups') {
         @let group = dashSvc.selectedGroup();
 
-        @if (isAdmin) {
+        <!-- @if (isAdmin) {
           <div class="block">
             <label for="group-name">
               NÁZEV
@@ -46,7 +46,17 @@
               Smazat skupinu
             </span>
           </div>
-        }
+        } -->
+
+        <div class="block">
+          <div class="label">NÁZEV</div>
+          <div class="value">{{ group?.name }}</div>
+        </div>
+
+        <div class="block">
+          <div class="label">POPIS</div>
+          <div class="value">{{ group?.description }}</div>
+        </div>
         
         <div class="block">
           <div class="label">
@@ -171,7 +181,7 @@
 
 @if (dashSvc.drawerButtons().length) {
   <footer class="drawer-footer">
-    @for (btn of dashSvc.drawerButtons(); track btn) {
+    @for (btn of dashSvc.drawerButtons(); track $index) {
       <span
         (click)="btn.action ? btn.action() : dashSvc.closeDrawer()"
         class="button real-button"

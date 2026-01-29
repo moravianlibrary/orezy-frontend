@@ -98,11 +98,11 @@ export class DashboardService {
   }
 
   addGroup(): void {
-
+    console.log('add group');
   }
 
   deleteGroup(): void {
-
+    console.log('delete group');
   }
 
   openGroupDetail(group: Group): void {
