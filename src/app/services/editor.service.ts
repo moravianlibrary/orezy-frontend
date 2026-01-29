@@ -268,7 +268,7 @@ export class EditorService {
     const mainImageItemId = this.mainImageItem()._id;
     if (this.imgWasEdited) {
       this.updateImagesByEdited(mainImageItemId ?? '');
-      this.showToast('Sken byl přesunut do Upravených.');
+      // this.showToast('Sken byl přesunut do Upravených.');
     }
 
     this.setDisplayedImages();
@@ -793,7 +793,7 @@ export class EditorService {
     this.showImage(-1);
     if (this.imgWasEdited) defer(() => {
       this.setDisplayedImages();
-      this.showToast('Sken byl přesunut do Upravených.');
+      // this.showToast('Sken byl přesunut do Upravených.');
     }, 100);
   }
 
@@ -804,7 +804,7 @@ export class EditorService {
     this.showImage(1);
     if (this.imgWasEdited) defer(() => {
       this.setDisplayedImages();
-      this.showToast('Sken byl přesunut do Upravených.');
+      // this.showToast('Sken byl přesunut do Upravených.');
     }, 100);
   }
 
