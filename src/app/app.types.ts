@@ -138,7 +138,7 @@ export interface Viewport {
   ------------------------------ */
 
 // Drawer
-export type DrawerContentType = 'manager-groups' | 'admin-groups' | 'users';
+export type DrawerContentType = 'groups' | 'users';
 export interface DrawerButton {
   label: string;
   primary?: boolean;

@@ -31,6 +31,7 @@ export class DashboardService {
   displayedGroups = signal<Group[]>([]);
   searchGroups = signal<string>('');
   selectedGroup = signal<Group | null>(null);
+  groupName = signal<string>('');
 
 
   /* ------------------------------
@@ -96,11 +97,33 @@ export class DashboardService {
     if (this.dashboardPage() === 'groups') this.selectedGroup.set(null);
   }
 
+  addGroup(): void {
+
+  }
+
+  deleteGroup(): void {
+
+  }
+
   openGroupDetail(group: Group): void {
     this.selectedGroup.set(group);
+    this.groupName.set(group.name);
     this.drawerTitle.set(group.name);
     this.drawerContent.set(true);
-    this.drawerContentType.set('manager-groups');
+    this.drawerContentType.set('groups');
+    this.drawerButtons.set([
+      {
+        label: 'Zavřít',
+        action: () => this.closeDrawer()
+      },
+      {
+        label: 'Uložit změny',
+        primary: true,
+        action: () => {
+          console.log('save');
+        }
+      }
+    ])
 
     this.openDrawer();
   }

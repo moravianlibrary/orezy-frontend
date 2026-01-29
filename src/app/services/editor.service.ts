@@ -2,7 +2,7 @@ import { HttpClient } from '@angular/common/http';
 import { computed, inject, Injectable, signal } from '@angular/core';
 import { DialogButton, DialogContentType, DimColor, GridMode, HitInfo, ImageItem, ImageRect, MousePos, Page, PageNumberType, ScanType, TitleDetail, Toast, ToastType, Viewport } from '../app.types';
 import { catchError, Observable, of } from 'rxjs';
-import { clamp, defer, degreeToRadian, focusMainWrapper, getColor, scrollToSelectedImage } from '../utils/utils';
+import { clamp, defer, degreeToRadian, focusMainWrapper, getColor, roundToDecimals, scrollToSelectedImage } from '../utils/utils';
 import { EnvironmentService } from './environment.service';
 import { dimColorDict, gridColor, transparentColor } from '../app.config';
 import { AuthService } from './auth.service';
@@ -145,8 +145,8 @@ export class EditorService {
     return this.http.patch(`${this.apiUrl}/${id}/update-pages`, payload, { headers: this.authSvc.authHeaders('json', true) });
   }
 
-  reset(id: string): Observable<ImageItem[]> {
-    return this.http.patch<ImageItem[]>(`${this.apiUrl}/${id}/reset`, {}, { headers: this.authSvc.authHeaders() });
+  reset(id: string): Observable<TitleDetail> {
+    return this.http.patch<TitleDetail>(`${this.apiUrl}/${id}/reset`, {}, { headers: this.authSvc.authHeaders() });
   }
 
 
@@ -171,7 +171,6 @@ export class EditorService {
     this.updatePages(this.book(), editedImages)
       .subscribe({
         next: () => {
-          this.selectedFilter = 'edited';
           this.setDisplayedImages();
           this.showToast('Proces byl úspěšně dokončen!', { type: 'success' });
         },
@@ -192,10 +191,6 @@ export class EditorService {
       )
     );
 
-    
-    this.selectedFilter = mainImageItemAfter.edited && this.editedImages().length
-      ? 'edited'
-      : (mainImageItemAfter.flags.length ? 'flagged' : 'ok');
     this.setDisplayedImages();
     scrollToSelectedImage();
     this.setMainImage(mainImageItemAfter);
@@ -209,13 +204,15 @@ export class EditorService {
     this.reset(this.book()).pipe(
       catchError(err => {
         console.error('Fetch error:', err);
-        return of([]);
+        return of();
       })
-    ).subscribe((res: ImageItem[]) => {
-      this.images.set(res);
-      this.originalImages.set(res);
+    ).subscribe((res: TitleDetail) => {
+      const images: ImageItem[] = res.scans;
       
-      if (this.selectedFilter === 'edited') this.selectedFilter = 'flagged';
+      this.images.set(images);
+      this.originalImages.set(images);
+      
+      if (this.selectedFilter === 'edited') this.selectedFilter = 'all';
       this.setDisplayedImages();
       this.setMainImage(this.displayedImagesFinal()[0]);
 
@@ -436,7 +433,10 @@ export class EditorService {
         const { left, right, top, bottom } = this.computeBounds(p.xc, p.yc, p.width, p.height, p.angle);
         const updatedPage = {
           ...p,
-          left, right, top, bottom
+          left: roundToDecimals(left, 4),
+          right: roundToDecimals(right, 4),
+          top: roundToDecimals(top, 4),
+          bottom: roundToDecimals(bottom, 4)
         }
         
         this.currentPages.push(updatedPage);
@@ -1339,17 +1339,16 @@ export class EditorService {
       'p', 'P',                                             // Add page
       'ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown',    // Drag selected page x, y by 1; not selected prev/next scan
       'PageDown', 'PageUp',                                 // (+ PageUp / PageDown)
-      'm', 'M', 'g', 'G',                                   // Mřížka / grid
+      'm', 'M',                                             // Mřížka / grid
       'o', 'O',                                             // Obrys / outline
       'c', 'C',                                             // Clona (barva)
-      'Enter',                                              // Přesunout sken do OK, + control/cmd = dokončit
-      'r', 'R',                                             // + control/cmd = reset změn skenu; + control/cmd + shift = reset změn dokumentu
+      'Enter',                                              // Next scan, + control/cmd = dokončit
       'F1', 'F2', 'F3', 'F4',                               // Filters
-      'Shift',                                              // 1 -> 10
-      'Control', 'Meta',                                    // + arrows = change width / height by 1
+      'Shift',                                              // + arrows = change width / height by 1
+      'Control', 'Meta',                                    // + R = reset změn skenu; + shift + R = reset změn dokumentu
       'a', 'A', 's', 'S',                                   // Rotate by 1
       'k', 'K',                                             // Shortcuts
-      'q', 'Q', 'w', 'W', 'e', 'E'                          // Zooming
+      'q', 'Q', 'w', 'W', 'e', 'E', 'r', 'R'                // Zooming
     ].includes(key);
   }
 
@@ -1410,7 +1409,7 @@ export class EditorService {
     if (['p', 'P'].includes(key) && !dialogOpen && this.currentPages.length < this.maxPages) this.addPage();
 
     // Change grid mode
-    if (['m', 'M', 'g', 'G'].includes(key) && this.selectedPage &&!dialogOpen) {
+    if (['m', 'M'].includes(key) && this.selectedPage &&!dialogOpen) {
       this.gridMode.set(!this.isRotating
         ? this.gridMode() === 'always' ? 'when-rotating' : 'always'
         : this.gridMode() === 'never' ? 'when-rotating' : 'never');
@@ -1793,25 +1792,32 @@ export class EditorService {
     // }
 
     // Zooming
-    if (['q', 'Q', 'w', 'W', 'e', 'E'].includes(key) && !dialogOpen) {
+    if (['q', 'Q', 'w', 'W', 'e', 'E', 'r', 'R'].includes(key) && !dialogOpen) {
       if (['q', 'Q'].includes(key)) {
-        this.selectedPage && event.shiftKey ? this.zoomSnap('in') : this.zoom('in');
+        // this.selectedPage && event.shiftKey ? this.zoomSnap('in') : this.zoom('in');
+        this.zoom('in');
         return;
       }
       
       if (['w', 'W'].includes(key)) {
-        event.shiftKey ? this.zoomSnap('out') : this.zoom('out');
+        // event.shiftKey ? this.zoomSnap('out') : this.zoom('out');
+        this.zoom('out');
         return;
       }
 
       if (['e', 'E'].includes(key)) {
+        this.selectedPage && this.zoomSnap('in');
+        return;
+      }
+
+      if (['r', 'R'].includes(key)) {
         this.resetZoom();
         return;
       }
     }
 
-    // Přesunout sken do OK
-    if (key === 'Enter' && !event.ctrlKey && !event.metaKey && !dialogOpen) this.markImageOK();
+    // Next scan regardless of if there is a selected page
+    if (key === 'Enter' && !event.ctrlKey && !event.metaKey && !dialogOpen) this.showNextImage();
 
     // Dokončit
     if (key === 'Enter' && (event.ctrlKey || event.metaKey)) {

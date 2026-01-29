@@ -93,8 +93,7 @@ export class AuthService {
 
       localStorage.setItem('access_token', res.access_token);
 
-      window.location.href = `${this.baseUri}`;
-      // this.redirectToStoredUri();
+      this.redirectToStoredUri();
     })
   }
 
@@ -112,7 +111,8 @@ export class AuthService {
   }
 
   private redirectToStoredUri(): void {
-    this.router.navigate([`${localStorage.getItem('redirectUri') || '/'}`]);
+    window.location.href = `${this.baseUri}/${localStorage.getItem('redirectUri')}`;
+    // this.router.navigate([`${localStorage.getItem('redirectUri') || '/'}`]);
   }
 
   logout(): void {
