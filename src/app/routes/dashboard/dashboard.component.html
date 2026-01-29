@@ -1,10 +1,4 @@
 <app-left-panel-groups></app-left-panel-groups>
 <app-main-groups></app-main-groups>
 <app-drawer />
-
-<!-- DIALOG -->
-@if (edtSvc.dialogOpen()) {
-  <app-dialog
-    (closed)="edtSvc.closeDialog()"
-  />
-}
+<app-dialog (closed)="edtSvc.closeDialog()" />

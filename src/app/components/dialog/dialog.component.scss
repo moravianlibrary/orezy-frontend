@@ -12,6 +12,11 @@
   inset: 0;
   background: rgba(0,0,0,0.45);
   z-index: 5000;
+  visibility: hidden;
+  opacity: 0;
+  transition:
+    opacity .2s ease,
+    visibility 0s linear 0s;
 }
 
 .dialog-container {
@@ -28,6 +33,19 @@
   flex-direction: column;
   gap: var(--spacing-x4);
   max-height: 90%;
+  visibility: hidden;
+  opacity: 0;
+  transition:
+    opacity .2s ease,
+    visibility 0s linear .2s;
+}
+
+.dialog-backdrop.open, .dialog-container.open {
+  visibility: visible;
+  opacity: 1;
+  transition:
+    opacity .2s ease,
+    visibility 0s linear 0s;
 }
 
 .dialog-header {

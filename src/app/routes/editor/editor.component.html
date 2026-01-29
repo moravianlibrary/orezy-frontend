@@ -12,10 +12,5 @@
   </div>
   <app-right-panel-editor></app-right-panel-editor>
 
-  <!-- DIALOG -->
-  @if (edtSvc.dialogOpen()) {
-    <app-dialog
-      (closed)="edtSvc.closeDialog()"
-    />
-  }
+  <app-dialog (closed)="edtSvc.closeDialog()" />
 </div>

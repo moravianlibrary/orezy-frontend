@@ -1,6 +1,13 @@
-<div class="dialog-backdrop" (click)="onBackdropClick()"></div>
+<div
+  class="dialog-backdrop"
+  [class.open]="edtSvc.dialogOpen()"
+  (click)="onBackdropClick()"
+></div>
 
-<div class="dialog-container">
+<div
+  class="dialog-container"
+  [class.open]="edtSvc.dialogOpen()"
+>
   <header class="dialog-header">
     <h2>{{ edtSvc.dialogTitle() }}</h2>
 
