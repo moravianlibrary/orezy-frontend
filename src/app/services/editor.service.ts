@@ -1,7 +1,7 @@
 import { HttpClient } from '@angular/common/http';
 import { computed, inject, Injectable, signal } from '@angular/core';
 import { DialogButton, DialogContentType, DimColor, GridMode, HitInfo, ImageItem, ImageRect, MousePos, Page, PageNumberType, ScanType, TitleDetail, Toast, ToastType, Viewport } from '../app.types';
-import { catchError, Observable, of } from 'rxjs';
+import { catchError, Observable } from 'rxjs';
 import { clamp, defer, degreeToRadian, focusMainWrapper, getColor, roundToDecimals, scrollToSelectedImage } from '../utils/utils';
 import { EnvironmentService } from './environment.service';
 import { dimColorDict, gridColor, transparentColor } from '../app.config';
@@ -1816,8 +1816,25 @@ export class EditorService {
       }
     }
 
-    // Next scan regardless of if there is a selected page
-    if (key === 'Enter' && !event.ctrlKey && !event.metaKey && !dialogOpen) this.showNextImage();
+    // Next scan based on number of current pages and selected page
+    if (key === 'Enter' && !event.ctrlKey && !event.metaKey && !dialogOpen) {
+      if (
+        this.currentPages.length < 2
+        || (
+          this.currentPages.length === this.maxPages
+          && this.selectedPage === this.currentPages.reduce((max, page) => page.xc > max.xc ? page : max)
+        )
+      ) {
+        this.showNextImage();
+        defer(() => {
+          this.selectedPage = this.currentPages[0];
+          this.lastPageCursorIsInside = this.selectedPage;
+          this.redrawImageOnCanvas();
+          this.currentPages.forEach(p => this.drawPage(p));
+          this.updateMainImageItem();
+        }, 200);
+      }
+    }
 
     // Dokončit
     if (key === 'Enter' && (event.ctrlKey || event.metaKey)) {
