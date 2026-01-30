@@ -14,9 +14,7 @@
   z-index: 5000;
   visibility: hidden;
   opacity: 0;
-  transition:
-    opacity .2s ease,
-    visibility 0s linear 0s;
+  transition: opacity .2s ease, visibility .2s ease;
 }
 
 .dialog-container {
@@ -35,17 +33,13 @@
   max-height: 90%;
   visibility: hidden;
   opacity: 0;
-  transition:
-    opacity .2s ease,
-    visibility 0s linear .2s;
+  transition: opacity .2s ease, visibility .2s ease;
 }
 
 .dialog-backdrop.open, .dialog-container.open {
   visibility: visible;
   opacity: 1;
-  transition:
-    opacity .2s ease,
-    visibility 0s linear 0s;
+  transition: opacity .2s ease, visibility .2s ease;
 }
 
 .dialog-header {

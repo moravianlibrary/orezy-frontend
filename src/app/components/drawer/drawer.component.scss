@@ -19,7 +19,7 @@
   border-right: 1px solid var(--border-color);
   box-shadow: 1px 0 24px 0 #0000001A;  
   visibility: hidden;
-  transition: right .3s ease-out;
+  transition: right .3s ease-out, visibility .3s ease-out;
 }
 
 :host(.open) {
