@@ -18,4 +18,15 @@ export class DrawerComponent {
 
   getDate = getDate;
   permissionDict = permissionDict;
+
+  copied: Record<string, boolean> = {};
+  private copiedTimers: Record<string, number> = {};
+
+  copy(key: string, text: string): void {
+    navigator.clipboard.writeText(text);
+
+    this.copied[key] = true;
+    window.clearTimeout(this.copiedTimers[key]);
+    this.copiedTimers[key] = window.setTimeout(() => this.copied[key] = false, 1200);
+  }
 }

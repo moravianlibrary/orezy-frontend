@@ -211,8 +211,4 @@ export class DashboardService {
 
     edtSvc.openDialog();
   }
-
-  copy(text: string) {
-    navigator.clipboard.writeText(text);
-  }
 }
