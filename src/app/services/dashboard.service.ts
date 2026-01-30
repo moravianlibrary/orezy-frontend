@@ -1,6 +1,6 @@
 import { HttpClient } from '@angular/common/http';
 import { computed, inject, Injectable, signal } from '@angular/core';
-import { catchError, Observable, switchMap, tap } from 'rxjs';
+import { catchError, Observable, tap } from 'rxjs';
 import { AuthService } from './auth.service';
 import { DashboardPage, DrawerButton, DrawerContentType, Group, GroupDetail, NewGroup, PermissionType, Title } from '../app.types';
 import { Router } from '@angular/router';
@@ -193,10 +193,10 @@ export class DashboardService {
         primary: true,
         destructive: true,
         action: () => this.deleteGroup(group?._id ?? '').pipe(
-          switchMap(() => this.fetchGroups()),
-          tap((res: Group[]) => {
-            this.myGroups.set(res);
-            this.displayedGroups.set(res);
+          tap(() => {
+            const updated = this.myGroups().filter(g => g._id !== group?._id);
+            this.myGroups.set(updated);
+            this.displayedGroups.set(updated);
             this.selectedGroup.set(null);
           }),
           catchError(err => {
