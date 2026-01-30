@@ -61,6 +61,7 @@ export class DashboardComponent {
                   this.dashSvc.displayedTitles.set(res.titles);
                 }),
                 catchError(err => {
+                  if (err.status === 403) this.router.navigate(['/']);
                   console.error('Fetching titles failed:', err);
                   throw err;
                 })
