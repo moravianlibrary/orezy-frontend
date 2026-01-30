@@ -57,6 +57,7 @@ export const permissionDict: Record<PermissionType, string> = {
 };
 
 export const titleStateDict: Record<TitleState, string> = {
+  new: 'Založena',
   scheduled: 'Bude se zpracovávat',
   in_progress: 'Zpracovává se',
   failed: 'Chyba',

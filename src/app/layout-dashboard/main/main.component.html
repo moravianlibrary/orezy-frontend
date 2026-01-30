@@ -186,7 +186,7 @@
                     class="tag"
                     [class.info]="title.state === 'ready'"
                     [class.success]="['user_approved', 'completed'].includes(title.state)"
-                    [class.pending]="['scheduled', 'in_progress'].includes(title.state)"
+                    [class.pending]="['new', 'scheduled', 'in_progress'].includes(title.state)"
                     [class.error]="title.state === 'failed'"
                   >
                     {{ titleStateDict[title.state] }}
