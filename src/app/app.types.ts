@@ -25,6 +25,11 @@ export interface GroupDetail {
   titles: Title[];
 }
 
+export interface NewGroup {
+  id: string;
+  api?: string;
+}
+
 export interface Title {
   _id: string;
   created_at: string;
@@ -58,9 +63,7 @@ export interface User {
 
 export interface UserInGroup {
   _id: string;
-  // email: string;
   full_name: string;
-  // role: Role;
   permission: PermissionType;
 }
 

@@ -2,7 +2,7 @@ import { HttpClient } from '@angular/common/http';
 import { computed, inject, Injectable, signal } from '@angular/core';
 import { catchError, Observable, switchMap, tap } from 'rxjs';
 import { AuthService } from './auth.service';
-import { DashboardPage, DrawerButton, DrawerContentType, Group, GroupDetail, Title } from '../app.types';
+import { DashboardPage, DrawerButton, DrawerContentType, Group, GroupDetail, NewGroup, PermissionType, Title } from '../app.types';
 import { Router } from '@angular/router';
 import { Location } from '@angular/common';
 import { EditorService } from './editor.service';
@@ -49,12 +49,12 @@ export class DashboardService {
     return this.http.get<GroupDetail>(`${this.authSvc.apiUrl}/groups/${group_id}`, { headers: this.authSvc.authHeaders() });
   }
 
-  createGroup(): Observable<{ id: string }> {
+  createGroup(): Observable<NewGroup> {
     const payload = {
       name: this.newGroupName(),
       description: this.newGroupDescription()
     };
-    return this.http.post<{ id: string }>(`${this.authSvc.apiUrl}/groups`, payload, { headers: this.authSvc.authHeaders('json', true) });
+    return this.http.post<NewGroup>(`${this.authSvc.apiUrl}/groups`, payload, { headers: this.authSvc.authHeaders('json', true) });
   }
 
   deleteGroup(group_id: string): Observable<void> {
@@ -149,12 +149,22 @@ export class DashboardService {
         label: 'Vytvořit',
         primary: true,
         action: () => this.createGroup().pipe(
-          tap((res: { id: string }) => this.selectedGroupId.set(res.id)),
-          switchMap(() => this.fetchGroups()),
-          tap((res: Group[]) => {
-            this.myGroups.set(res);
-            this.displayedGroups.set(res);
-            this.selectedGroup.set(this.displayedGroups().find(g => g._id === this.selectedGroupId()) ?? null);
+          tap((res: NewGroup) => {
+            const now = Date();
+            const newGroup = {
+              _id: res.id,
+              name: this.newGroupName(),
+              api: res?.api ?? '',
+              description: this.newGroupDescription(),
+              created_at: now,
+              modified_at: now,
+              title_count: 0,
+              permission: 'manage' as PermissionType
+            };
+
+            this.myGroups.update(prev => [ ...prev, newGroup ]);
+            this.displayedGroups.set(this.myGroups());
+            this.selectedGroup.set(newGroup);
             this.newGroupName.set('');
             this.newGroupDescription.set('');
           }),
@@ -175,6 +185,7 @@ export class DashboardService {
     
     edtSvc.dialogTitle.set('Smazat skupinu');
     edtSvc.dialogDescription.set(`Opravdu chcete smazat skupinu${' ' + group?.name}?`);
+    edtSvc.dialogContent.set(false);
     edtSvc.dialogButtons.set([
       { label: 'Zrušit' },
       {
