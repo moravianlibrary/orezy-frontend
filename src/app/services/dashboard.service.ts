@@ -155,6 +155,8 @@ export class DashboardService {
             this.myGroups.set(res);
             this.displayedGroups.set(res);
             this.selectedGroup.set(this.displayedGroups().find(g => g._id === this.selectedGroupId()) ?? null);
+            this.newGroupName.set('');
+            this.newGroupDescription.set('');
           }),
           catchError(err => {
             console.error(err);
