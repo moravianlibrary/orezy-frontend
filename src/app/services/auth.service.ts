@@ -111,7 +111,7 @@ export class AuthService {
   }
 
   private redirectToStoredUri(): void {
-    window.location.href = `${this.baseUri}/${localStorage.getItem('redirectUri')}`;
+    window.location.href = `${this.baseUri}${localStorage.getItem('redirectUri')}`;
     // this.router.navigate([`${localStorage.getItem('redirectUri') || '/'}`]);
   }
 
