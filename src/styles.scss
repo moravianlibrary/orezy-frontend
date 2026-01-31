@@ -1,3 +1,5 @@
+@import "overlayscrollbars/styles/overlayscrollbars.css";
+
 :root {
   --primary: #0080A8;
   --bg-base: #FFFFFF;
@@ -134,4 +136,58 @@ html, body {
   &:hover {
     cursor: default;
   }
+}
+
+// Scrollbar
+.os-theme-orezy {
+  --os-size: var(--spacing-x3);
+  --os-padding-perpendicular: var(--spacing-x1);
+  --os-padding-axis: var(--spacing-x1);
+  --os-border-radius: var(--spacing-x1);
+
+  /* colors */
+  --os-handle-bg: var(--border-color);
+  --os-handle-bg-hover: var(--border-tertiary-color);
+  --os-handle-bg-active: var(--border-tertiary-pressed);
+  --os-track-bg: transparent;
+}
+
+.os-theme-orezy .os-scrollbar-track {
+  background: var(--os-track-bg);
+  border-radius: var(--os-border-radius);
+}
+
+.os-theme-orezy .os-scrollbar-handle {
+  background: var(--os-handle-bg);
+  border-radius: var(--os-border-radius);
+  opacity: 0.9;
+}
+
+.os-theme-orezy .os-scrollbar-handle:hover {
+  background: var(--os-handle-bg-hover);
+}
+
+.os-theme-orezy .os-scrollbar-handle:active {
+  background: var(--os-handle-bg-active);
+}
+
+.os-theme-orezy .os-scrollbar {
+  transition: opacity 0.15s ease;
+}
+
+/* White background */
+.os-scrollbar.os-theme-orezy {
+  background: #fff;
+  opacity: 1;
+}
+
+/* Hide native scrollbar while OS is not mounted */
+.table-body-y-scroll.os-pending {
+  scrollbar-width: none;
+}
+
+.table-body-y-scroll.os-pending::-webkit-scrollbar {
+  width: 0;
+  height: 0;
+  display: none;
 }
