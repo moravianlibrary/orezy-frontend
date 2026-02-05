@@ -9,7 +9,8 @@ import { OverlayScrollbars } from 'overlayscrollbars';
 import { ActivatedRoute, Router } from '@angular/router';
 import { catchError, map, of, Subscription, switchMap, tap } from 'rxjs';
 import { CommonModule } from '@angular/common';
-import { ConnectedPosition, OverlayModule } from '@angular/cdk/overlay';
+import { OverlayModule } from '@angular/cdk/overlay';
+import { Title } from '@angular/platform-browser';
 
 @Component({
   selector: 'app-main-groups',
@@ -20,6 +21,7 @@ import { ConnectedPosition, OverlayModule } from '@angular/cdk/overlay';
 export class MainComponent {
   dashSvc = inject(DashboardService);
   authSvc = inject(AuthService);
+  private title = inject(Title);
   private router = inject(Router);
   private activatedRoute = inject(ActivatedRoute);
   private paramsOnGroupId = new Subscription();
@@ -68,6 +70,8 @@ export class MainComponent {
                   this.dashSvc.selectedMyGroup.set(res);
                   this.dashSvc.titles.set(res.titles);
                   this.dashSvc.displayedTitles.set(res.titles);
+                  this.title.setTitle(`${res.name} | Skeny`);
+                  
                   clearTimeout(this.timerTooltip);
                   this.visibleTooltip = false;
                 }),
