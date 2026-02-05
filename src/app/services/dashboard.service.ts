@@ -4,7 +4,6 @@ import { catchError, Observable, tap } from 'rxjs';
 import { AuthService } from './auth.service';
 import { DashboardPage, DrawerButton, DrawerContentType, Group, GroupDetail, NewGroup, PermissionType, Title } from '../app.types';
 import { Router } from '@angular/router';
-import { Location } from '@angular/common';
 import { EditorService } from './editor.service';
 
 @Injectable({
@@ -15,7 +14,6 @@ export class DashboardService {
   private authSvc = inject(AuthService);
   private edtSvc = inject(EditorService);
   private router = inject(Router);
-  private location = inject(Location)
 
   dashboardPage = signal<DashboardPage>('my-groups');
 
@@ -73,11 +71,6 @@ export class DashboardService {
   openMyGroupsTitles(group: Group): void {
     this.dashboardPage.set('my-groups-titles');
     this.router.navigate(['/group', group._id]);
-  }
-
-  backToMyGroups(): void {
-    this.dashboardPage.set('my-groups');
-    this.location.back();
   }
 
   openTitle(bookId: string): void {

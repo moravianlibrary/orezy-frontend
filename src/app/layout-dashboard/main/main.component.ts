@@ -2,16 +2,18 @@ import { Component, ElementRef, inject, ViewChild } from '@angular/core';
 import { DashboardService } from '../../services/dashboard.service';
 import { FormsModule } from '@angular/forms';
 import { AuthService } from '../../services/auth.service';
-import { permissionDict, titleStateDict } from '../../app.config';
-import { Group, GroupDetail, UserInGroup } from '../../app.types';
+import { permissionDict, titleStateDict, titleStateFilterDict } from '../../app.config';
+import { Group, GroupDetail, Position, UserInGroup } from '../../app.types';
 import { defer, getDate } from '../../utils/utils';
 import { OverlayScrollbars } from 'overlayscrollbars';
 import { ActivatedRoute, Router } from '@angular/router';
 import { catchError, map, of, Subscription, switchMap, tap } from 'rxjs';
+import { CommonModule } from '@angular/common';
+import { ConnectedPosition, OverlayModule } from '@angular/cdk/overlay';
 
 @Component({
   selector: 'app-main-groups',
-  imports: [FormsModule],
+  imports: [FormsModule, CommonModule, OverlayModule],
   templateUrl: './main.component.html',
   styleUrl: './main.component.scss'
 })
@@ -157,37 +159,56 @@ export class MainComponent {
 
   // Hover
   visibleTooltip = false;
-  x = 0;
-  y = 0;
+  positionTooltip: Position = { x: 0, y: 0 };
   private timerTooltip: any;
 
-  onMouseEnter(event: MouseEvent, isClickable: boolean): void {
+  showTooltip(event: MouseEvent, isClickable: boolean): void {
+    this.clearTimerTooltip();
     if (!isClickable) return;
-    this.timerTooltip = defer(() => {
+
+    this.timerTooltip = setTimeout(() => {
       this.visibleTooltip = true;
       this.updatePosition(event);
     }, 500);
   }
 
-  onMouseLeave(): void {
+  clearTimerTooltip(): void {
     clearTimeout(this.timerTooltip);
     this.visibleTooltip = false;
   }
 
-  onMouseMove(event: MouseEvent, isClickable: boolean): void {
-    clearTimeout(this.timerTooltip);
-    this.visibleTooltip = false;
-
-    if (!isClickable) return;
-    this.timerTooltip = defer(() => {
-      this.visibleTooltip = true;
-      this.updatePosition(event);
-    }, 500);
+  private updatePosition(event: MouseEvent): void {
+    this.positionTooltip = {
+      x: event.clientX + 12,
+      y: event.clientY + 12
+    };
   }
 
-  private updatePosition(event: MouseEvent) {
-    this.x = event.clientX + 12;
-    this.y = event.clientY + 12;
+  // State filter
+  titleStateFilterDict = titleStateFilterDict;
+  stateDropdownOpen = false;
+  selectedState: string | null = 'all';
+  stateOptions = Object.keys(titleStateFilterDict);
+
+  toggleStateDropdown(): void {
+    this.stateDropdownOpen = !this.stateDropdownOpen;
+  }
+
+  onStateChange(stateValue: string): void {
+    this.selectedState = stateValue;
+    this.stateDropdownOpen = false;
+
+    switch (stateValue) {
+      case 'all':
+        this.dashSvc.displayedTitles.set(this.dashSvc.titles());
+        break;
+      case 'saved':
+        this.dashSvc.displayedTitles.set(this.dashSvc.titles().filter(t => ['user_approved', 'completed'].includes(t.state)));
+        break;
+      default:
+        this.dashSvc.displayedTitles.set(this.dashSvc.titles().filter(t => t.state === stateValue));
+        break;
+    }
   }
 
 

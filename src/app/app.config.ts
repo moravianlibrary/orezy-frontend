@@ -66,6 +66,16 @@ export const titleStateDict: Record<TitleState, string> = {
   completed: 'Uloženo'
 }
 
+export const titleStateFilterDict: Record<string, string> = {
+  'Vše': 'all',
+  'Nové': 'ready',
+  'Uloženo': 'saved',
+  'Založena': 'new',
+  'Bude se zpracovávat': 'scheduled',
+  'Zpracovává se': 'in_progress',
+  'Chyba': 'failed'
+}
+
 export const appConfig: ApplicationConfig = {
   providers: [
     provideZoneChangeDetection({ eventCoalescing: true }),

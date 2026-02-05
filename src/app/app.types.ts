@@ -67,6 +67,11 @@ export interface UserInGroup {
   permission: PermissionType;
 }
 
+export interface Position {
+  x: number;
+  y: number;
+}
+
 
 
 /* ------------------------------

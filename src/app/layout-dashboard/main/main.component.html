@@ -134,7 +134,7 @@
   <div class="top-panel">
     <svg
       width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"
-      (click)="dashSvc.backToMyGroups()"
+      (click)="dashSvc.navigateToMyGroups()"
     >
       <path fill-rule="evenodd" clip-rule="evenodd" d="M10.1003 5.39936C10.3932 5.69225 10.3932 6.16712 10.1003 6.46002L4.56066 11.9997L10.1003 17.5394C10.3932 17.8322 10.3932 18.3071 10.1003 18.6C9.80744 18.8929 9.33256 18.8929 9.03967 18.6L2.96967 12.53C2.82902 12.3894 2.75 12.1986 2.75 11.9997C2.75 11.8008 2.82902 11.61 2.96967 11.4694L9.03967 5.39936C9.33256 5.10646 9.80744 5.10646 10.1003 5.39936Z" />
       <path fill-rule="evenodd" clip-rule="evenodd" d="M2.91992 12C2.91992 11.5858 3.25571 11.25 3.66992 11.25H20.4999C20.9141 11.25 21.2499 11.5858 21.2499 12C21.2499 12.4142 20.9141 12.75 20.4999 12.75H3.66992C3.25571 12.75 2.91992 12.4142 2.91992 12Z" />
@@ -178,8 +178,47 @@
           <thead>
             <tr>
               <th>ID knihy</th>
-              <th>
-                Stav
+              <th class="dropdown-state-wrapper" cdkOverlayOrigin #origin="cdkOverlayOrigin">
+                <div class="dropdown-state-title" (click)="toggleStateDropdown()">
+                  Stav
+                  <svg 
+                    width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"
+                    class="chevron"
+                    [class.open]="stateDropdownOpen"
+                  >
+                    <path fill-rule="evenodd" clip-rule="evenodd" d="M2.36666 5.61324C2.56192 5.41798 2.87851 5.41798 3.07377 5.61324L7.42044 9.95991C7.73851 10.278 8.26192 10.278 8.58 9.95991L12.9267 5.61324C13.1219 5.41798 13.4385 5.41798 13.6338 5.61324C13.829 5.80851 13.829 6.12509 13.6338 6.32035L9.2871 10.667C8.57851 11.3756 7.42192 11.3756 6.71333 10.667L2.36666 6.32035C2.1714 6.12509 2.1714 5.80851 2.36666 5.61324Z" />
+                    <path fill-rule="evenodd" clip-rule="evenodd" d="M2.36666 5.61324C2.56192 5.41798 2.87851 5.41798 3.07377 5.61324L7.42044 9.95991C7.73851 10.278 8.26192 10.278 8.58 9.95991L12.9267 5.61324C13.1219 5.41798 13.4385 5.41798 13.6338 5.61324C13.829 5.80851 13.829 6.12509 13.6338 6.32035L9.2871 10.667C8.57851 11.3756 7.42192 11.3756 6.71333 10.667L2.36666 6.32035C2.1714 6.12509 2.1714 5.80851 2.36666 5.61324Z" />
+                  </svg>
+                </div>
+
+                <ng-template
+                  cdkConnectedOverlay
+                  [cdkConnectedOverlayOrigin]="origin"
+                  [cdkConnectedOverlayOpen]="stateDropdownOpen"
+                  (overlayOutsideClick)="stateDropdownOpen = false"
+                >
+                  <div
+                    class="state-dropdown radios-wrapper"
+                    [class.show]="stateDropdownOpen"
+                  >
+                    @for (state of stateOptions; track state) {
+                      @let stateValue = titleStateFilterDict[state];
+                      <label
+                        class="radio"
+                        [for]="stateValue"
+                      >
+                        <input
+                          type="radio"
+                          [id]="stateValue"
+                          [name]="stateValue"
+                          [checked]="stateValue === selectedState"
+                          (click)="onStateChange(stateValue)"
+                        />
+                        <span class="radio-value">{{ state }}</span>
+                      </label>
+                    }
+                  </div>
+                </ng-template>
               </th>
               <th>
                 Vytvořeno
@@ -202,38 +241,44 @@
               <col style="width:180px">
             </colgroup>
             <tbody>
-              @for (title of dashSvc.displayedTitles(); track title._id) {
-                @let isClickable = shouldHaveLink(title.state);
-                <tr
-                  tabindex="0"
-                  [class.clickable]="isClickable"
-                  (click)="isClickable ? dashSvc.openTitle(title._id) : null"
-                  (mouseenter)="onMouseEnter($event, isClickable)"
-                  (mouseleave)="onMouseLeave()"
-                  (mousemove)="onMouseMove($event, isClickable)"
-                >
-                  <td>{{ title._id }}</td>
-                  <td>
-                    <span
-                      class="tag"
-                      [class.info]="title.state === 'ready'"
-                      [class.success]="['user_approved', 'completed'].includes(title.state)"
-                      [class.pending]="['new', 'scheduled', 'in_progress'].includes(title.state)"
-                      [class.error]="title.state === 'failed'"
-                    >
-                      {{ titleStateDict[title.state] }}
-                    </span>
-                  </td>
-                  <td>
-                    @let created = getDate(title.created_at);
-                    <span class="date">{{ created[0] }}</span>{{ ' ' }}
-                    <span class="time">{{ created[1] }}</span>
-                  </td>
-                  <td>
-                    @let modified = getDate(title.modified_at);
-                    <span class="date">{{ modified[0] }}</span>{{ ' ' }}
-                    <span class="time">{{ modified[1] }}</span>
-                  </td>
+              @let titles = dashSvc.displayedTitles();
+              @if (titles.length) {
+                @for (title of titles; track title._id) {
+                  @let isClickable = shouldHaveLink(title.state);
+                  <tr
+                    tabindex="0"
+                    [class.clickable]="isClickable"
+                    (click)="isClickable ? dashSvc.openTitle(title._id) : null"
+                    (mousemove)="showTooltip($event, isClickable)"
+                    (mouseleave)="clearTimerTooltip()"
+                  >
+                    <td>{{ title._id }}</td>
+                    <td>
+                      <span
+                        class="tag"
+                        [class.info]="title.state === 'ready'"
+                        [class.success]="['user_approved', 'completed'].includes(title.state)"
+                        [class.pending]="['new', 'scheduled', 'in_progress'].includes(title.state)"
+                        [class.error]="title.state === 'failed'"
+                      >
+                        {{ titleStateDict[title.state] }}
+                      </span>
+                    </td>
+                    <td>
+                      @let created = getDate(title.created_at);
+                      <span class="date">{{ created[0] }}</span>{{ ' ' }}
+                      <span class="time">{{ created[1] }}</span>
+                    </td>
+                    <td>
+                      @let modified = getDate(title.modified_at);
+                      <span class="date">{{ modified[0] }}</span>{{ ' ' }}
+                      <span class="time">{{ modified[1] }}</span>
+                    </td>
+                  </tr>
+                }
+              } @else {
+                <tr class="no-titles">
+                  <td>Nenalezeny žádné knihy</td>
                 </tr>
               }
             </tbody>
@@ -246,8 +291,8 @@
   <div
     class="tooltip"
     [class.show]="visibleTooltip"
-    [style.left.px]="x - 269"
-    [style.top.px]="y + 10"
+    [style.left.px]="positionTooltip.x - 269"
+    [style.top.px]="positionTooltip.y + 10"
   >
     Otevřít ořez
   </div>

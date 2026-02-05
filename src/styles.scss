@@ -1,5 +1,14 @@
 @import "overlayscrollbars/styles/overlayscrollbars.css";
 
+@mixin font($font-weight, $font-size, $line-height, $color) {
+  font-family: 'IBM Plex Sans', sans-serif;
+  letter-spacing: 0%;
+  font-weight: $font-weight;
+  font-size: $font-size;
+  line-height: $line-height;
+  color: $color;
+}
+
 :root {
   --primary: #0080A8;
   --bg-base: #FFFFFF;
@@ -64,22 +73,17 @@ html, body {
   height: 100%;
 }
 
-// Buttons
-@mixin font($font-weight, $font-size, $line-height) {
-  font-family: 'IBM Plex Sans', sans-serif;
-  letter-spacing: 0%;
-  font-weight: $font-weight;
-  font-size: $font-size;
-  line-height: $line-height;
-}
 
+/* ------------------------------
+  BUTTONS
+------------------------------ */
 .button-group {
   display: flex;
   gap: var(--spacing-x2);
 }
 
 .button {
-  @include font(400, var(font-size-x1-5), var(--spacing-x4));
+  @include font(400, var(font-size-x1-5), var(--spacing-x4), var(--text-base));
   display: flex;
   justify-content: center;
   align-items: center;
@@ -138,14 +142,79 @@ html, body {
   }
 }
 
-// Scrollbar
+
+/* ------------------------------
+  RADIO BUTTONS
+------------------------------ */
+.radios-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-x1);
+
+  .radio {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--spacing-x2);
+    cursor: pointer;
+    
+    .radio-value {
+      @include font(450, var(--font-size-x1-5), var(--spacing-x5), var(--text-secondary));
+    }
+  }
+
+  .radio:hover > input[type="radio"] + .radio-value::before {
+    border-color: var(--primary);
+    background-color: rgba(0, 128, 168, 0.04);
+  }
+
+  .radio > input[type="radio"]{
+    position: absolute;
+    opacity: 0;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    pointer-events: none;
+  }
+
+  .radio > input[type="radio"] + .radio-value{
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .radio > input[type="radio"] + .radio-value::before{
+    content: "";
+    width: 16px;
+    height: 16px;
+    box-sizing: border-box;
+    border-radius: 999px;
+    border: 1px solid #BFCCD9;
+    background: transparent;
+    display: inline-block;
+    flex: 0 0 16px;
+  }
+
+  .radio > input[type="radio"]:checked + .radio-value::before{
+    border-color: var(--primary);
+    background: radial-gradient(circle at center, var(--primary) 0 3px, transparent 3px);
+  }
+
+  .radio > input[type="radio"]:focus-visible + .radio-value::before{
+    outline: 2px solid rgba(0,128,168,.35);
+    outline-offset: 2px;
+  }
+}
+
+
+/* ------------------------------
+  SCROLLBAR
+------------------------------ */
 .os-theme-orezy {
   --os-size: var(--spacing-x3);
   --os-padding-perpendicular: var(--spacing-x1);
   --os-padding-axis: var(--spacing-x1);
   --os-border-radius: var(--spacing-x1);
 
-  /* colors */
   --os-handle-bg: var(--border-color);
   --os-handle-bg-hover: var(--border-tertiary-color);
   --os-handle-bg-active: var(--border-tertiary-pressed);
@@ -175,13 +244,11 @@ html, body {
   transition: opacity 0.15s ease;
 }
 
-/* White background */
 .os-scrollbar.os-theme-orezy {
   background: #fff;
   opacity: 1;
 }
 
-/* Hide native scrollbar while OS is not mounted */
 .table-body-y-scroll.os-pending {
   scrollbar-width: none;
 }
