@@ -66,6 +66,8 @@ export class MainComponent {
                   this.dashSvc.selectedMyGroup.set(res);
                   this.dashSvc.titles.set(res.titles);
                   this.dashSvc.displayedTitles.set(res.titles);
+                  clearTimeout(this.timerTooltip);
+                  this.visibleTooltip = false;
                 }),
                 catchError(err => {
                   if (err.status === 403) this.router.navigate(['/']);
@@ -180,7 +182,6 @@ export class MainComponent {
     this.timerTooltip = defer(() => {
       this.visibleTooltip = true;
       this.updatePosition(event);
-      console.log('huh');
     }, 500);
   }
 
