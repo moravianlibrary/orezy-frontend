@@ -208,6 +208,9 @@
                   tabindex="0"
                   [class.clickable]="isClickable"
                   (click)="isClickable ? dashSvc.openTitle(title._id) : null"
+                  (mouseenter)="onMouseEnter($event, isClickable)"
+                  (mouseleave)="onMouseLeave()"
+                  (mousemove)="onMouseMove($event, isClickable)"
                 >
                   <td>{{ title._id }}</td>
                   <td>
@@ -238,6 +241,15 @@
         </div>
       </div>
     </div>
+  </div>
+
+  <div
+    class="tooltip"
+    [class.show]="visibleTooltip"
+    [style.left.px]="x - 269"
+    [style.top.px]="y + 10"
+  >
+    Otevřít ořez
   </div>
 } @else if (dashSvc.dashboardPage() === 'groups') {
 

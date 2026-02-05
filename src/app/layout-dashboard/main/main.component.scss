@@ -8,12 +8,32 @@
 }
 
 :host {
+  position: relative;
   display: flex;
   flex-direction: column;
   height: 100dvh;
   width: 100%;
   max-width: calc(100dvw - 250px);
   background-color: var(--bg-main-light);
+
+  .tooltip {
+    position: absolute;
+    padding: var(--spacing-x2) var(--spacing-x3);
+    border-radius: var(--spacing-x1);
+    border: 1px solid var(--border-light);
+    background-color: var(--bg-base);
+    box-shadow: 0 2px var(--spacing-x4) 2px #00000014;
+    @include font(400, var(--font-size-x1), var(--spacing-x4), var(--text-base));
+    white-space: nowrap;
+
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity .12s ease;
+  }
+
+  .tooltip.show {
+    opacity: 1;
+  }
 }
 
 .top-panel {

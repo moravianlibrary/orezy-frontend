@@ -29,6 +29,9 @@ export class MainComponent {
   private osInstance?: ReturnType<typeof OverlayScrollbars>;
 
 
+  /* ------------------------------
+    DIFFERENT PAGES INITIAL FETCHES
+  ------------------------------ */
   ngOnInit() {
     
     // Subscribe to params
@@ -148,6 +151,42 @@ export class MainComponent {
 
   shouldHaveLink(state: string): boolean {
     return ['ready', 'user_approved', 'completed'].includes(state);
+  }
+
+  // Hover
+  visibleTooltip = false;
+  x = 0;
+  y = 0;
+  private timerTooltip: any;
+
+  onMouseEnter(event: MouseEvent, isClickable: boolean): void {
+    if (!isClickable) return;
+    this.timerTooltip = defer(() => {
+      this.visibleTooltip = true;
+      this.updatePosition(event);
+    }, 500);
+  }
+
+  onMouseLeave(): void {
+    clearTimeout(this.timerTooltip);
+    this.visibleTooltip = false;
+  }
+
+  onMouseMove(event: MouseEvent, isClickable: boolean): void {
+    clearTimeout(this.timerTooltip);
+    this.visibleTooltip = false;
+
+    if (!isClickable) return;
+    this.timerTooltip = defer(() => {
+      this.visibleTooltip = true;
+      this.updatePosition(event);
+      console.log('huh');
+    }, 500);
+  }
+
+  private updatePosition(event: MouseEvent) {
+    this.x = event.clientX + 12;
+    this.y = event.clientY + 12;
   }
 
 
