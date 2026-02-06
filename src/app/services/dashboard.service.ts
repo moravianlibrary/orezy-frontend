@@ -2,7 +2,7 @@ import { HttpClient } from '@angular/common/http';
 import { computed, inject, Injectable, signal } from '@angular/core';
 import { catchError, Observable, tap } from 'rxjs';
 import { AuthService } from './auth.service';
-import { DashboardPage, DrawerButton, DrawerContentType, Group, GroupDetail, NewGroup, PermissionType, Title } from '../app.types';
+import { DashboardPage, DrawerButton, DrawerContentType, Group, GroupDetail, NewGroup, NewUser, Permission, PermissionType, Title, User } from '../app.types';
 import { Router } from '@angular/router';
 import { EditorService } from './editor.service';
 
@@ -33,6 +33,32 @@ export class DashboardService {
   selectedGroup = signal<Group | null>(null);
   newGroupName = signal<string>('');
   newGroupDescription = signal<string>('');
+  groupChanged = computed<boolean>(() => {
+    const group = this.selectedGroup();
+    if (!group) return false;
+
+    return false;
+  });
+
+  // Users
+  users = signal<User[]>([]);
+  displayedUsers = signal<User[]>([]);
+  searchUsers = signal<string>('');
+  selectedUser = signal<User | null>(null);
+  newUserEmail = signal<string>('');
+  newUserFullname = signal<string>('');
+  newUserPermissions = signal<Permission[]>([]);
+  userFullname = signal<string>('');
+  userEmail = signal<string>('');
+  userChanged = computed<boolean>(() => {
+    const user = this.selectedUser();
+    if (!user) return false;
+
+    const fullnameChanged = user.full_name !== this.userFullname();
+    const emailChanged = user.email !== this.userEmail();
+
+    return fullnameChanged || emailChanged;
+  });
 
 
   /* ------------------------------
@@ -42,8 +68,8 @@ export class DashboardService {
     return this.http.get<Group[]>(`${this.authSvc.apiUrl}/groups`, { headers: this.authSvc.authHeaders() });
   }
 
-  fetchTitles(group_id: string): Observable<GroupDetail> {
-    return this.http.get<GroupDetail>(`${this.authSvc.apiUrl}/groups/${group_id}`, { headers: this.authSvc.authHeaders() });
+  fetchTitles(groupId: string): Observable<GroupDetail> {
+    return this.http.get<GroupDetail>(`${this.authSvc.apiUrl}/groups/${groupId}`, { headers: this.authSvc.authHeaders() });
   }
 
   createGroup(): Observable<NewGroup> {
@@ -54,8 +80,35 @@ export class DashboardService {
     return this.http.post<NewGroup>(`${this.authSvc.apiUrl}/groups`, payload, { headers: this.authSvc.authHeaders('json', true) });
   }
 
-  deleteGroup(group_id: string): Observable<void> {
-    return this.http.delete<void>(`${this.authSvc.apiUrl}/groups/${group_id}`, { headers: this.authSvc.authHeaders() });
+  deleteGroup(groupId: string): Observable<void> {
+    return this.http.delete<void>(`${this.authSvc.apiUrl}/groups/${groupId}`, { headers: this.authSvc.authHeaders() });
+  }
+
+  fetchUsers(groupId?: string): Observable<User[]> {
+    return this.http.get<User[]>(`${this.authSvc.apiUrl}/users${groupId ? `?group_id=${groupId}` : ''}`, { headers: this.authSvc.authHeaders() });
+  }
+
+  createUser(): Observable<NewUser> {
+    const permissions = this.newUserPermissions();
+    const payload = {
+      email: this.newUserEmail(),
+      full_name: this.newUserFullname(),
+      ...(permissions && { permissions: permissions })
+    };
+
+    return this.http.post<NewUser>(`${this.authSvc.apiUrl}/users/register`, payload, { headers: this.authSvc.authHeaders('json', true) });
+  }
+
+  deleteUser(userId: string): Observable<void> {
+    return this.http.delete<void>(`${this.authSvc.apiUrl}/users/${userId}`, { headers: this.authSvc.authHeaders() });
+  }
+
+  updateUser(userId: string): Observable<User> {
+    const payload = {
+      full_name: this.userFullname()
+    };
+
+    return this.http.patch<User>(`${this.authSvc.apiUrl}/users/${userId}`, payload, { headers: this.authSvc.authHeaders('json', true) });
   }
 
 
@@ -75,13 +128,18 @@ export class DashboardService {
 
   openTitle(bookId: string): void {
     window.location.href = `${this.authSvc.baseUri}/book/${bookId}`;
-    // this.router.navigate(['/book', bookId]);
   }
 
   navigateToGroups(): void {
     this.closeDrawer();
     this.dashboardPage.set('groups');
     this.router.navigate(['/groups']);
+  }
+
+  navigateToUsers(): void {
+    this.closeDrawer();
+    this.dashboardPage.set('users');
+    this.router.navigate(['/users']);
   }
 
 
@@ -102,7 +160,16 @@ export class DashboardService {
   closeDrawer(): void {
     this.drawerOpen.set(false);
 
-    if (this.dashboardPage() === 'groups') this.selectedGroup.set(null);
+    switch (this.dashboardPage()) {
+      case 'groups':
+        this.selectedGroup.set(null);
+        break;
+      case 'users':
+      this.selectedUser.set(null);
+        break;
+      default:
+        break;
+    }
   }
 
   openGroupDetail(group: Group | null): void {
@@ -149,7 +216,7 @@ export class DashboardService {
             const newGroup = {
               _id: res.id,
               name: this.newGroupName(),
-              api: res?.api ?? '',
+              api: res?.api_key ?? '',
               description: this.newGroupDescription(),
               created_at: now,
               modified_at: now,
@@ -193,6 +260,116 @@ export class DashboardService {
             this.myGroups.set(updated);
             this.displayedGroups.set(updated);
             this.selectedGroup.set(null);
+          }),
+          catchError(err => {
+            console.error(err);
+            throw err;
+          })
+        ).subscribe(() => this.closeDrawer())
+      }
+    ])
+
+    edtSvc.openDialog();
+  }
+
+  openUserDetail(user: User | null): void {
+    if (!user) return;
+    
+    this.selectedUser.set(user);
+    this.drawerTitle.set(user.full_name);
+    this.drawerContent.set(true);
+    this.drawerContentType.set('users');
+    this.userFullname.set(user.full_name);
+    this.userEmail.set(user.email);
+    
+    this.drawerButtons.set([
+      {
+        label: 'Zavřít',
+        action: () => this.closeDrawer()
+      },
+      {
+        label: 'Uložit změny',
+        primary: true,
+        action: () => {
+          if (!this.userChanged()) return;
+
+          return this.updateUser(this.selectedUser()?._id ?? '').pipe(
+            tap((res: User) => {
+              this.users.update(prev => [ ...prev.filter(u => u._id !== res._id), res ]);
+              this.displayedUsers.set(this.users());
+              this.selectedUser.set(null);
+            }),
+            catchError(err => {
+              console.error(err);
+              throw err;
+            })
+          ).subscribe(() => this.closeDrawer());
+        }
+      }
+    ]);
+
+    this.openDrawer();
+  }
+
+  createUserDialog(): void {
+    const edtSvc = this.edtSvc;
+    
+    edtSvc.dialogTitle.set('Nový uživatel');
+    edtSvc.dialogContent.set(true);
+    edtSvc.dialogContentType.set('new-user');
+    edtSvc.dialogButtons.set([
+      { label: 'Zrušit' },
+      {
+        label: 'Vytvořit',
+        primary: true,
+        action: () => this.createUser().pipe(
+          tap((res: NewUser) => {
+            const newUser: User = {
+              _id: res.id,
+              email: this.newUserEmail(),
+              full_name: this.newUserFullname(),
+              password: res.password,
+              role: 'user',
+              permissions: this.newUserPermissions()
+            };
+
+            this.users.update(prev => [ ...prev, newUser ]);
+            this.displayedUsers.set(this.users());
+            this.selectedUser.set(newUser);
+            this.newUserEmail.set('');
+            this.newUserFullname.set('');
+            this.newUserPermissions.set([]);
+          }),
+          catchError(err => {
+            console.error(err);
+            throw err;
+          })
+        ).subscribe(() => this.openUserDetail(this.selectedUser()))
+      }
+    ])
+
+    this.closeDrawer();
+    edtSvc.openDialog();
+  }
+
+  deleteUserDialog(user: User | null): void {
+    const edtSvc = this.edtSvc;
+    
+    edtSvc.dialogTitle.set('Smazat uživatele');
+    edtSvc.dialogDescription.set(`Opravdu chcete smazat uživatele${' ' + user?.full_name}?`);
+    edtSvc.dialogContent.set(false);
+    edtSvc.dialogButtons.set([
+      { label: 'Zrušit' },
+      {
+        label: 'Smazat uživatele',
+        primary: true,
+        destructive: true,
+        action: () => this.deleteUser(user?._id ?? '').pipe(
+          tap(() => {
+            const updated = this.users().filter(u => u._id !== user?._id);
+            this.users.set(updated);
+            this.displayedUsers.set(updated);
+            this.selectedUser.set(null);
           }),
           catchError(err => {
             console.error(err);

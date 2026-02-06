@@ -81,16 +81,23 @@
       }
 
       label {
-        flex-direction: column;
-        align-items: flex-start;
+        position: relative;
+
+        svg {
+          fill: var(--icon-dark);
+          position: absolute;
+          top: var(--spacing-x4);
+          left: var(--spacing-x4);
+        }
 
         input {
           background-color: var(--bg-base);
-          padding: var(--spacing-x3) var(--spacing-x4);
+          padding: var(--spacing-x2) var(--spacing-x4) var(--spacing-x2) 44px;
+          margin-top: var(--spacing-x1);
           width: 100%;
-          // height: 40px;
           border: 1px solid var(--border-tertiary-color);
           border-radius: var(--spacing-x1);
+          @include font(400, var(--font-size-x2), var(--spacing-x6), var(--text-base));
 
           &:focus {
             border-color: var(--primary);
@@ -144,7 +151,7 @@
         }
       }
 
-      .delete-group {
+      .delete {
         display: flex;
         align-items: center;
         gap: var(--spacing-x2);

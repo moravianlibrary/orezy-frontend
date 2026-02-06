@@ -3,7 +3,7 @@ import { DashboardService } from '../../services/dashboard.service';
 import { FormsModule } from '@angular/forms';
 import { AuthService } from '../../services/auth.service';
 import { permissionDict, titleStateDict, titleStateFilterDict } from '../../app.config';
-import { Group, GroupDetail, Position, UserInGroup } from '../../app.types';
+import { Group, GroupDetail, Permission, Position, User, UserInGroup } from '../../app.types';
 import { defer, getDate } from '../../utils/utils';
 import { OverlayScrollbars } from 'overlayscrollbars';
 import { ActivatedRoute, Router } from '@angular/router';
@@ -28,6 +28,7 @@ export class MainComponent {
 
   getDate = getDate;
   maxUsers: number = 3;
+  maxGroups: number = 2;
 
   @ViewChild('bodyScroll', { static: false }) bodyScroll!: ElementRef<HTMLDivElement>;
   private osInstance?: ReturnType<typeof OverlayScrollbars>;
@@ -97,8 +98,19 @@ export class MainComponent {
               );
 
             // Users
-            // case 'users':
-              // some fetching
+            case 'users':
+              return this.dashSvc.fetchUsers().pipe(
+                tap((res: User[]) => {
+                  this.dashSvc.dashboardPage.set('users');
+                  this.dashSvc.users.set(res);
+                  this.dashSvc.displayedUsers.set(res);
+                }),
+                catchError(err => {
+                  if (err.status === 403) this.router.navigate(['/']);
+                  console.error('Fetching users failed:', err);
+                  throw err;
+                })
+              );
 
             default:
               return of(null);
@@ -229,10 +241,31 @@ export class MainComponent {
   }
 
   getUsersShort(group: Group): UserInGroup[] {
-    return group.users?.slice(0,this.maxUsers) ?? [];
+    return group.users?.slice(0, this.maxUsers) ?? [];
   }
 
   getUsersLong(group: Group): UserInGroup[] {
     return group.users ?? [];
+  }
+
+
+  /* ------------------------------
+    USERS
+  ------------------------------ */
+  get totalUsersLabel(): string {
+    const length = this.dashSvc.displayedUsers().length;
+    return `Celkem ${length} uživatel${[2, 3, 4].includes(length) ? 'é' : 'ů' }`;
+  }
+
+  filterUsers(): void {
+    this.dashSvc.displayedUsers.set(this.dashSvc.users().filter(u => u.full_name.toLowerCase().includes(this.dashSvc.searchUsers())));
+  }
+
+  getGroupsShort(user: User): Permission[] {
+    return user.permissions.slice(0, this.maxGroups);
+  }
+
+  getGroupsLong(user: User): Permission[] {
+    return user.permissions;
   }
 }

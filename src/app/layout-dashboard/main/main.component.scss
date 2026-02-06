@@ -114,6 +114,7 @@
         height: 40px;
         border: 1px solid var(--border-tertiary-color);
         border-radius: var(--spacing-x1);
+        @include font(400, var(--font-size-x2), var(--spacing-x6), var(--text-base));
 
         &:focus {
           border-color: var(--primary);
@@ -200,7 +201,7 @@
       }
 
       tbody {
-        .no-titles {
+        .no-results {
           td {
             width: 100%;
             padding-inline: var(--spacing-x6);
@@ -303,7 +304,7 @@
             }
           }
 
-          .users {
+          .tags {
             display: flex;
             gap: var(--spacing-x2);
           }
@@ -323,6 +324,7 @@
 
       tr {
         th, td {
+          max-width: 1px;
           overflow-x: hidden;
           text-overflow: ellipsis;
           white-space: nowrap;

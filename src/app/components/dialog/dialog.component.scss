@@ -30,7 +30,6 @@
   display: flex;
   flex-direction: column;
   gap: var(--spacing-x4);
-  height: 100%;
   max-height: 90%;
   visibility: hidden;
   opacity: 0;
@@ -200,6 +199,7 @@
   }
 }
 
+
 /* ------------------------------
   NEW GROUP DIALOG
 ------------------------------ */
@@ -233,6 +233,62 @@
         width: 100%;
         border: 1px solid var(--border-tertiary-color);
         border-radius: var(--spacing-x1);
+
+        &:focus {
+          border-color: var(--primary);
+          outline: none;
+        }
+      }
+    }
+  }
+
+  & > :first-child {
+    padding-top: 0;
+  }
+}
+
+
+/* ------------------------------
+  NEW USER DIALOG
+------------------------------ */
+.new-user-content-wrapper {
+  .block {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-x1);
+    padding: var(--spacing-x2);
+
+    label, .label {
+      display: flex;
+      align-items: center;
+      gap: var(--spacing-x2);
+      @include font(400, var(--font-size-x1), var(--spacing-x5), var(--text-light));
+
+      svg {
+        fill: var(--primary);
+
+        &:hover { cursor: pointer }
+      }
+    }
+
+    label {
+      position: relative;
+
+      svg {
+        fill: var(--icon-dark);
+        position: absolute;
+        top: var(--spacing-x4);
+        left: var(--spacing-x4);
+      }
+
+      input {
+        background-color: var(--bg-base);
+        padding: var(--spacing-x2) var(--spacing-x4) var(--spacing-x2) 44px;
+        margin-top: var(--spacing-x1);
+        width: 100%;
+        border: 1px solid var(--border-tertiary-color);
+        border-radius: var(--spacing-x1);
+        @include font(400, var(--font-size-x2), var(--spacing-x6), var(--text-base));
 
         &:focus {
           border-color: var(--primary);

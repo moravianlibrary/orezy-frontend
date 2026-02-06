@@ -7,7 +7,7 @@ export type PermissionType = 'read' | 'write' | 'manage';
 export interface Group {
   _id: string;
   name: string;
-  api?: string;
+  api_key?: ApiKey;
   description: string;
   created_at: string;
   modified_at: string;
@@ -27,7 +27,12 @@ export interface GroupDetail {
 
 export interface NewGroup {
   id: string;
-  api?: string;
+  api_key?: string;
+}
+
+export interface ApiKey {
+  key: string;
+  created_at: string;
 }
 
 export interface Title {
@@ -57,6 +62,7 @@ export interface User {
   _id: string;
   email: string;
   full_name: string;
+  password?: string;
   role: Role;
   permissions: Permission[];
 }
@@ -65,6 +71,11 @@ export interface UserInGroup {
   _id: string;
   full_name: string;
   permission: PermissionType;
+}
+
+export interface NewUser {
+  id: string;
+  password: string;
 }
 
 export interface Position {
@@ -155,7 +166,7 @@ export interface DrawerButton {
 }
 
 // Dialog
-export type DialogContentType = 'settings' | 'shortcuts' | 'new-group' | 'delete-group';
+export type DialogContentType = 'settings' | 'shortcuts' | 'new-group' | 'delete-group' | 'new-user';
 export interface DialogButton {
   label: string;
   primary?: boolean;
