@@ -252,6 +252,10 @@
         }
       }
     }
+
+    .error {
+      @include font(400, var(--font-size-x1-5), var(--spacing-x6), var(--text-destructive));
+    }
   }
 
   & > :first-child {

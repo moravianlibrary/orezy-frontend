@@ -16,6 +16,10 @@ export class DashboardService {
   private router = inject(Router);
 
   dashboardPage = signal<DashboardPage>('my-groups');
+  errors: Record<string, string> = {
+    groupNameEmpty: 'Zadejte název skupiny.',
+    groupNameExists: 'Skupina s daným názvem už existuje. Zadejte prosím jiný název.',
+  };
 
   // My groups
   myGroups = signal<Group[]>([]);
@@ -33,8 +37,10 @@ export class DashboardService {
   selectedGroup = signal<Group | null>(null);
   newGroupName = signal<string>('');
   newGroupDescription = signal<string>('');
+  newGroupNameError = signal<string>('');
   groupName = signal<string>('');
   groupDescription = signal<string>('');
+  groupNameError = signal<string>('');
   groupChanged = computed<boolean>(() => {
     const group = this.selectedGroup();
     if (!group) return false;
@@ -210,6 +216,18 @@ export class DashboardService {
             const group = this.selectedGroup();
             if (!group) return;
 
+            const groupName = this.groupName();
+
+            if (!groupName) {
+              this.groupNameError.set(this.errors['groupNameEmpty']);
+              return;
+            }
+
+            if (this.groups().some(g => g.name === groupName)) {
+              this.groupNameError.set(this.errors['groupNameExists']);
+              return;
+            }
+
             return this.updateGroup(group?._id ?? '').pipe(
               tap(() => {
                 this.myGroups.update(prev => [
@@ -221,6 +239,7 @@ export class DashboardService {
                 ]);
                 this.displayedGroups.set(this.groups());
                 this.selectedGroup.set(null);
+                this.groupNameError.set('');
               }),
               catchError(err => {
                 console.error(err);
@@ -246,38 +265,73 @@ export class DashboardService {
       {
         label: 'Vytvořit',
         primary: true,
-        action: () => this.createGroup().pipe(
-          tap((res: NewGroup) => {
-            const now = Date();
-            const newGroup = {
-              _id: res.id,
-              name: this.newGroupName(),
-              api: res?.api_key ?? '',
-              description: this.newGroupDescription(),
-              created_at: now,
-              modified_at: now,
-              title_count: 0,
-              permission: 'manage' as PermissionType
-            };
+        action: () => {
+          const newGroupName = this.newGroupName();
 
-            this.myGroups.update(prev => [ ...prev, newGroup ]);
-            this.displayedGroups.set(this.myGroups());
-            this.selectedGroup.set(newGroup);
-            this.newGroupName.set('');
-            this.newGroupDescription.set('');
-          }),
-          catchError(err => {
-            console.error(err);
-            throw err;
-          })
-        ).subscribe(() => this.openGroupDetail(this.selectedGroup()))
+          if (!newGroupName) {
+            this.newGroupNameError.set(this.errors['groupNameEmpty']);
+            return;
+          }
+
+          if (this.groups().some(g => g.name === newGroupName)) {
+            this.newGroupNameError.set(this.errors['groupNameExists']);
+            return;
+          }
+
+          this.edtSvc.closeDialog();
+          
+          return this.createGroup().pipe(
+            tap((res: NewGroup) => {
+              const now = Date();
+              const newGroup = {
+                _id: res.id,
+                name: this.newGroupName(),
+                api: res?.api_key ?? '',
+                description: this.newGroupDescription(),
+                created_at: now,
+                modified_at: now,
+                title_count: 0,
+                permission: 'manage' as PermissionType
+              };
+
+              this.myGroups.update(prev => [ ...prev, newGroup ]);
+              this.displayedGroups.set(this.myGroups());
+              this.selectedGroup.set(newGroup);
+              this.newGroupName.set('');
+              this.newGroupDescription.set('');
+              this.newGroupNameError.set('');
+            }),
+            catchError(err => {
+              console.error(err);
+              throw err;
+            })
+          ).subscribe(() => this.openGroupDetail(this.selectedGroup()))
+        }
       }
     ])
 
     this.newGroupName.set('');
     this.newGroupDescription.set('');
+    this.newGroupNameError.set('');
     this.closeDrawer();
     edtSvc.openDialog();
+  }
+
+  checkNewGroupNameUniqueness(): void {
+    this.newGroupNameError.set(this.groups().some(g => g.name === this.newGroupName())
+      ? this.errors['groupNameExists']
+      : ''
+    );
+  }
+
+  checkGroupNameUniqueness(): void {
+    this.groupNameError.set(
+      this.groups()
+        .filter(g => g._id !== this.selectedGroup()?._id)
+        .some(g => g.name === this.groupName())
+          ? this.errors['groupNameExists']
+          : ''
+    );
   }
 
   deleteGroupDialog(group: Group | null): void {
@@ -298,6 +352,7 @@ export class DashboardService {
             this.myGroups.set(updated);
             this.displayedGroups.set(updated);
             this.selectedGroup.set(null);
+            this.edtSvc.closeDialog();
           }),
           catchError(err => {
             console.error(err);

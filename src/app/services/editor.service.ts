@@ -1205,13 +1205,17 @@ export class EditorService {
           localStorage.setItem('filterPageNumberStart', 'all');
           this.redrawImageOnCanvas();
           this.currentPages.forEach(p => this.drawPage(p));
+          this.closeDialog();
           this.showToast('Nastavení bylo resetováno.', { type: 'success' });
         }
       },
       {
         label: 'Uložit',
         primary: true,
-        action: () => this.saveSettings()
+        action: () => {
+          this.closeDialog();
+          this.saveSettings();
+        }
       }
     ]);
 
@@ -1253,7 +1257,10 @@ export class EditorService {
         label: 'Resetovat celý dokument',
         primary: true,
         destructive: true,
-        action: () => this.resetDoc()
+        action: () => {
+          this.closeDialog();
+          this.resetDoc();
+        }
       }
     ]);
 
@@ -1271,7 +1278,10 @@ export class EditorService {
         label: 'Resetovat změny skenu',
         primary: true,
         destructive: true,
-        action: () => this.resetScan()
+        action: () => {
+          this.closeDialog();
+          this.resetScan();
+        }
       }
     ]);
 
@@ -1288,7 +1298,10 @@ export class EditorService {
       {
         label: 'Ano, dokončit',
         primary: true,
-        action: () => this.finishEverything()
+        action: () => {
+          this.closeDialog();
+          this.finishEverything();
+        }
       }
     ]);
 

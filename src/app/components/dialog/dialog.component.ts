@@ -30,11 +30,11 @@ export class DialogComponent {
   filterPageNumberStartDict: Record<PageNumberType, string> = filterPageNumberStartDict;
   filterPageNumberStartDictKeys = Object.keys(filterPageNumberStartDict) as PageNumberType[];
 
-  close() {
+  close(): void {
     this.closed.emit();
   }
 
-  onBackdropClick() {
+  onBackdropClick(): void {
     this.backdropClick.emit();
     this.close();
 
