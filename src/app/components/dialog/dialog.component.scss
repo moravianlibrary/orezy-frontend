@@ -219,7 +219,9 @@
       svg {
         fill: var(--primary);
 
-        &:hover { cursor: pointer }
+        &:hover {
+          cursor: pointer
+        }
       }
     }
 

@@ -39,6 +39,16 @@ export function getDate(input: string): string[] {
     .split(' ');
 }
 
+export function checkEmailValidity(email: string): boolean {
+  if (!email) return false;
+
+  const normalizedEmail = email.trim().toLowerCase();
+  const emailRegex =
+    /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+  return emailRegex.test(normalizedEmail);
+}
+
 
 /* ------------------------------
   UI

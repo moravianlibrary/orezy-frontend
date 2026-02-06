@@ -105,6 +105,10 @@
         position: absolute;
         top: var(--spacing-x3);
         left: var(--spacing-x4);
+
+        &:hover {
+          cursor: pointer
+        }
       }
 
       input {

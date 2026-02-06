@@ -5,6 +5,7 @@ import { AuthService } from './auth.service';
 import { DashboardPage, DrawerButton, DrawerContentType, Group, GroupDetail, NewGroup, NewUser, Permission, PermissionType, Title, User } from '../app.types';
 import { Router } from '@angular/router';
 import { EditorService } from './editor.service';
+import { checkEmailValidity } from '../utils/utils';
 
 @Injectable({
   providedIn: 'root'
@@ -19,6 +20,10 @@ export class DashboardService {
   errors: Record<string, string> = {
     groupNameEmpty: 'Zadejte název skupiny.',
     groupNameExists: 'Skupina s daným názvem už existuje. Zadejte prosím jiný název.',
+    userNameEmpty: 'Zadejte jméno uživatele.',
+    userEmailEmpty: 'Zadejte e-mail uživatele.',
+    userEmailInvalid: 'Zadejte e-mail uživatele ve formátu uzivatel@domena.cz.',
+    userEmailExists: 'Uživatel s daným e-mailem už existuje. Zadejte prosím jiný e-mail.'
   };
 
   // My groups
@@ -59,8 +64,12 @@ export class DashboardService {
   newUserEmail = signal<string>('');
   newUserFullname = signal<string>('');
   newUserPermissions = signal<Permission[]>([]);
+  newUserNameError = signal<string>('');
+  newUserEmailError = signal<string>('');
   userFullname = signal<string>('');
   userEmail = signal<string>('');
+  userNameError = signal<string>('');
+  userEmailError = signal<string>('');
   userChanged = computed<boolean>(() => {
     const user = this.selectedUser();
     if (!user) return false;
@@ -318,9 +327,10 @@ export class DashboardService {
   }
 
   checkNewGroupNameUniqueness(): void {
-    this.newGroupNameError.set(this.groups().some(g => g.name === this.newGroupName())
-      ? this.errors['groupNameExists']
-      : ''
+    this.newGroupNameError.set(this.groups()
+      .some(g => g.name === this.newGroupName())
+        ? this.errors['groupNameExists']
+        : ''
     );
   }
 
@@ -386,6 +396,29 @@ export class DashboardService {
         action: () => {
           if (!this.userChanged()) return;
 
+          const userName = this.userFullname();
+          const userEmail = this.userEmail();
+
+          if (!userName) {
+            this.userNameError.set(this.errors['userNameEmpty']);
+            return;
+          }
+
+          if (!userEmail) {
+            this.userEmailError.set(this.errors['userEmailEmpty']);
+            return;
+          }
+
+          if (!checkEmailValidity(this.userEmail())) {
+            this.userEmailError.set(this.errors['userEmailInvalid']);
+            return;
+          }
+
+          if (this.users().filter(u => u._id !== this.selectedUser()?._id).some(u => u.email === userEmail)) {
+            this.userEmailError.set(this.errors['userEmailExists']);
+            return;
+          }
+
           return this.updateUser(this.selectedUser()?._id ?? '').pipe(
             tap((res: User) => {
               this.users.update(prev => [ ...prev.filter(u => u._id !== res._id), res ]);
@@ -415,37 +448,117 @@ export class DashboardService {
       {
         label: 'Vytvořit',
         primary: true,
-        action: () => this.createUser().pipe(
-          tap((res: NewUser) => {
-            const newUser: User = {
-              _id: res.id,
-              email: this.newUserEmail(),
-              full_name: this.newUserFullname(),
-              password: res.password,
-              role: 'user',
-              permissions: this.newUserPermissions()
-            };
+        action: () => {
+          if (!this.newUserFullname()) {
+            this.newUserNameError.set(this.errors['userNameEmpty']);
+          }
 
-            this.users.update(prev => [ ...prev, newUser ]);
-            this.displayedUsers.set(this.users());
-            this.selectedUser.set(newUser);
-            this.newUserEmail.set('');
-            this.newUserFullname.set('');
-            this.newUserPermissions.set([]);
-          }),
-          catchError(err => {
-            console.error(err);
-            throw err;
-          })
-        ).subscribe(() => this.openUserDetail(this.selectedUser()))
+          const newUserEmail = this.newUserEmail();
+
+          if (!newUserEmail) {
+            this.newUserEmailError.set(this.errors['userEmailEmpty']);
+            return;
+          }
+
+          if (!checkEmailValidity(newUserEmail)) {
+            this.newUserEmailError.set(this.errors['userEmailInvalid']);
+            return;
+          }
+
+          if (this.users().some(u => u.email === this.newUserEmail())) {
+            this.newUserEmailError.set(this.errors['userEmailExists']);
+            return;
+          }
+          
+          this.edtSvc.closeDialog();
+
+          return this.createUser().pipe(
+            tap((res: NewUser) => {
+              const newUser: User = {
+                _id: res.id,
+                email: this.newUserEmail(),
+                full_name: this.newUserFullname(),
+                password: res.password,
+                role: 'user',
+                permissions: this.newUserPermissions()
+              };
+
+              this.users.update(prev => [ ...prev, newUser ]);
+              this.displayedUsers.set(this.users());
+              this.selectedUser.set(newUser);
+              this.newUserEmail.set('');
+              this.newUserFullname.set('');
+              this.newUserPermissions.set([]);
+              this.newUserNameError.set('');
+              this.newUserEmailError.set('');
+            }),
+            catchError(err => {
+              console.error(err);
+              throw err;
+            })
+          ).subscribe(() => this.openUserDetail(this.selectedUser()))
+        }
       }
     ])
 
     this.newUserEmail.set('');
     this.newUserFullname.set('');
     this.newUserPermissions.set([]);
+    this.newUserNameError.set('');
+    this.newUserEmailError.set('');
     this.closeDrawer();
     edtSvc.openDialog();
+  }
+
+  checkNewUserName(): void {
+    this.newUserNameError.set('');
+  }
+
+  checkNewUserEmail(): void {
+    this.checkNewUserEmailValidity();
+    this.checkNewUserEmailUniqueness();
+  }
+
+  checkNewUserEmailValidity(): void {
+    this.newUserEmailError.set(checkEmailValidity(this.newUserEmail())
+      ? this.errors['userEmailInvalid']
+      : ''
+    );
+  }
+
+  checkNewUserEmailUniqueness(): void {
+    this.newUserEmailError.set(
+      this.users()
+        .some(u => u.email === this.newUserEmail())
+          ? this.errors['userEmailExists']
+          : ''
+    );
+  }
+
+  checkUserName(): void {
+    this.userNameError.set('');
+  }
+
+  checkUserEmail(): void {
+    this.checkUserEmailValidity();
+    this.checkUserEmailUniqueness();
+  }
+
+  checkUserEmailValidity(): void {
+    this.userEmailError.set(checkEmailValidity(this.userEmail())
+      ? this.errors['userEmailInvalid']
+      : ''
+    );
+  }
+
+  checkUserEmailUniqueness(): void {
+    this.userEmailError.set(
+      this.users()
+        .filter(u => u._id !== this.selectedUser()?._id)
+        .some(u => u.email === this.userEmail())
+          ? this.errors['userEmailExists']
+          : ''
+    );
   }
 
   deleteUserDialog(user: User | null): void {
@@ -466,6 +579,7 @@ export class DashboardService {
             this.users.set(updated);
             this.displayedUsers.set(updated);
             this.selectedUser.set(null);
+            this.edtSvc.closeDialog();
           }),
           catchError(err => {
             console.error(err);

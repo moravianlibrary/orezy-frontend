@@ -246,8 +246,13 @@
               type="text"
               placeholder="Jméno"
               [(ngModel)]="dashSvc.userFullname"
+              (input)="dashSvc.checkUserName()"
             />
           </label>
+          @let userNameError = dashSvc.userNameError();
+          @if (userNameError) {
+            <span class="error">{{ userNameError }}</span>
+          }
           <label for="user-email">
             <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
               <path fill-rule="evenodd" clip-rule="evenodd" d="M2.5899 3.49141C2.1366 3.91233 1.83301 4.59531 1.83301 5.66668V10.3333C1.83301 11.4047 2.1366 12.0877 2.5899 12.5086C3.04991 12.9358 3.74299 13.1667 4.66634 13.1667H11.333C12.2564 13.1667 12.9494 12.9358 13.4094 12.5086C13.8628 12.0877 14.1663 11.4047 14.1663 10.3333V5.66668C14.1663 4.59531 13.8628 3.91233 13.4094 3.49141C12.9494 3.06425 12.2564 2.83334 11.333 2.83334H4.66634C3.74299 2.83334 3.04991 3.06425 2.5899 3.49141ZM1.90945 2.75861C2.61611 2.10243 3.58969 1.83334 4.66634 1.83334H11.333C12.4097 1.83334 13.3832 2.10243 14.0899 2.75861C14.8033 3.42102 15.1663 4.40471 15.1663 5.66668V10.3333C15.1663 11.5953 14.8033 12.579 14.0899 13.2414C13.3832 13.8976 12.4097 14.1667 11.333 14.1667H4.66634C3.58969 14.1667 2.61611 13.8976 1.90945 13.2414C1.19608 12.579 0.833008 11.5953 0.833008 10.3333V5.66668C0.833008 4.40471 1.19608 3.42102 1.90945 2.75861Z" />
@@ -259,8 +264,13 @@
               type="email"
               placeholder="E-mail"
               [(ngModel)]="dashSvc.userEmail"
+              (input)="dashSvc.checkUserEmail()"
             />
           </label>
+          @let userEmailError = dashSvc.userEmailError();
+          @if (userEmailError) {
+            <span class="error">{{ userEmailError }}</span>
+          }
           <span
             class="button delete"
             (click)="dashSvc.deleteUserDialog(user)"
