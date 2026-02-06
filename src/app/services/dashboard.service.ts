@@ -33,11 +33,16 @@ export class DashboardService {
   selectedGroup = signal<Group | null>(null);
   newGroupName = signal<string>('');
   newGroupDescription = signal<string>('');
+  groupName = signal<string>('');
+  groupDescription = signal<string>('');
   groupChanged = computed<boolean>(() => {
     const group = this.selectedGroup();
     if (!group) return false;
 
-    return false;
+    const nameChanged = group.name !== this.groupName();
+    const descriptionChanged = group.description !== this.groupDescription();
+
+    return nameChanged || descriptionChanged;
   });
 
   // Users
@@ -82,6 +87,15 @@ export class DashboardService {
 
   deleteGroup(groupId: string): Observable<void> {
     return this.http.delete<void>(`${this.authSvc.apiUrl}/groups/${groupId}`, { headers: this.authSvc.authHeaders() });
+  }
+
+  updateGroup(groupId: string): Observable<void> {
+    const payload = {
+      name: this.groupName(),
+      description: this.groupDescription()
+    };
+
+    return this.http.patch<void>(`${this.authSvc.apiUrl}/groups/${groupId}`, payload, { headers: this.authSvc.authHeaders('json', true) });
   }
 
   fetchUsers(groupId?: string): Observable<User[]> {
@@ -179,6 +193,8 @@ export class DashboardService {
     this.drawerTitle.set(group.name);
     this.drawerContent.set(true);
     this.drawerContentType.set('groups');
+    this.groupName.set(group.name);
+    this.groupDescription.set(group.description);
     
     if (this.authSvc.user()?.role === 'admin') {
       this.drawerButtons.set([
@@ -190,7 +206,27 @@ export class DashboardService {
           label: 'Uložit změny',
           primary: true,
           action: () => {
-            console.log('save');
+            if (!this.groupChanged()) return;
+            const group = this.selectedGroup();
+            if (!group) return;
+
+            return this.updateGroup(group?._id ?? '').pipe(
+              tap(() => {
+                this.myGroups.update(prev => [
+                  ...prev.filter(g => g._id !== group?._id), {
+                    ...group,
+                    name: this.groupName(),
+                    description: this.groupDescription()
+                  } 
+                ]);
+                this.displayedGroups.set(this.groups());
+                this.selectedGroup.set(null);
+              }),
+              catchError(err => {
+                console.error(err);
+                throw err;
+              })
+            ).subscribe(() => this.closeDrawer());
           }
         }
       ]);
@@ -238,6 +274,8 @@ export class DashboardService {
       }
     ])
 
+    this.newGroupName.set('');
+    this.newGroupDescription.set('');
     this.closeDrawer();
     edtSvc.openDialog();
   }
@@ -348,6 +386,9 @@ export class DashboardService {
       }
     ])
 
+    this.newUserEmail.set('');
+    this.newUserFullname.set('');
+    this.newUserPermissions.set([]);
     this.closeDrawer();
     edtSvc.openDialog();
   }

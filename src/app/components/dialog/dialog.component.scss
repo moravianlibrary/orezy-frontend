@@ -201,57 +201,9 @@
 
 
 /* ------------------------------
-  NEW GROUP DIALOG
+  NEW GROUP & USER DIALOG
 ------------------------------ */
-.new-group-content-wrapper {
-  .block {
-    display: flex;
-    flex-direction: column;
-    gap: var(--spacing-x1);
-    padding: var(--spacing-x2);
-
-    label, .label {
-      display: flex;
-      align-items: center;
-      gap: var(--spacing-x2);
-      @include font(400, var(--font-size-x1), var(--spacing-x5), var(--text-light));
-
-      svg {
-        fill: var(--primary);
-
-        &:hover { cursor: pointer }
-      }
-    }
-
-    label {
-      flex-direction: column;
-      align-items: flex-start;
-
-      input {
-        background-color: var(--bg-base);
-        padding: var(--spacing-x3) var(--spacing-x4);
-        width: 100%;
-        border: 1px solid var(--border-tertiary-color);
-        border-radius: var(--spacing-x1);
-
-        &:focus {
-          border-color: var(--primary);
-          outline: none;
-        }
-      }
-    }
-  }
-
-  & > :first-child {
-    padding-top: 0;
-  }
-}
-
-
-/* ------------------------------
-  NEW USER DIALOG
------------------------------- */
-.new-user-content-wrapper {
+.new-group-content-wrapper, .new-user-content-wrapper {
   .block {
     display: flex;
     flex-direction: column;
