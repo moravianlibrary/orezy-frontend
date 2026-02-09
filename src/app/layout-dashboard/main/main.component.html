@@ -60,6 +60,9 @@
               @let myGroups = dashSvc.displayedMyGroups();
               @if (myGroups.length) {
                 @for (group of myGroups; track group._id) {
+                  @let isUpload = group.permissions.includes('upload');
+                  @let isWrite = group.permissions.includes('write');
+                  @let isRead = group.permissions.includes('read_group') || group.permissions.includes('read_title');
                   <tr
                     tabindex="0"
                     class="clickable"
@@ -70,11 +73,11 @@
                     <td>
                       <span
                         class="tag"
-                        [class.success]="group.permission === 'manage'"
-                        [class.pending]="group.permission === 'write'"
-                        [class.error]="group.permission === 'read'"
+                        [class.success]="isUpload"
+                        [class.pending]="!isUpload && isWrite"
+                        [class.error]="!isUpload && !isWrite && isRead"
                       >
-                        @if (group.permission === 'manage') {
+                        @if (isUpload) {
                           <svg
                             width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"
                             class="success"
@@ -91,7 +94,7 @@
                               </clipPath>
                             </defs>
                           </svg>
-                        } @else if (group.permission === 'write') {
+                        } @else if (isWrite) {
                           <svg
                             width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"
                             class="pending"
@@ -100,7 +103,7 @@
                             <path fill-rule="evenodd" clip-rule="evenodd" d="M7.84953 2.87249C8.12238 2.82998 8.37803 3.01671 8.42054 3.28956C8.67196 4.9033 9.98164 6.13838 11.6099 6.30238C11.8847 6.33005 12.085 6.57521 12.0573 6.84997C12.0296 7.12472 11.7845 7.32502 11.5097 7.29734C9.43136 7.08801 7.75438 5.50975 7.43246 3.4435C7.38995 3.17065 7.57668 2.915 7.84953 2.87249Z" />
                             <path fill-rule="evenodd" clip-rule="evenodd" d="M1.5 14.6666C1.5 14.3904 1.72386 14.1666 2 14.1666H14C14.2761 14.1666 14.5 14.3904 14.5 14.6666C14.5 14.9427 14.2761 15.1666 14 15.1666H2C1.72386 15.1666 1.5 14.9427 1.5 14.6666Z" />
                           </svg>
-                        } @else if (group.permission === 'read') {
+                        } @else if (isRead) {
                           <svg
                             width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"
                             class="error"
@@ -109,7 +112,13 @@
                             <path fill-rule="evenodd" clip-rule="evenodd" d="M1.50489 5.99771C3.09884 3.49214 5.43458 1.97974 7.9999 1.97974C10.5653 1.97974 12.9012 3.49227 14.4951 5.99804C14.8584 6.5676 15.0232 7.29717 15.0232 7.9964C15.0232 8.69563 14.8584 9.42521 14.4951 9.99477C12.9012 12.5005 10.5653 14.0131 7.9999 14.0131C5.43446 14.0131 3.09863 12.5005 1.50468 9.99477C1.14137 9.42521 0.976562 8.69563 0.976562 7.9964C0.976562 7.29704 1.14143 6.56732 1.50489 5.99771ZM7.9999 2.97974C5.85866 2.97974 3.80783 4.24054 2.34844 6.53476L2.34802 6.53542C2.11163 6.90577 1.97656 7.4359 1.97656 7.9964C1.97656 8.55691 2.11163 9.08704 2.34802 9.45739L2.34844 9.45804C3.80783 11.7523 5.85866 13.0131 7.9999 13.0131C10.1411 13.0131 12.192 11.7523 13.6514 9.45804L13.6518 9.45739C13.8882 9.08704 14.0232 8.55691 14.0232 7.9964C14.0232 7.4359 13.8882 6.90577 13.6518 6.53542L13.6514 6.53476C12.192 4.24054 10.1411 2.97974 7.9999 2.97974Z" />
                           </svg>
                         }
-                        <span class="tag-label">{{ permissionDict[group.permission] }}</span>
+                        @if (isUpload) {
+                          <span class="tag-label">{{ permissionDict['upload'] }}</span>
+                        } @else if (isWrite) {
+                          <span class="tag-label">{{ permissionDict['write'] }}</span>
+                        } @else if (isRead) {
+                          <span class="tag-label">{{ permissionDict['read_group'] }}</span>
+                        }
                       </span>
                     </td>
                     <td>
@@ -392,13 +401,16 @@
                         @let usersShort = getUsersShort(group);
                         @let usersLong = getUsersLong(group);
                         @for (user of usersShort; track user._id) {
+                          @let isUpload = user.permission.includes('upload');
+                          @let isWrite = user.permission.includes('write');
+                          @let isRead = user.permission.includes('read_group') || user.permission.includes('read_title');
                           <span
                             class="tag"
-                            [class.success]="user.permission === 'manage'"
-                            [class.pending]="user.permission === 'write'"
-                            [class.error]="user.permission === 'read'"
+                            [class.success]="isUpload"
+                            [class.pending]="!isUpload && isWrite"
+                            [class.error]="!isUpload && !isWrite && isRead"
                           >
-                            @if (user.permission === 'manage') {
+                            @if (isUpload) {
                               <svg
                                 width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"
                                 class="success"
@@ -415,7 +427,7 @@
                                   </clipPath>
                                 </defs>
                               </svg>
-                            } @else if (user.permission === 'write') {
+                            } @else if (isWrite) {
                               <svg
                                 width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"
                                 class="pending"
@@ -424,7 +436,7 @@
                                 <path fill-rule="evenodd" clip-rule="evenodd" d="M7.84953 2.87249C8.12238 2.82998 8.37803 3.01671 8.42054 3.28956C8.67196 4.9033 9.98164 6.13838 11.6099 6.30238C11.8847 6.33005 12.085 6.57521 12.0573 6.84997C12.0296 7.12472 11.7845 7.32502 11.5097 7.29734C9.43136 7.08801 7.75438 5.50975 7.43246 3.4435C7.38995 3.17065 7.57668 2.915 7.84953 2.87249Z" />
                                 <path fill-rule="evenodd" clip-rule="evenodd" d="M1.5 14.6666C1.5 14.3904 1.72386 14.1666 2 14.1666H14C14.2761 14.1666 14.5 14.3904 14.5 14.6666C14.5 14.9427 14.2761 15.1666 14 15.1666H2C1.72386 15.1666 1.5 14.9427 1.5 14.6666Z" />
                               </svg>
-                            } @else if (user.permission === 'read') {
+                            } @else if (isRead) {
                               <svg
                                 width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"
                                 class="error"
@@ -548,13 +560,16 @@
                         @let groupsShort = getGroupsShort(user);
                         @let groupsLong = getGroupsLong(user);
                         @for (group of groupsShort; track group.group_id) {
+                          @let isUpload = group.permission.includes('upload');
+                          @let isWrite = group.permission.includes('write');
+                          @let isRead = group.permission.includes('read_group') || group.permission.includes('read_title');
                           <span
                             class="tag"
-                            [class.success]="group.permission === 'manage'"
-                            [class.pending]="group.permission === 'write'"
-                            [class.error]="group.permission === 'read'"
+                            [class.success]="isUpload"
+                            [class.pending]="!isUpload && isWrite"
+                            [class.error]="!isUpload && !isWrite && isRead"
                           >
-                            @if (group.permission === 'manage') {
+                            @if (isUpload) {
                               <svg
                                 width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"
                                 class="success"
@@ -571,7 +586,7 @@
                                   </clipPath>
                                 </defs>
                               </svg>
-                            } @else if (group.permission === 'write') {
+                            } @else if (isWrite) {
                               <svg
                                 width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"
                                 class="pending"
@@ -580,7 +595,7 @@
                                 <path fill-rule="evenodd" clip-rule="evenodd" d="M7.84953 2.87249C8.12238 2.82998 8.37803 3.01671 8.42054 3.28956C8.67196 4.9033 9.98164 6.13838 11.6099 6.30238C11.8847 6.33005 12.085 6.57521 12.0573 6.84997C12.0296 7.12472 11.7845 7.32502 11.5097 7.29734C9.43136 7.08801 7.75438 5.50975 7.43246 3.4435C7.38995 3.17065 7.57668 2.915 7.84953 2.87249Z" />
                                 <path fill-rule="evenodd" clip-rule="evenodd" d="M1.5 14.6666C1.5 14.3904 1.72386 14.1666 2 14.1666H14C14.2761 14.1666 14.5 14.3904 14.5 14.6666C14.5 14.9427 14.2761 15.1666 14 15.1666H2C1.72386 15.1666 1.5 14.9427 1.5 14.6666Z" />
                               </svg>
-                            } @else if (group.permission === 'read') {
+                            } @else if (isRead) {
                               <svg
                                 width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"
                                 class="error"

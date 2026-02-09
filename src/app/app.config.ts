@@ -51,9 +51,10 @@ export const userRolesDict: Record<Role | 'manage', string> = {
 };
 
 export const permissionDict: Record<PermissionType, string> = {
-  'read': 'Čtení',
+  'read_group': 'Čtení',
+  'read_title': 'Čtení',
   'write': 'Úpravy',
-  'manage': 'Správa'
+  'upload': 'Správa'
 };
 
 export const titleStateDict: Record<TitleState, string> = {

@@ -59,7 +59,7 @@ export class AuthService {
       ).subscribe((res: User) => {
         const user = res;
         this.user.set(user);
-        this.isManager.set(!!user.permissions.filter(p => p.permission === 'manage').length);
+        this.isManager.set(!!user.permissions.filter(p => p.permission.includes('upload')).length);
       });
     }
 

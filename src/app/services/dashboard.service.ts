@@ -36,7 +36,7 @@ export class DashboardService {
   searchTitles = signal<string>('');
 
   // Groups
-  groups = computed(() => this.myGroups().filter(g => g.permission === 'manage'));
+  groups = computed(() => this.myGroups().filter(g => g.permissions.includes('upload')));
   displayedGroups = signal<Group[]>([]);
   searchGroups = signal<string>('');
   selectedGroup = signal<Group | null>(null);
@@ -300,7 +300,7 @@ export class DashboardService {
                 created_at: now,
                 modified_at: now,
                 title_count: 0,
-                permission: 'manage' as PermissionType
+                permissions: ['read_group', 'read_title', 'write', 'upload'] as PermissionType[]
               };
 
               this.myGroups.update(prev => [ ...prev, newGroup ]);

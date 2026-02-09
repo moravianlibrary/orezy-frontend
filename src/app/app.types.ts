@@ -2,7 +2,7 @@
     DASHBOARD
   ------------------------------ */
 export type DashboardPage = 'my-groups' | 'my-groups-titles' | 'groups' | 'users';
-export type PermissionType = 'read' | 'write' | 'manage';
+export type PermissionType = 'read_group' | 'read_title' | 'write' | 'upload';
 
 export interface Group {
   _id: string;
@@ -12,7 +12,7 @@ export interface Group {
   created_at: string;
   modified_at: string;
   title_count: number;
-  permission: PermissionType;
+  permissions: PermissionType[];
   users?: UserInGroup[];
 }
 
