@@ -42,10 +42,15 @@ export const routes: Routes = [
     loadComponent: () => import('./routes/editor/editor.component').then((m) => m.EditorComponent),
     title: 'Kontrola a úpravy | Skeny',
     canActivate: [ AuthService ]
-  },  
+  },
+  {
+    path: 'forbidden',
+    loadComponent: () => import('./routes/errors/forbidden/forbidden.component').then((m) => m.ForbiddenComponent),
+    title: 'Nemáte oprávnění | Skeny'
+  },
   {
     path: '**',
-    loadComponent: () => import('./routes/not-found/not-found.component').then((m) => m.NotFoundComponent),
+    loadComponent: () => import('./routes/errors/not-found/not-found.component').then((m) => m.NotFoundComponent),
     title: 'Stránka nenalezena | Skeny'
   }
 ];

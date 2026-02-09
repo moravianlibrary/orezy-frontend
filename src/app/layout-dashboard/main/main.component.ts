@@ -53,6 +53,8 @@ export class MainComponent {
             case null:
               return this.dashSvc.fetchGroups().pipe(
                 tap((res: Group[]) => {
+                  if (!this.authSvc.user()?.permissions.find(p => p.permission.includes('read_group'))) this.router.navigate(['/forbidden']);
+                  
                   this.dashSvc.dashboardPage.set('my-groups');
                   this.dashSvc.myGroups.set(res);
                   this.dashSvc.displayedMyGroups.set(res);

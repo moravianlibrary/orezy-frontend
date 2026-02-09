@@ -54,7 +54,7 @@ export interface TitleDetail {
 
 export interface Permission {
   group_id: string;
-  permission: string;
+  permission: PermissionType[];
   created_at: string;
 }
 
