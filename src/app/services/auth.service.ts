@@ -18,6 +18,7 @@ export class AuthService {
   error = signal<string>('');
 
   user = signal<User | null>(null);
+  canWriteTitle = signal<Boolean>(false);
   isManager = signal<Boolean>(false);
 
   get baseUri(): string {
@@ -41,14 +42,18 @@ export class AuthService {
   }
     
   canActivate(next: ActivatedRouteSnapshot, state: RouterStateSnapshot) {
-    localStorage.setItem('redirectUri', state.url);
+    const url = state.url;
+    localStorage.setItem('redirectUri', url);
     const accessToken = localStorage.getItem('access_token');
 
     // Possible výjimka z loginu
     // if (condition) return true;
 
     if (accessToken) {
-      return this.verifyToken().pipe(
+      let titleId: string | undefined = '';
+      if (url.includes('book')) titleId = url.split('/').pop();
+
+      return this.verifyToken(titleId).pipe(
         catchError((err) => {
           localStorage.removeItem('access_token');
           this.router.navigate([localStorage.getItem('url') || '']);
@@ -59,7 +64,11 @@ export class AuthService {
       ).subscribe((res: User) => {
         const user = res;
         this.user.set(user);
-        this.isManager.set(!!user.permissions.filter(p => p.permission.includes('upload')).length);
+        
+        const permissions = user.permissions;
+        this.isManager.set(!!permissions.filter(p => p.permission.includes('upload')).length);
+        this.canWriteTitle.set(false);
+        if (titleId && permissions[0].permission.includes('write')) this.canWriteTitle.set(true);
       });
     }
 
@@ -67,8 +76,8 @@ export class AuthService {
     return false;
   }
 
-  private verifyToken(): any {
-    return this.http.get(`${this.apiUrl}/users/current-user`, { headers: this.authHeaders('json', true) })
+  private verifyToken(titleId?: string): any {
+    return this.http.get(`${this.apiUrl}/users/current-user${titleId ? `?title_id=${titleId}` : ''}`, { headers: this.authHeaders('json', true) })
   }
 
   private redirectToLogin(): void {

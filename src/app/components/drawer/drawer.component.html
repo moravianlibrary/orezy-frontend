@@ -313,7 +313,7 @@
         [class.tertiary]="!btn.primary"
         [class.primary]="btn.primary"
         [class.destructive]="btn.destructive"
-        [class.primary-disabled]="btn.primary && (
+        [class.disabled]="btn.primary && (
           !isAdmin
           || (dashSvc.dashboardPage() === 'groups' && !dashSvc.groupChanged())
           || (dashSvc.dashboardPage() === 'users' && !dashSvc.userChanged())

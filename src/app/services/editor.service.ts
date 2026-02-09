@@ -879,6 +879,8 @@ export class EditorService {
   }
 
   updateHoverPage(): void {
+    if (!this.authSvc.canWriteTitle()) return;
+    
     const insidePage = Boolean(this.pageId);
     if (!this.isDragging && !this.isRotating && insidePage) {
       this.pageId = this.pageIdCursorInside();
@@ -1048,7 +1050,7 @@ export class EditorService {
   }
   
   addPage(): void {
-    if (this.currentPages.length >= this.maxPages || !this.displayedImagesFinal().length) return;
+    if (!this.authSvc.canWriteTitle() || this.currentPages.length >= this.maxPages || !this.displayedImagesFinal().length) return;
 
     if (this.pageWasEdited) this.updateCurrentPagesWithEdited();
 
@@ -1247,6 +1249,8 @@ export class EditorService {
   }
 
   openResetDoc(): void {
+    if (!this.authSvc.canWriteTitle()) return;
+    
     this.dialogTitle.set('Opravdu chcete resetovat změny dokumentu?');
     this.dialogContent.set(false);
     this.dialogContentType.set(null);
@@ -1268,6 +1272,8 @@ export class EditorService {
   }
 
   openResetScan(): void {
+    if (!this.authSvc.canWriteTitle()) return;
+
     this.dialogTitle.set('Opravdu chcete resetovat změny skenu?');
     this.dialogContent.set(false);
     this.dialogContentType.set(null);
@@ -1289,6 +1295,8 @@ export class EditorService {
   }
 
   openFinish(): void {
+    if (!this.authSvc.canWriteTitle()) return;
+    
     this.dialogTitle.set('Opravdu chcete dokončit proces?');
     this.dialogContent.set(false);
     this.dialogContentType.set(null);
@@ -1371,6 +1379,7 @@ export class EditorService {
     event.preventDefault();
     event.stopPropagation();
     const dialogOpen = this.dialogOpen();
+    const canWriteTitle = this.authSvc.canWriteTitle();
 
     // Update hover page
     if (key === 'Shift') {
@@ -1385,6 +1394,7 @@ export class EditorService {
         return;
       }
       
+      if (!canWriteTitle) return;
       if (this.pageWasEdited) this.updateCurrentPagesWithEdited();
       this.lastSelectedPage = this.selectedPage;
       const isLeftKey = key === '+' || key === '1';
@@ -1398,7 +1408,7 @@ export class EditorService {
     }
 
     // Unselect page
-    if (key === 'Escape') {
+    if (canWriteTitle && key === 'Escape') {
       if (dialogOpen) {
         this.dialogOpen.set(false);
         this.dialogOpened = false;
@@ -1416,13 +1426,13 @@ export class EditorService {
     }
 
     // Remove selected page
-    if (['Backspace', 'Delete'].includes(key) && !dialogOpen && this.selectedPage) this.removePage();
+    if (canWriteTitle && ['Backspace', 'Delete'].includes(key) && !dialogOpen && this.selectedPage) this.removePage();
     
     // Add page
-    if (['p', 'P'].includes(key) && !dialogOpen && this.currentPages.length < this.maxPages) this.addPage();
+    if (canWriteTitle && ['p', 'P'].includes(key) && !dialogOpen && this.currentPages.length < this.maxPages) this.addPage();
 
     // Change grid mode
-    if (['m', 'M'].includes(key) && this.selectedPage &&!dialogOpen) {
+    if (canWriteTitle && ['m', 'M'].includes(key) && this.selectedPage &&!dialogOpen) {
       this.gridMode.set(!this.isRotating
         ? this.gridMode() === 'always' ? 'when-rotating' : 'always'
         : this.gridMode() === 'never' ? 'when-rotating' : 'never');
@@ -1433,7 +1443,7 @@ export class EditorService {
     };
 
     // Outline transparency
-    if (['o', 'O'].includes(key) && this.selectedPage && !dialogOpen) {
+    if (canWriteTitle && ['o', 'O'].includes(key) && this.selectedPage && !dialogOpen) {
       this.outlineTransparent = !this.outlineTransparent;
       localStorage.setItem('outlineTransparent', String(this.outlineTransparent));
       this.redrawImageOnCanvas();
@@ -1441,7 +1451,7 @@ export class EditorService {
     }
 
     // Dimming color
-    if (['c', 'C'].includes(key) && this.selectedPage && !dialogOpen) {
+    if (canWriteTitle && ['c', 'C'].includes(key) && this.selectedPage && !dialogOpen) {
       this.dimColor.update(prev => prev === 'Černá' ? 'Červená' : 'Černá');
       this.dimRadio.set(this.dimColor());
       localStorage.setItem('dimColor', this.dimColor());
@@ -1461,7 +1471,7 @@ export class EditorService {
     }
 
     // Drag/move page
-    if (['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].includes(key) && this.selectedPage && !event.altKey && !event.ctrlKey && !event.shiftKey && !event.metaKey && !dialogOpen) {
+    if (canWriteTitle && ['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].includes(key) && this.selectedPage && !event.altKey && !event.ctrlKey && !event.shiftKey && !event.metaKey && !dialogOpen) {
       const start = this.selectedPage;
       const isHorizontal = ['ArrowLeft', 'ArrowRight'].includes(key);
       const sign = ['ArrowRight','ArrowDown'].includes(key) ? 1 : -1;
@@ -1507,7 +1517,7 @@ export class EditorService {
     }
 
     // Change page width / height
-    if (['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].includes(key) && event.shiftKey && this.selectedPage && !dialogOpen) {
+    if (canWriteTitle && ['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].includes(key) && event.shiftKey && this.selectedPage && !dialogOpen) {
       if (['ArrowLeft', 'ArrowRight'].includes(key)) {
         const cw = this.c.width;
         const ch = this.c.height;
@@ -1754,7 +1764,7 @@ export class EditorService {
     }
 
     // Rotate
-    if (['a', 'A', 's', 'S'].includes(key) && this.selectedPage && !dialogOpen) {
+    if (canWriteTitle && ['a', 'A', 's', 'S'].includes(key) && this.selectedPage && !dialogOpen) {
       const page = this.selectedPage;
       const sign = ['s', 'S'].includes(key) ? 1 : -1;
       const delta = this.incrementAngle * sign/*  * (event.shiftKey ? 10 : 1) */;
@@ -1831,6 +1841,11 @@ export class EditorService {
 
     // Next scan based on number of current pages and selected page
     if (key === 'Enter' && !event.ctrlKey && !event.metaKey && !dialogOpen) {
+      if (!canWriteTitle) {
+        this.showNextImage();
+        return;
+      }
+      
       if (
         this.currentPages.length < 2
         || (
@@ -1850,7 +1865,7 @@ export class EditorService {
     }
 
     // Dokončit
-    if (key === 'Enter' && (event.ctrlKey || event.metaKey)) {
+    if (canWriteTitle && key === 'Enter' && (event.ctrlKey || event.metaKey)) {
       if (!dialogOpen) {
         this.openFinish();
         return;

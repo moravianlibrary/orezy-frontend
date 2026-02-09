@@ -4,6 +4,7 @@ import { EditorService } from '../../services/editor.service';
 import { dimColorDict, filterPageNumberStartDict, filterScanTypeStartDict, gridModeDict } from '../../app.config';
 import { FormsModule } from '@angular/forms';
 import { DashboardService } from '../../services/dashboard.service';
+import { AuthService } from '../../services/auth.service';
 
 @Component({
   selector: 'app-dialog',
@@ -14,6 +15,7 @@ import { DashboardService } from '../../services/dashboard.service';
 export class DialogComponent {
   dashSvc = inject(DashboardService);
   edtSvc = inject(EditorService);
+  authSvc = inject(AuthService);
   
   closed = output<void>();
   backdropClick = output<void>();

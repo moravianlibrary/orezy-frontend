@@ -2,6 +2,7 @@ import { CdkConnectedOverlay, CdkOverlayOrigin, ConnectedPosition } from '@angul
 import { Component, ElementRef, HostListener, inject, input, ViewChild } from '@angular/core';
 import { NgClass } from '../../../../node_modules/@angular/common';
 import { EditorService } from '../../services/editor.service';
+import { AuthService } from '../../services/auth.service';
 
 @Component({
   selector: 'app-menu',
@@ -11,6 +12,7 @@ import { EditorService } from '../../services/editor.service';
 })
 export class MenuComponent {
   edtSvc = inject(EditorService);
+  authSvc = inject(AuthService);
   type = input('menu-primary');
 
 

@@ -197,15 +197,6 @@
         fill: var(--primary);
       }
     }
-
-    .disabled {
-      fill: var(--icon-disabled);
-
-      &:hover {
-        cursor: default;
-        fill: var(--icon-disabled);
-      }
-    }
   }
 
   .up {

@@ -1,3 +1,5 @@
+@let canWriteTitle = authSvc.canWriteTitle();
+
 <div class="header top border-bottom">
   <span class="title-menu-wrapper">
     <h1>Sken {{ currentIndexImage }}/{{ edtSvc.displayedImagesFinal().length }}</h1>
@@ -31,7 +33,7 @@
   <span class="actions">
     <span
       class="action"
-      [class.disabled]="edtSvc.currentPages.length >= edtSvc.maxPages || !edtSvc.displayedImagesFinal().length"
+      [class.disabled]="!canWriteTitle || edtSvc.currentPages.length >= edtSvc.maxPages || !edtSvc.displayedImagesFinal().length"
       (click)="edtSvc.addPage()"
     >
       Přidat výřez
@@ -311,6 +313,7 @@
 <div class="footer">
   <span 
     class="button real-button primary"
+    [class.disabled]="!canWriteTitle"
     (click)="edtSvc.openFinish()"
   >
     Dokončit

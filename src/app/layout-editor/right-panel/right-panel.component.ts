@@ -7,6 +7,7 @@ import { InputType, Page } from '../../app.types';
 import { clamp, defer, degreeToRadian } from '../../utils/utils';
 import { MenuComponent } from '../../components/menu/menu.component';
 import { flagMessages } from '../../app.config';
+import { AuthService } from '../../services/auth.service';
 
 @Component({
   selector: 'app-right-panel-editor',
@@ -16,6 +17,7 @@ import { flagMessages } from '../../app.config';
 })
 export class RightPanelComponent {
   edtSvc = inject(EditorService);
+  authSvc = inject(AuthService);
   private cdr = inject(ChangeDetectorRef);
 
   private firstFocus = { left: true, top: true, width: true, height: true, angle: true };

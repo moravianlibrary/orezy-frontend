@@ -4,6 +4,7 @@ import { clamp, degreeToRadian, radianToDegree } from '../../utils/utils';
 import { CornerName, EdgeLocalOrientation, EdgeSide, HitInfo, Page } from '../../app.types';
 import { LoaderComponent } from '../../components/loader/loader.component';
 import { ToastComponent } from '../../components/toast/toast.component';
+import { AuthService } from '../../services/auth.service';
 
 @Component({
   selector: 'app-main-editor',
@@ -13,6 +14,7 @@ import { ToastComponent } from '../../components/toast/toast.component';
 })
 export class MainComponent {
   edtSvc = inject(EditorService);
+  private authSvc = inject(AuthService);
 
   private moveCursor: string = "url('/assets/move-cursor.png'), auto";
   private rotateCursorTopRight: string = "url('/assets/rotate-cursor-top-right.png') 9.5 9.5, auto";
@@ -91,6 +93,7 @@ export class MainComponent {
   private handleCanvasInteraction(ev: MouseEvent | WheelEvent, el: HTMLElement): void {
     if ((ev.target as HTMLElement).tagName !== 'CANVAS') return;
     const edtSvc = this.edtSvc;
+    const canWriteTitle = this.authSvc.canWriteTitle();
 
     const btn = ev.button;
     const hit = this.hitTest(ev);
@@ -104,7 +107,8 @@ export class MainComponent {
 
     // Hover
     if (
-      ev.type === 'mousemove'
+      canWriteTitle
+      && ev.type === 'mousemove'
       && (edtSvc.lastPageCursorIsInside?._id !== pageId || edtSvc.selectedPage)
       && !edtSvc.isDragging && !edtSvc.isRotating && !edtSvc.isResizing && !edtSvc.isPanning
     ) {
@@ -125,18 +129,18 @@ export class MainComponent {
       if (ev.ctrlKey || ev.metaKey) {
         const factor = Math.exp(-wev.deltaY * edtSvc.zoomFactor);
         edtSvc.setZoomAt(sx, sy, edtSvc.viewport.scale * factor);
-        hoveringPage();
+        if (canWriteTitle) hoveringPage();
       }
 
       // Panning: two-figer touch OR wheel
       if (edtSvc.viewport.scale > 1 && !(ev.ctrlKey || ev.metaKey)) {
         edtSvc.panBy(-wev.deltaX, -wev.deltaY);
-        hoveringPage();
+        if (canWriteTitle) hoveringPage();
       }
     }
 
     // Assign cursor
-    {
+    if (canWriteTitle) {
       edtSvc.cursor = insidePage ? (edtSvc.selectedPage?._id === hitPage?._id ? this.moveCursor : 'pointer') : 'initial';
 
       if ((ev.type === 'mousedown' && btn === 1) || edtSvc.isPanning) {
@@ -162,7 +166,7 @@ export class MainComponent {
     }
 
     // Click
-    if (ev.type === 'mousedown' && btn === 0) {
+    if (canWriteTitle && ev.type === 'mousedown' && btn === 0) {
       if (edtSvc.pageWasEdited && (edtSvc.cursor === 'initial' || edtSvc.cursor === 'pointer')) {
         edtSvc.updateCurrentPagesWithEdited();
       }
@@ -207,7 +211,7 @@ export class MainComponent {
     }
 
     // Drag
-    if (hit.area === 'inside' || edtSvc.isDragging) {
+    if (canWriteTitle && hit.area === 'inside' || edtSvc.isDragging) {
       if (ev.type === 'mousedown' && btn === 0 && hitPage) {
         edtSvc.isDragging = true;
         // imgSvc.dragStartMouse = { x: ev.clientX, y: ev.clientY };

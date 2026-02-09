@@ -26,14 +26,6 @@
   fill: var(--icon-dark);
 }
 
-.disabled { 
-  color: var(--text-disabled);
-
-  svg {
-    fill: var(--icon-disabled);
-  }
-}
-
 .mark-ok {
   @include font(400, var(--font-size-x1-5), var(--spacing-x4));
   gap: var(--spacing-x2);

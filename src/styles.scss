@@ -135,19 +135,29 @@ html, body {
   color: var(--text-white);
 }
 
-.disabled {
+.secondary.disabled {
+  color: var(--text-disabled);
   border-color: var(--border-color);
 
   &:hover {
     cursor: default;
   }
+
+  svg {
+    fill: var(--icon-disabled) !important;
+  }
 }
 
-.primary-disabled {
-  background-color: var(--primary-disabled);
+.primary.disabled {
+  color: var(--text-white) !important;
+  background-color: var(--primary-disabled) !important;
 
   &:hover {
     cursor: default;
+  }
+
+  svg {
+    fill: var(--icon-white) !important;
   }
 }
 
