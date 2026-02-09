@@ -326,24 +326,6 @@ export class DashboardService {
     edtSvc.openDialog();
   }
 
-  checkNewGroupNameUniqueness(): void {
-    this.newGroupNameError.set(this.groups()
-      .some(g => g.name === this.newGroupName())
-        ? this.errors['groupNameExists']
-        : ''
-    );
-  }
-
-  checkGroupNameUniqueness(): void {
-    this.groupNameError.set(
-      this.groups()
-        .filter(g => g._id !== this.selectedGroup()?._id)
-        .some(g => g.name === this.groupName())
-          ? this.errors['groupNameExists']
-          : ''
-    );
-  }
-
   deleteGroupDialog(group: Group | null): void {
     const edtSvc = this.edtSvc;
     
@@ -510,57 +492,6 @@ export class DashboardService {
     edtSvc.openDialog();
   }
 
-  checkNewUserName(): void {
-    this.newUserNameError.set('');
-  }
-
-  checkNewUserEmail(): void {
-    this.checkNewUserEmailValidity();
-    this.checkNewUserEmailUniqueness();
-  }
-
-  checkNewUserEmailValidity(): void {
-    this.newUserEmailError.set(checkEmailValidity(this.newUserEmail())
-      ? this.errors['userEmailInvalid']
-      : ''
-    );
-  }
-
-  checkNewUserEmailUniqueness(): void {
-    this.newUserEmailError.set(
-      this.users()
-        .some(u => u.email === this.newUserEmail())
-          ? this.errors['userEmailExists']
-          : ''
-    );
-  }
-
-  checkUserName(): void {
-    this.userNameError.set('');
-  }
-
-  checkUserEmail(): void {
-    this.checkUserEmailValidity();
-    this.checkUserEmailUniqueness();
-  }
-
-  checkUserEmailValidity(): void {
-    this.userEmailError.set(checkEmailValidity(this.userEmail())
-      ? this.errors['userEmailInvalid']
-      : ''
-    );
-  }
-
-  checkUserEmailUniqueness(): void {
-    this.userEmailError.set(
-      this.users()
-        .filter(u => u._id !== this.selectedUser()?._id)
-        .some(u => u.email === this.userEmail())
-          ? this.errors['userEmailExists']
-          : ''
-    );
-  }
-
   deleteUserDialog(user: User | null): void {
     const edtSvc = this.edtSvc;
     
@@ -590,5 +521,78 @@ export class DashboardService {
     ])
 
     edtSvc.openDialog();
+  }
+
+
+  /* ------------------------------
+    INPUT INLINE VALIDATION
+  ------------------------------ */
+  checkNewGroupNameUniqueness(): void {
+    this.newGroupNameError.set(this.groups()
+      .some(g => g.name === this.newGroupName())
+        ? this.errors['groupNameExists']
+        : ''
+    );
+  }
+
+  checkGroupNameUniqueness(): void {
+    this.groupNameError.set(
+      this.groups()
+        .filter(g => g._id !== this.selectedGroup()?._id)
+        .some(g => g.name === this.groupName())
+          ? this.errors['groupNameExists']
+          : ''
+    );
+  }
+
+  checkNewUserName(): void {
+    this.newUserNameError.set('');
+  }
+
+  checkNewUserEmail(): void {
+    this.checkNewUserEmailValidity();
+    this.checkNewUserEmailUniqueness();
+  }
+
+  private checkNewUserEmailValidity(): void {
+    this.newUserEmailError.set(checkEmailValidity(this.newUserEmail())
+      ? this.errors['userEmailInvalid']
+      : ''
+    );
+  }
+
+  private checkNewUserEmailUniqueness(): void {
+    this.newUserEmailError.set(
+      this.users()
+        .some(u => u.email === this.newUserEmail())
+          ? this.errors['userEmailExists']
+          : ''
+    );
+  }
+
+  checkUserName(): void {
+    this.userNameError.set('');
+  }
+
+  checkUserEmail(): void {
+    this.checkUserEmailValidity();
+    this.checkUserEmailUniqueness();
+  }
+
+  private checkUserEmailValidity(): void {
+    this.userEmailError.set(checkEmailValidity(this.userEmail())
+      ? this.errors['userEmailInvalid']
+      : ''
+    );
+  }
+
+  private checkUserEmailUniqueness(): void {
+    this.userEmailError.set(
+      this.users()
+        .filter(u => u._id !== this.selectedUser()?._id)
+        .some(u => u.email === this.userEmail())
+          ? this.errors['userEmailExists']
+          : ''
+    );
   }
 }
