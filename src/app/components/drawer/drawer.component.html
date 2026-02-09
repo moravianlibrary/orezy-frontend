@@ -1,4 +1,4 @@
-@let isAdmin = authSvc.user()?.role === 'admin';
+@let isAdmin = authSvc.isAdmin();
 
 <header class="drawer-header">
   <h2>{{ dashSvc.drawerTitle() }}</h2>

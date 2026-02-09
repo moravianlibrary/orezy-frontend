@@ -4,8 +4,8 @@
 </div>
 
 @let user = authSvc.user();
-@let isAdmin = user?.role === 'admin';
 @let isManager = authSvc.isManager();
+@let isAdmin = authSvc.isAdmin();
 <div class="user-info">
   <div class="user-name">{{ user?.full_name }}</div>
   <div class="user-role">{{ userRolesDict[isAdmin ? 'admin' : isManager ? 'manage' : 'user'] }}</div>

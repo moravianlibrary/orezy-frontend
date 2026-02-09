@@ -260,7 +260,7 @@
               @let titles = dashSvc.displayedTitles();
               @if (titles.length) {
                 @for (title of titles; track title._id) {
-                  @let isClickable = shouldHaveLink(title.state);
+                  @let isClickable = authSvc.canReadTitle() && shouldHaveLink(title.state);
                   <tr
                     tabindex="0"
                     [class.clickable]="isClickable"

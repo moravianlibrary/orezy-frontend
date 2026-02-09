@@ -1,5 +1,5 @@
 import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
-import { inject, Injectable, signal } from '@angular/core';
+import { computed, inject, Injectable, signal } from '@angular/core';
 import { EnvironmentService } from './environment.service';
 import { ActivatedRouteSnapshot, Router, RouterStateSnapshot } from '@angular/router';
 import { catchError, of } from 'rxjs';
@@ -18,8 +18,10 @@ export class AuthService {
   error = signal<string>('');
 
   user = signal<User | null>(null);
-  canWriteTitle = signal<Boolean>(false);
-  isManager = signal<Boolean>(false);
+  canReadTitle = signal<boolean>(false);
+  canWriteTitle = signal<boolean>(false);
+  isManager = signal<boolean>(false);
+  isAdmin = computed<boolean>(() => this.user()?.role === 'admin');
 
   get baseUri(): string {
     return window.location.origin;

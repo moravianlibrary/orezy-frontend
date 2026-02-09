@@ -52,9 +52,7 @@ export class MainComponent {
             // My groups
             case null:
               return this.dashSvc.fetchGroups().pipe(
-                tap((res: Group[]) => {
-                  if (!this.authSvc.user()?.permissions.find(p => p.permission.includes('read_group'))) this.router.navigate(['/forbidden']);
-                  
+                tap((res: Group[]) => {                  
                   this.dashSvc.dashboardPage.set('my-groups');
                   this.dashSvc.myGroups.set(res);
                   this.dashSvc.displayedMyGroups.set(res);
@@ -75,11 +73,14 @@ export class MainComponent {
                   this.dashSvc.displayedTitles.set(res.titles);
                   this.title.setTitle(`${res.name} | Skeny`);
                   
+                  this.authSvc.canReadTitle.set(false);
+                  if (this.authSvc.user()?.permissions.find(group => group.group_id === group_id && group.permission.includes('read_title'))) this.authSvc.canReadTitle.set(true);
+                  
                   clearTimeout(this.timerTooltip);
                   this.visibleTooltip = false;
                 }),
                 catchError(err => {
-                  if (err.status === 403) this.router.navigate(['/']);
+                  if (err.status === 403) this.router.navigate(['/forbidden']);
                   console.error('Fetching titles failed:', err);
                   throw err;
                 })
@@ -89,6 +90,8 @@ export class MainComponent {
             case 'groups':
               return this.dashSvc.fetchGroups().pipe(
                 tap((res: Group[]) => {
+                  if (!this.authSvc.isAdmin()) this.router.navigate(['/forbidden']);
+                  
                   this.dashSvc.dashboardPage.set('groups');
                   this.dashSvc.myGroups.set(res);
                   this.dashSvc.displayedGroups.set(this.dashSvc.groups());
@@ -108,7 +111,7 @@ export class MainComponent {
                   this.dashSvc.displayedUsers.set(res);
                 }),
                 catchError(err => {
-                  if (err.status === 403) this.router.navigate(['/']);
+                  if (err.status === 403) this.router.navigate(['/forbidden']);
                   console.error('Fetching users failed:', err);
                   throw err;
                 })
