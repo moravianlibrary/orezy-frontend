@@ -195,7 +195,7 @@ export class DashboardService {
         this.selectedGroup.set(null);
         break;
       case 'users':
-      this.selectedUser.set(null);
+        this.selectedUser.set(null);
         break;
       default:
         break;
