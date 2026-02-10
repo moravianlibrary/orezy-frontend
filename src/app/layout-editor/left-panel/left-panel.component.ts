@@ -84,6 +84,16 @@ export class LeftPanelComponent {
   /* ------------------------------
     CLICKS
   ------------------------------ */
+  backToMyGroupsTitles(groupId: string): void {
+    this.dashSvc.dashboardPage.set('my-groups-titles');
+    window.location.href = `${this.authSvc.baseUri}/group/${groupId}`;
+  }
+
+  backToHomepage(): void {
+    this.dashSvc.dashboardPage.set('my-groups');
+    window.location.href = this.authSvc.baseUri;
+  }
+
   clickThumbnail(image: ImageItem): void {
     const edtSvc = this.edtSvc;
     if (image._id === edtSvc.mainImageItem()._id) return;
