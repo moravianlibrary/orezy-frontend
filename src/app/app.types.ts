@@ -38,6 +38,7 @@ export interface ApiKey {
 export interface Title {
   _id: string;
   external_id?: string;
+  model?: string;
   created_at: string;
   modified_at: string;
   state: TitleState;

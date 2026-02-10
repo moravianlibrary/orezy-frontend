@@ -175,7 +175,7 @@ export class MainComponent {
     this.dashSvc.displayedTitles.set(this.dashSvc.titles().filter(t => 
       (t.external_id ?? '').includes(searchTitles)
       || t._id.includes(searchTitles)
-      // || t.model.includes(searchTitles)
+      || (t.model ?? '').includes(searchTitles)
     ));
   }
 

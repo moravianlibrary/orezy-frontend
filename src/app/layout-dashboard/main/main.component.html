@@ -187,7 +187,8 @@
         >
           <colgroup>
             <col style="width:240px">
-            <col style="width:240px">
+            <col style="width:120px">
+            <col style="width:120px">
             <col style="width:180px">
             <col style="width:180px">
             <col style="width:180px">
@@ -196,6 +197,7 @@
             <tr>
               <th>Kniha</th>
               <th>ID knihy</th>
+              <th>AI model</th>
               <th class="dropdown-state-wrapper" cdkOverlayOrigin #origin="cdkOverlayOrigin">
                 <div class="dropdown-state-title" (click)="toggleStateDropdown()">
                   Stav
@@ -254,7 +256,8 @@
           <table class="table-body">
             <colgroup>
               <col style="width:240px">
-              <col style="width:240px">
+              <col style="width:120px">
+              <col style="width:120px">
               <col style="width:180px">
               <col style="width:180px">
               <col style="width:180px">
@@ -273,6 +276,7 @@
                   >
                     <td>{{ title.external_id ?? title._id }}</td>
                     <td class="title-id">{{ title._id }}</td>
+                    <td>{{ title.model ?? 'Neznámý' }}</td>
                     <td>
                       <span
                         class="tag"
