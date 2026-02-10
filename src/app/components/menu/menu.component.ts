@@ -21,14 +21,6 @@ export class MenuComponent {
   ------------------------------ */
   @ViewChild('menu', { static: true }) menu!: ElementRef;
   show = false;
-  positions: ConnectedPosition[] = [
-    {
-      originX: 'start',
-      originY: 'bottom',
-      overlayX: 'start',
-      overlayY: 'top'
-    }
-  ];
 
   toggleMenu(): void {
     this.show = !this.show;

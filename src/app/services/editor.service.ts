@@ -6,7 +6,6 @@ import { clamp, defer, degreeToRadian, focusMainWrapper, getColor, roundToDecima
 import { EnvironmentService } from './environment.service';
 import { dimColorDict, gridColor, transparentColor } from '../app.config';
 import { AuthService } from './auth.service';
-import { Location } from '@angular/common';
 
 @Injectable({
   providedIn: 'root'
@@ -15,7 +14,6 @@ export class EditorService {
   private http = inject(HttpClient);
   private envService = inject(EnvironmentService);
   private authSvc = inject(AuthService);
-  private location = inject(Location);
   
   private get apiUrl(): string { return this.envService.get('serverBaseUrl') };
 
@@ -1050,16 +1048,8 @@ export class EditorService {
 
     if (this.pageWasEdited) this.updateCurrentPagesWithEdited();
 
-    this.currentPages = this.currentPages.map(p => ({ ...p, type: p.xc < 0.5 ? 'left' : 'right' }));
-    
-    const type = !this.currentPages.length
-      ? 'single'
-      : this.currentPages[0].type === 'single' && this.currentPages[0].xc < 0.5
-        ? 'right'
-        : 'left';
-
     const addedPage: Page = {
-      _id: `${this.mainImageItem()._id}-${type}`,
+      _id: `${this.mainImageItem()._id}-${this.currentPages.length + 1}`,
       xc: .5,
       yc: .5,
       left: .5 - .2,
@@ -1070,7 +1060,6 @@ export class EditorService {
       height: .85,
       angle: 0,
       edited: true,
-      type: type,
       flags: []
     };
     
@@ -1394,8 +1383,13 @@ export class EditorService {
       if (this.pageWasEdited) this.updateCurrentPagesWithEdited();
       this.lastSelectedPage = this.selectedPage;
       const isLeftKey = key === '+' || key === '1';
-      const targetTypes = isLeftKey ? new Set(['left', 'single']) : new Set(['right']);
-      this.selectedPage = this.currentPages.find(p => targetTypes.has(p.type)) ?? null;
+      this.selectedPage = this.currentPages.length
+        ? this.currentPages.reduce((best, p) =>
+            isLeftKey
+              ? p.xc < best.xc ? p : best
+              : p.xc > best.xc ? p : best
+          )
+        : null;
       this.clickedDiffPage = this.lastSelectedPage && this.selectedPage && this.lastSelectedPage !== this.selectedPage;
       this.lastPageCursorIsInside = this.selectedPage;
       this.redrawImageOnCanvas();
@@ -1829,7 +1823,7 @@ export class EditorService {
         return;
       }
 
-      if (['r', 'R'].includes(key)) {
+      if (['r', 'R'].includes(key) && !event.ctrlKey && !event.shiftKey && !event.metaKey && !event.altKey) {
         this.resetZoom();
         return;
       }

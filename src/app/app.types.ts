@@ -96,7 +96,6 @@ export interface Page {
   width: number;
   height: number;
   angle: number;
-  type: PageType;
   flags: string[];
   left: number;
   right: number;
@@ -123,7 +122,6 @@ export interface ImageRect {
 
 export type ScanType = 'all' | 'flagged' | 'edited' | 'ok';
 export type PageNumberType = 'all' | 'single' | 'double';
-export type PageType = 'single' | 'left' | 'right';
 export type InputType = 'left' | 'top' | 'width' | 'height' | 'angle';
 export type Role = 'admin' | 'user';
 export type GridMode = 'always' | 'never' | 'when-rotating';

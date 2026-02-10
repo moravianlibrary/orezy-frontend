@@ -25,13 +25,10 @@
   </span>
 
   <ng-template
-    cdk-connected-overlay
+    cdkConnectedOverlay
     [cdkConnectedOverlayOrigin]="trigger"
     [cdkConnectedOverlayOpen]="show"
-    [cdkConnectedOverlayHasBackdrop]="true"
-    (backdropClick)="show = false"
-    [cdkConnectedOverlayBackdropClass]="'cdk-overlay-transparent-backdrop'"
-    [cdkConnectedOverlayPositions]="positions"
+    (overlayOutsideClick)="show = false"
   >
     <div
       class="menu-bubble"
