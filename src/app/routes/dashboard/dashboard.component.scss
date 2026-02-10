@@ -3,3 +3,10 @@
   position: relative;
   overflow: hidden;
 }
+
+.drawer-backdrop {
+  position: fixed;
+  inset: 0;
+  background: transparent;
+  z-index: 5000;
+}

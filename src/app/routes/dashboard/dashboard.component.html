@@ -1,4 +1,11 @@
 <app-left-panel-groups></app-left-panel-groups>
 <app-main-groups></app-main-groups>
+@if (dashSvc.drawerOpen()) {
+  <div
+    class="drawer-backdrop"
+    (click)="dashSvc.closeDrawer()"
+    aria-hidden="true"
+  ></div>
+}
 <app-drawer />
 <app-dialog (closed)="edtSvc.closeDialog()" />
