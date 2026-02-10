@@ -308,6 +308,10 @@
             }
           }
 
+          .title-id {
+            @include font(400, var(--font-size-x1-5), var(--spacing-x5), var(--text-light));
+          }
+
           .tags {
             display: flex;
             gap: var(--spacing-x2);
