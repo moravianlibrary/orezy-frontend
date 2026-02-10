@@ -134,7 +134,8 @@ export class DashboardService {
 
   updateUser(userId: string): Observable<User> {
     const payload = {
-      full_name: this.userFullname()
+      full_name: this.userFullname(),
+      email: this.userEmail()
     };
 
     return this.http.patch<User>(`${this.authSvc.apiUrl}/users/${userId}`, payload, { headers: this.authSvc.authHeaders('json', true) });
@@ -239,13 +240,11 @@ export class DashboardService {
 
             return this.updateGroup(group?._id ?? '').pipe(
               tap(() => {
-                this.myGroups.update(prev => [
-                  ...prev.filter(g => g._id !== group?._id), {
-                    ...group,
-                    name: this.groupName(),
-                    description: this.groupDescription()
-                  } 
-                ]);
+                this.myGroups.update(prev => prev.map(g => g._id === group?._id ? {
+                  ...group,
+                  name: this.groupName(),
+                  description: this.groupDescription()
+                } : g))
                 this.displayedGroups.set(this.groups());
                 this.selectedGroup.set(null);
                 this.groupNameError.set('');
@@ -403,7 +402,7 @@ export class DashboardService {
 
           return this.updateUser(this.selectedUser()?._id ?? '').pipe(
             tap((res: User) => {
-              this.users.update(prev => [ ...prev.filter(u => u._id !== res._id), res ]);
+              this.users.update(prev => prev.map(u => u._id === res._id ? res : u));
               this.displayedUsers.set(this.users());
               this.selectedUser.set(null);
             }),
