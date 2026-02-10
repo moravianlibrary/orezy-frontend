@@ -4,7 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { DecimalPipe } from '@angular/common';
 import { ChangeDetectorRef } from '@angular/core';
 import { InputType, Page } from '../../app.types';
-import { clamp, defer, degreeToRadian } from '../../utils/utils';
+import { clamp, defer, degreeToRadian, focusMainWrapper } from '../../utils/utils';
 import { MenuComponent } from '../../components/menu/menu.component';
 import { flagMessages } from '../../app.config';
 import { AuthService } from '../../services/auth.service';
@@ -43,7 +43,7 @@ export class RightPanelComponent {
   ------------------------------ */
   changeInputValue(type: InputType, event: any): void {
     const edtSvc = this.edtSvc;
-    const page = edtSvc.clickedDiffPage ? edtSvc.lastSelectedPage : edtSvc.selectedPage;
+    const page = edtSvc.selectedPage;
     if (!page) return;
 
     edtSvc.lastLeftInput = page.left;
@@ -404,12 +404,14 @@ export class RightPanelComponent {
 
   onEscape(input: HTMLInputElement): void {
     input.blur();
-    (document.querySelector('.main-wrapper') as HTMLElement).focus();
+    focusMainWrapper();
   }
 
   private adjustValue(type: InputType, input: HTMLInputElement, direction: 1 | -1,  multiplier: number = 1): void {
     const page = this.edtSvc.selectedPage;
     if (!page) return;
+
+    
 
     const increment = (type === 'angle' ? this.edtSvc.incrementAngle : this.edtSvc.increment) * multiplier;
     const multiplicator = type === 'angle' ? 1 : 100;
