@@ -43,6 +43,10 @@
       }
 
       h1 { @include font(500, var(--font-size-x3), var(--spacing-x8), var(--text-base)); }
+
+      h1.clickable {
+        cursor: pointer;
+      }
     }
   }
 

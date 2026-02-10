@@ -20,6 +20,7 @@ export class AuthService {
   user = signal<User | null>(null);
   canReadTitle = signal<boolean>(false);
   canWriteTitle = signal<boolean>(false);
+  canReadGroup = signal<string>('');
   isManager = signal<boolean>(false);
   isAdmin = computed<boolean>(() => this.user()?.role === 'admin');
 
@@ -67,10 +68,15 @@ export class AuthService {
         const user = res;
         this.user.set(user);
         
-        const permissions = user.permissions;
-        this.isManager.set(!!permissions.filter(p => p.permission.includes('upload')).length);
         this.canWriteTitle.set(false);
-        if (titleId && permissions[0].permission.includes('write')) this.canWriteTitle.set(true);
+        this.canReadGroup.set('');
+        const permissions = user.permissions;
+        const permission = permissions[0].permission;
+        this.isManager.set(!!permissions.filter(p => p.permission.includes('upload')).length);
+        if (titleId) {
+          if (permission.includes('write')) this.canWriteTitle.set(true);
+          if (permission.includes('read_group')) this.canReadGroup.set(permissions[0].group_id);
+        }
       });
     }
 

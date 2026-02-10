@@ -5,6 +5,8 @@ import { LoaderComponent } from '../../components/loader/loader.component';
 import { NgClass } from '../../../../node_modules/@angular/common';
 import { MenuComponent } from "../../components/menu/menu.component";
 import { flagMessages } from '../../app.config';
+import { AuthService } from '../../services/auth.service';
+import { DashboardService } from '../../services/dashboard.service';
 // import { Subscription } from 'rxjs';
 
 @Component({
@@ -15,6 +17,8 @@ import { flagMessages } from '../../app.config';
 })
 export class LeftPanelComponent {
   edtSvc = inject(EditorService);
+  dashSvc = inject(DashboardService);
+  authSvc = inject(AuthService);
 
   pageImagesNumber(number: number): number {
     return this.edtSvc.displayedImages().filter(img => img.pages.length === number).length;

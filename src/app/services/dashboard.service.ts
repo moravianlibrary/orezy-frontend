@@ -150,9 +150,9 @@ export class DashboardService {
     this.router.navigate(['/']);
   }
   
-  openMyGroupsTitles(group: Group): void {
+  openMyGroupsTitles(groupId: string): void {
     this.dashboardPage.set('my-groups-titles');
-    this.router.navigate(['/group', group._id]);
+    this.router.navigate(['/group', groupId]);
   }
 
   openTitle(bookId: string): void {

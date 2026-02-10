@@ -224,10 +224,6 @@ export class EditorService {
   /* ------------------------------
     LEFT PANEL
   ------------------------------ */
-  backToMyGroupTitles(): void {
-    this.location.back();
-  }
-  
   setDisplayedImages(): void {
     switch (this.selectedFilter) {
       case 'all':
