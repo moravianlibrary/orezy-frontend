@@ -25,6 +25,7 @@
   --text-secondary: #263340;
   --text-tertiary: #394C60;
   --text-destructive: #FF3A30;
+  --text-destructive-disabled: #F3A5A0; // #FDE2E0
   --text-light: #4C6580;
   --text-white: #FFFFFF;
   --text-disabled: #DFE5EC;
@@ -135,6 +136,19 @@ html, body {
   color: var(--text-white);
 }
 
+.primary.disabled {
+  color: var(--text-white) !important;
+  background-color: var(--primary-disabled) !important;
+
+  &:hover {
+    cursor: default;
+  }
+
+  svg {
+    fill: var(--icon-white) !important;
+  }
+}
+
 .secondary.disabled {
   color: var(--text-disabled);
   border-color: var(--border-color);
@@ -148,16 +162,16 @@ html, body {
   }
 }
 
-.primary.disabled {
-  color: var(--text-white) !important;
-  background-color: var(--primary-disabled) !important;
+.menu-item.red.disabled {
+  color: var(--text-destructive-disabled) !important;
+  background-color: var(--bg-base) !important;
 
   &:hover {
-    cursor: default;
+    cursor: default !important;
   }
 
   svg {
-    fill: var(--icon-white) !important;
+    fill: var(--text-destructive-disabled) !important;
   }
 }
 

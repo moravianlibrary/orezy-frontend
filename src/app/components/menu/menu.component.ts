@@ -1,5 +1,5 @@
 import { CdkConnectedOverlay, CdkOverlayOrigin, ConnectedPosition } from '@angular/cdk/overlay';
-import { Component, ElementRef, HostListener, inject, input, ViewChild } from '@angular/core';
+import { Component, ElementRef, inject, input, ViewChild } from '@angular/core';
 import { NgClass } from '../../../../node_modules/@angular/common';
 import { EditorService } from '../../services/editor.service';
 import { AuthService } from '../../services/auth.service';
@@ -34,8 +34,23 @@ export class MenuComponent {
     this.show = !this.show;
   }
 
-  @HostListener('document:click', ['$event'])
-  onDocumentClick(event: MouseEvent): void {
-    if (!this.menu.nativeElement.contains(event.target)) this.show = false;
+  onSettingsClick(): void {
+    this.edtSvc.openSettings();
+    this.show = false;
+  }
+
+  onShortcutsClick(): void {
+    this.edtSvc.openShortcuts();
+    this.show = false;
+  }
+
+  onResetDocClick(): void {
+    this.edtSvc.openResetDoc();
+    this.show = !this.authSvc.canWriteTitle();
+  }
+
+  onResetScanClick(): void {
+    this.edtSvc.openResetScan();
+    this.show = !this.authSvc.canWriteTitle();
   }
 }

@@ -291,15 +291,25 @@ export class DashboardService {
           return this.createGroup().pipe(
             tap((res: NewGroup) => {
               const now = Date();
+              const user = this.authSvc.user();
+              const permissions = ['read_group', 'read_title', 'write', 'upload'] as PermissionType[];
               const newGroup = {
                 _id: res.id,
                 name: this.newGroupName(),
-                api: res?.api_key ?? '',
+                api_key: {
+                  key: res?.api_key ?? '',
+                  created_at: now  
+                },
                 description: this.newGroupDescription(),
                 created_at: now,
                 modified_at: now,
                 title_count: 0,
-                permissions: ['read_group', 'read_title', 'write', 'upload'] as PermissionType[]
+                permissions: permissions,
+                users: [{
+                  _id: user?._id ?? '',
+                  full_name: user?.full_name ?? '',
+                  permission: permissions
+                }]
               };
 
               this.myGroups.update(prev => [ ...prev, newGroup ]);

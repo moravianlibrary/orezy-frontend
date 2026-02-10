@@ -70,7 +70,7 @@ export interface User {
 export interface UserInGroup {
   _id: string;
   full_name: string;
-  permission: PermissionType;
+  permission: PermissionType[];
 }
 
 export interface NewUser {
