@@ -28,7 +28,7 @@ export class MainComponent {
 
   getDate = getDate;
   maxUsers: number = 3;
-  maxGroups: number = 2;
+  maxGroups: number = 3;
 
   @ViewChild('bodyScroll', { static: false }) bodyScroll!: ElementRef<HTMLDivElement>;
   private osInstance?: ReturnType<typeof OverlayScrollbars>;
