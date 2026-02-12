@@ -4,6 +4,10 @@
 export type DashboardPage = 'my-groups' | 'my-groups-titles' | 'groups' | 'users';
 export type PermissionType = 'read_group' | 'read_title' | 'write' | 'upload';
 
+export interface Models {
+  available_models: string[];
+}
+
 export interface Group {
   _id: string;
   name: string;
@@ -167,7 +171,7 @@ export interface DrawerButton {
 }
 
 // Dialog
-export type DialogContentType = 'settings' | 'shortcuts' | 'new-group' | 'delete-group' | 'new-user';
+export type DialogContentType = 'settings' | 'shortcuts' | 'new-group' | 'delete-group' | 'new-title' | 'new-user';
 export interface DialogButton {
   label: string;
   primary?: boolean;
@@ -183,3 +187,9 @@ export interface Toast {
   type?: ToastType;
   duration?: number;
 }
+
+// Select
+export interface SelectOption {
+  value: number;
+  label: string;
+};

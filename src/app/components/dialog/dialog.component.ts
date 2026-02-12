@@ -5,10 +5,11 @@ import { dimColorDict, filterPageNumberStartDict, filterScanTypeStartDict, gridM
 import { FormsModule } from '@angular/forms';
 import { DashboardService } from '../../services/dashboard.service';
 import { AuthService } from '../../services/auth.service';
+import { SelectComponent } from '../select/select.component';
 
 @Component({
   selector: 'app-dialog',
-  imports: [FormsModule],
+  imports: [FormsModule, SelectComponent],
   templateUrl: './dialog.component.html',
   styleUrl: './dialog.component.scss'
 })

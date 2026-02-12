@@ -2,7 +2,7 @@ import { HttpClient } from '@angular/common/http';
 import { computed, inject, Injectable, signal } from '@angular/core';
 import { catchError, Observable, tap } from 'rxjs';
 import { AuthService } from './auth.service';
-import { DashboardPage, DrawerButton, DrawerContentType, Group, GroupDetail, NewGroup, NewUser, Permission, PermissionType, Title, User } from '../app.types';
+import { DashboardPage, DrawerButton, DrawerContentType, Group, GroupDetail, Models, NewGroup, NewUser, Permission, PermissionType, Title, User } from '../app.types';
 import { Router } from '@angular/router';
 import { EditorService } from './editor.service';
 import { checkEmailValidity } from '../utils/utils';
@@ -20,6 +20,7 @@ export class DashboardService {
   errors: Record<string, string> = {
     groupNameEmpty: 'Zadejte název skupiny.',
     groupNameExists: 'Skupina s daným názvem už existuje. Zadejte prosím jiný název.',
+    titleNameEmpty: 'Zadejte název knihy.',
     userNameEmpty: 'Zadejte jméno uživatele.',
     userEmailEmpty: 'Zadejte e-mail uživatele.',
     userEmailInvalid: 'Zadejte e-mail uživatele ve formátu uzivatel@domena.cz.',
@@ -55,6 +56,12 @@ export class DashboardService {
 
     return nameChanged || descriptionChanged;
   });
+  newTitleName = signal<string>('');
+  newTitleNameError = signal<string>('');
+  availableModels = signal<{ value: number, label: string }[]>([]);
+  selectedModelId = signal<number>(0);
+  selectedModel = computed<string>(() => this.availableModels()[this.selectedModelId()].label);
+  selectedModelUsed = signal<boolean>(false);
 
   // Users
   users = signal<User[]>([]);
@@ -90,6 +97,10 @@ export class DashboardService {
 
   fetchTitles(groupId: string): Observable<GroupDetail> {
     return this.http.get<GroupDetail>(`${this.authSvc.apiUrl}/groups/${groupId}`, { headers: this.authSvc.authHeaders() });
+  }
+
+  fetchModels(): Observable<Models> {
+    return this.http.get<Models>(`${this.authSvc.apiUrl}/models`, { headers: this.authSvc.authHeaders() });
   }
 
   createGroup(): Observable<NewGroup> {
@@ -174,94 +185,8 @@ export class DashboardService {
 
 
   /* ------------------------------
-    DRAWER ACTIONS
+    DIALOGS
   ------------------------------ */
-  drawerOpen = signal<boolean>(false);
-  drawerTitle = signal<string>('');
-  drawerContent = signal<boolean>(false);
-  drawerContentType = signal<DrawerContentType | null>(null);
-  drawerDescription = signal<string | null>(null);
-  drawerButtons = signal<DrawerButton[]>([]);
-  
-  openDrawer(): void {
-    this.drawerOpen.set(true);
-  }
-
-  closeDrawer(): void {
-    this.drawerOpen.set(false);
-
-    switch (this.dashboardPage()) {
-      case 'groups':
-        this.selectedGroup.set(null);
-        break;
-      case 'users':
-        this.selectedUser.set(null);
-        break;
-      default:
-        break;
-    }
-  }
-
-  openGroupDetail(group: Group | null): void {
-    if (!group) return;
-    
-    this.selectedGroup.set(group);
-    this.drawerTitle.set(group.name);
-    this.drawerContent.set(true);
-    this.drawerContentType.set('groups');
-    this.groupName.set(group.name);
-    this.groupDescription.set(group.description);
-    
-    if (this.authSvc.user()?.role === 'admin') {
-      this.drawerButtons.set([
-        {
-          label: 'Zavřít',
-          action: () => this.closeDrawer()
-        },
-        {
-          label: 'Uložit změny',
-          primary: true,
-          action: () => {
-            if (!this.groupChanged()) return;
-            const group = this.selectedGroup();
-            if (!group) return;
-
-            const groupName = this.groupName();
-
-            if (!groupName) {
-              this.groupNameError.set(this.errors['groupNameEmpty']);
-              return;
-            }
-
-            if (this.groups().some(g => g.name === groupName)) {
-              this.groupNameError.set(this.errors['groupNameExists']);
-              return;
-            }
-
-            return this.updateGroup(group?._id ?? '').pipe(
-              tap(() => {
-                this.myGroups.update(prev => prev.map(g => g._id === group?._id ? {
-                  ...group,
-                  name: this.groupName(),
-                  description: this.groupDescription()
-                } : g))
-                this.displayedGroups.set(this.groups());
-                this.selectedGroup.set(null);
-                this.groupNameError.set('');
-              }),
-              catchError(err => {
-                console.error(err);
-                throw err;
-              })
-            ).subscribe(() => this.closeDrawer());
-          }
-        }
-      ]);
-    }
-
-    this.openDrawer();
-  }
-
   createGroupDialog(): void {
     const edtSvc = this.edtSvc;
     
@@ -295,7 +220,7 @@ export class DashboardService {
               const permissions = ['read_group', 'read_title', 'write', 'upload'] as PermissionType[];
               const newGroup = {
                 _id: res.id,
-                name: this.newGroupName(),
+                name: newGroupName,
                 api_key: {
                   key: res?.api_key ?? '',
                   created_at: now  
@@ -366,66 +291,85 @@ export class DashboardService {
     edtSvc.openDialog();
   }
 
-  openUserDetail(user: User | null): void {
-    if (!user) return;
+  createTitleDialog(): void {
+    const edtSvc = this.edtSvc;
     
-    this.selectedUser.set(user);
-    this.drawerTitle.set(user.full_name);
-    this.drawerContent.set(true);
-    this.drawerContentType.set('users');
-    this.userFullname.set(user.full_name);
-    this.userEmail.set(user.email);
-    
-    this.drawerButtons.set([
+    edtSvc.dialogTitle.set('Nová kniha');
+    edtSvc.dialogContent.set(true);
+    edtSvc.dialogContentType.set('new-title');
+    edtSvc.dialogButtons.set([
+      { label: 'Zrušit' },
       {
-        label: 'Zavřít',
-        action: () => this.closeDrawer()
-      },
-      {
-        label: 'Uložit změny',
+        label: 'Vytvořit',
         primary: true,
         action: () => {
-          if (!this.userChanged()) return;
+          const newTitleName = this.newTitleName();
 
-          const userName = this.userFullname();
-          const userEmail = this.userEmail();
-
-          if (!userName) {
-            this.userNameError.set(this.errors['userNameEmpty']);
+          if (!newTitleName) {
+            this.newTitleNameError.set(this.errors['titleNameEmpty']);
             return;
           }
 
-          if (!userEmail) {
-            this.userEmailError.set(this.errors['userEmailEmpty']);
-            return;
-          }
+          this.edtSvc.closeDialog();
+          
+          return this.createGroup().pipe(
+            tap((res: NewGroup) => {
+              const now = Date();
+              const user = this.authSvc.user();
+              const permissions = ['read_group', 'read_title', 'write', 'upload'] as PermissionType[];
+              const newGroup = {
+                _id: res.id,
+                name: newTitleName,
+                api_key: {
+                  key: res?.api_key ?? '',
+                  created_at: now  
+                },
+                description: this.newGroupDescription(),
+                created_at: now,
+                modified_at: now,
+                title_count: 0,
+                permissions: permissions,
+                users: [{
+                  _id: user?._id ?? '',
+                  full_name: user?.full_name ?? '',
+                  permission: permissions
+                }]
+              };
 
-          if (!checkEmailValidity(this.userEmail())) {
-            this.userEmailError.set(this.errors['userEmailInvalid']);
-            return;
-          }
-
-          if (this.users().filter(u => u._id !== this.selectedUser()?._id).some(u => u.email === userEmail)) {
-            this.userEmailError.set(this.errors['userEmailExists']);
-            return;
-          }
-
-          return this.updateUser(this.selectedUser()?._id ?? '').pipe(
-            tap((res: User) => {
-              this.users.update(prev => prev.map(u => u._id === res._id ? res : u));
-              this.displayedUsers.set(this.users());
-              this.selectedUser.set(null);
+              this.myGroups.update(prev => [ ...prev, newGroup ]);
+              this.displayedGroups.set(this.myGroups());
+              this.selectedGroup.set(newGroup);
+              this.newGroupName.set('');
+              this.newGroupDescription.set('');
+              this.newGroupNameError.set('');
             }),
             catchError(err => {
               console.error(err);
               throw err;
             })
-          ).subscribe(() => this.closeDrawer());
+          ).subscribe(() => this.openGroupDetail(this.selectedGroup()))
         }
       }
-    ]);
+    ])
 
-    this.openDrawer();
+    this.fetchModels().pipe(
+      catchError(err => {
+        console.error(err);
+        throw err;
+      })
+    ).subscribe((res: Models) => {
+      this.newTitleName.set('');
+      this.newTitleNameError.set('');
+      this.availableModels.set(res.available_models.map((m, index) => ({ value: index, label: m })));
+      this.selectedModelId.set(this.availableModels().length - 1);
+      this.selectedModelUsed.set(false);
+      this.closeDrawer();
+      edtSvc.openDialog();
+    });
+  }
+
+  onSelectModelUsed(used: boolean): void {
+    this.selectedModelUsed.set(used);
   }
 
   createUserDialog(): void {
@@ -530,6 +474,158 @@ export class DashboardService {
     ])
 
     edtSvc.openDialog();
+  }
+
+
+  /* ------------------------------
+    DRAWER ACTIONS
+  ------------------------------ */
+  drawerOpen = signal<boolean>(false);
+  drawerTitle = signal<string>('');
+  drawerContent = signal<boolean>(false);
+  drawerContentType = signal<DrawerContentType | null>(null);
+  drawerDescription = signal<string | null>(null);
+  drawerButtons = signal<DrawerButton[]>([]);
+  
+  openDrawer(): void {
+    this.drawerOpen.set(true);
+  }
+
+  closeDrawer(): void {
+    this.drawerOpen.set(false);
+
+    switch (this.dashboardPage()) {
+      case 'groups':
+        this.selectedGroup.set(null);
+        break;
+      case 'users':
+        this.selectedUser.set(null);
+        break;
+      default:
+        break;
+    }
+  }
+
+  openGroupDetail(group: Group | null): void {
+    if (!group) return;
+    
+    this.selectedGroup.set(group);
+    this.drawerTitle.set(group.name);
+    this.drawerContent.set(true);
+    this.drawerContentType.set('groups');
+    this.groupName.set(group.name);
+    this.groupDescription.set(group.description);
+    
+    if (this.authSvc.user()?.role === 'admin') {
+      this.drawerButtons.set([
+        {
+          label: 'Zavřít',
+          action: () => this.closeDrawer()
+        },
+        {
+          label: 'Uložit změny',
+          primary: true,
+          action: () => {
+            if (!this.groupChanged()) return;
+            const group = this.selectedGroup();
+            if (!group) return;
+
+            const groupName = this.groupName();
+
+            if (!groupName) {
+              this.groupNameError.set(this.errors['groupNameEmpty']);
+              return;
+            }
+
+            if (this.groups().some(g => g.name === groupName)) {
+              this.groupNameError.set(this.errors['groupNameExists']);
+              return;
+            }
+
+            return this.updateGroup(group?._id ?? '').pipe(
+              tap(() => {
+                this.myGroups.update(prev => prev.map(g => g._id === group?._id ? {
+                  ...group,
+                  name: this.groupName(),
+                  description: this.groupDescription()
+                } : g))
+                this.displayedGroups.set(this.groups());
+                this.selectedGroup.set(null);
+                this.groupNameError.set('');
+              }),
+              catchError(err => {
+                console.error(err);
+                throw err;
+              })
+            ).subscribe(() => this.closeDrawer());
+          }
+        }
+      ]);
+    }
+
+    this.openDrawer();
+  }
+
+  openUserDetail(user: User | null): void {
+    if (!user) return;
+    
+    this.selectedUser.set(user);
+    this.drawerTitle.set(user.full_name);
+    this.drawerContent.set(true);
+    this.drawerContentType.set('users');
+    this.userFullname.set(user.full_name);
+    this.userEmail.set(user.email);
+    
+    this.drawerButtons.set([
+      {
+        label: 'Zavřít',
+        action: () => this.closeDrawer()
+      },
+      {
+        label: 'Uložit změny',
+        primary: true,
+        action: () => {
+          if (!this.userChanged()) return;
+
+          const userName = this.userFullname();
+          const userEmail = this.userEmail();
+
+          if (!userName) {
+            this.userNameError.set(this.errors['userNameEmpty']);
+            return;
+          }
+
+          if (!userEmail) {
+            this.userEmailError.set(this.errors['userEmailEmpty']);
+            return;
+          }
+
+          if (!checkEmailValidity(this.userEmail())) {
+            this.userEmailError.set(this.errors['userEmailInvalid']);
+            return;
+          }
+
+          if (this.users().filter(u => u._id !== this.selectedUser()?._id).some(u => u.email === userEmail)) {
+            this.userEmailError.set(this.errors['userEmailExists']);
+            return;
+          }
+
+          return this.updateUser(this.selectedUser()?._id ?? '').pipe(
+            tap((res: User) => {
+              this.users.update(prev => prev.map(u => u._id === res._id ? res : u));
+              this.displayedUsers.set(this.users());
+              this.selectedUser.set(null);
+            }),
+            catchError(err => {
+              console.error(err);
+              throw err;
+            })
+          ).subscribe(() => this.closeDrawer());
+        }
+      }
+    ]);
+
+    this.openDrawer();
   }
 
 

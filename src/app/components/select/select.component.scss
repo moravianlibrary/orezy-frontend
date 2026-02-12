@@ -1,0 +1,133 @@
+@mixin font($font-weight, $font-size, $line-height, $color) {
+  font-family: 'IBM Plex Sans', sans-serif;
+  letter-spacing: 0%;
+  font-weight: $font-weight;
+  font-size: $font-size;
+  line-height: $line-height;
+  color: $color;
+}
+
+:host {
+  display: inline-block;
+  font-family: inherit;
+}
+
+.select {
+  position: relative;
+}
+
+.trigger {
+  height: 40px;
+  width: 280px;
+  border: 1px solid var(--border-tertiary-color);
+  border-radius: var(--spacing-x1);
+  background: var(--bg-base);
+  display: flex;
+  align-items: center;
+  overflow: hidden;
+
+  &:focus-within {
+    border-color: var(--primary);
+  }
+
+  svg {
+    fill: var(--icon-dark);
+    margin-right: var(--spacing-x4);
+  }
+}
+
+.select.open .trigger {
+  border-color: var(--primary);
+}
+
+.combo-input {
+  border: 0;
+  outline: none;
+  padding-left: var(--spacing-x4);
+  height: 100%;
+  flex: 1;
+  min-width: 0;
+  background: transparent;
+  @include font(500, var(--font-size-x1-5), var(--spacing-x4), var(--text-label-bright));
+
+  &::placeholder {
+    @include font(400, var(--font-size-x1-5), var(--spacing-x4), var(--text-label-bright));
+  }
+}
+
+.combo-input.used {
+  color: var(--text-secondary);
+}
+
+.chevron-btn {
+  height: 100%;
+  border: 0;
+  padding-inline: var(--spacing-x4);
+  background: transparent;
+  cursor: pointer;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+  
+}
+
+.dropdown {
+  position: absolute;
+  left: 0;
+  top: calc(100% + var(--spacing-x2));
+  width: 100%;
+  background: var(--bg-base);
+  border: 1px solid var(--primary);;
+  border-radius: var(--spacing-x1);
+  overflow: hidden;
+  z-index: 20;
+}
+
+.items {
+  max-height: 240px;
+  overflow: auto;
+}
+
+.item {
+  width: 100%;
+  border: 0;
+  background: transparent;
+  padding: var(--spacing-x3) var(--spacing-x4);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  cursor: pointer;
+  text-align: left;
+
+  &:hover {
+    background: var(--bg-main-light);
+  }
+
+  &.selected {
+    background: var(--bg-main-light);
+  }
+
+  .label {
+    @include font(500, var(--font-size-x1-5), var(--spacing-x4), var(--text-secondary));
+  }
+
+  svg {
+    fill: var(--primary);
+  }
+}
+
+.empty {
+  padding: var(--spacing-x3) var(--spacing-x4);
+  @include font(400, var(--font-size-x1-5), var(--spacing-x4), var(--text-label-bright));
+}
+
+.check {
+  margin-left: 10px;
+  font-size: 14px;
+  color: #2c3e50;
+}
+
+.select.disabled .trigger {
+  opacity: 0.6;
+}

@@ -21,7 +21,7 @@ export class AuthService {
   canReadTitle = signal<boolean>(false);
   canWriteTitle = signal<boolean>(false);
   canReadGroup = signal<string>('');
-  isManager = signal<boolean>(false);
+  canUpload = signal<boolean>(false);
   isAdmin = computed<boolean>(() => this.user()?.role === 'admin');
 
   get baseUri(): string {
@@ -68,11 +68,11 @@ export class AuthService {
         const user = res;
         this.user.set(user);
         
-        this.canWriteTitle.set(false);
-        this.canReadGroup.set('');
         const permissions = user.permissions;
         const permission = permissions[0].permission;
-        this.isManager.set(!!permissions.filter(p => p.permission.includes('upload')).length);
+        this.canWriteTitle.set(false);
+        this.canReadGroup.set('');
+        this.canUpload.set(!!permissions.filter(p => p.permission.includes('upload')).length);
         if (titleId) {
           if (permission.includes('write')) this.canWriteTitle.set(true);
           if (permission.includes('read_group')) this.canReadGroup.set(permissions[0].group_id);

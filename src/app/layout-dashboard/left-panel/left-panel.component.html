@@ -5,11 +5,10 @@
 </div>
 
 @let user = authSvc.user();
-@let isManager = authSvc.isManager();
 @let isAdmin = authSvc.isAdmin();
 <div class="user-info">
   <div class="user-name">{{ user?.full_name }}</div>
-  <div class="user-role">{{ userRolesDict[isAdmin ? 'admin' : isManager ? 'manage' : 'user'] }}</div>
+  <div class="user-role">{{ userRolesDict[isAdmin ? 'admin' : authSvc.canUpload() ? 'manage' : 'user'] }}</div>
 </div>
 
 <div class="menu">
@@ -26,7 +25,7 @@
       </svg>
       Moje skupiny
     </div>
-    @if (isManager) {
+    @if (isAdmin) {
       <div
         class="item"
         [class.active]="dashSvc.dashboardPage() === 'groups'"
@@ -41,8 +40,6 @@
         </svg>
         Správa skupin
       </div>
-    }
-    @if (isAdmin) {
       <div
         class="item"
         [class.active]="dashSvc.dashboardPage() === 'users'"

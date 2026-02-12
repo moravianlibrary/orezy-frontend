@@ -185,6 +185,39 @@
         </div>
       }
 
+      <!-- New title -->
+      @if (edtSvc.dialogContentType() === 'new-title') {
+        <div class="new-title-content-wrapper">
+          <div class="block">
+            <label class="above-input" for="new-title-name">
+              NÁZEV KNIHY
+              <input
+                id="new-title-name"
+                name="new-title-name"
+                type="text"
+                [(ngModel)]="dashSvc.newTitleName"
+              />
+            </label>
+            @let newTitleNameError = dashSvc.newTitleNameError();
+            @if (newTitleNameError) {
+              <span class="error">{{ newTitleNameError }}</span>
+            }
+          </div>
+
+          <div class="block">
+            <label class="above-input select">
+              VYBERTE AI MODEL
+              <app-select
+                [(ngModel)]="dashSvc.selectedModelId"
+                [options]="dashSvc.availableModels()"
+                [usedIn]="dashSvc.selectedModelUsed()"
+                (usedOut)="dashSvc.onSelectModelUsed($event)"
+              ></app-select>
+            </label>
+          </div>
+        </div>
+      }
+
       <!-- New user -->
       @if (edtSvc.dialogContentType() === 'new-user') {
         <div class="new-user-content-wrapper">
