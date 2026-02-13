@@ -278,7 +278,7 @@ html, body {
 }
 
 .os-scrollbar.os-theme-orezy {
-  background: #fff;
+  background: var(--bg-base);
   opacity: 1;
 }
 
@@ -287,6 +287,16 @@ html, body {
 }
 
 .table-body-y-scroll.os-pending::-webkit-scrollbar {
+  width: 0;
+  height: 0;
+  display: none;
+}
+
+.items.os-pending {
+  scrollbar-width: none;
+}
+
+.items.os-pending::-webkit-scrollbar {
   width: 0;
   height: 0;
   display: none;

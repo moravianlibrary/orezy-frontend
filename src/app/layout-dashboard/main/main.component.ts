@@ -11,10 +11,11 @@ import { catchError, map, of, Subscription, switchMap, tap } from 'rxjs';
 import { CommonModule } from '@angular/common';
 import { OverlayModule } from '@angular/cdk/overlay';
 import { Title } from '@angular/platform-browser';
+import { ToastComponent } from '../../components/toast/toast.component';
 
 @Component({
   selector: 'app-main-groups',
-  imports: [FormsModule, CommonModule, OverlayModule],
+  imports: [FormsModule, CommonModule, OverlayModule, ToastComponent],
   templateUrl: './main.component.html',
   styleUrl: './main.component.scss'
 })

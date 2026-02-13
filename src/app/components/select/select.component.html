@@ -24,12 +24,17 @@
 
   @if (isOpen()) {
     <div class="dropdown">
-      <div class="items">
+      <div
+        #items
+        class="items os-pending"
+        [style]="`max-height:${maxDropdownHeight()}px`"
+      >
         @for (opt of filteredOptions(); track opt.value) {
           @let isSelected = opt.value === value();
           <button
             class="item"
             [class.selected]="isSelected"
+            [style]="`padding-right:${paddingRight()}px`"
             (mousedown)="select(opt)"
           >
             <span class="label">{{ opt.label }}</span>

@@ -129,12 +129,10 @@ export class AuthService {
 
   private redirectToStoredUri(): void {
     window.location.href = `${this.baseUri}${localStorage.getItem('redirectUri')}`;
-    // this.router.navigate([`${localStorage.getItem('redirectUri') || '/'}`]);
   }
 
   logout(): void {
     localStorage.removeItem('access_token');
     window.location.href = `${this.baseUri}/login`;
-    // this.router.navigate(['/login']);
   }
 }

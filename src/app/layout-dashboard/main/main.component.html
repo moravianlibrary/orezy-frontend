@@ -202,7 +202,7 @@
         >
           <colgroup>
             <col style="width:240px">
-            <col style="width:120px">
+            <col style="width:240px">
             <col style="width:120px">
             <col style="width:180px">
             <col style="width:180px">
@@ -213,8 +213,8 @@
               <th>Název knihy</th>
               <th>ID knihy</th>
               <th>AI model</th>
-              <th class="dropdown-state-wrapper" cdkOverlayOrigin #origin="cdkOverlayOrigin">
-                <div class="dropdown-state-title" (click)="toggleStateDropdown()">
+              <th class="state-dropdown-wrapper" #stateDropdown cdkOverlayOrigin>
+                <div class="state-dropdown-title" (click)="toggleStateDropdown()">
                   Stav
                   <svg 
                     width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"
@@ -228,7 +228,8 @@
 
                 <ng-template
                   cdkConnectedOverlay
-                  [cdkConnectedOverlayOrigin]="origin"
+                  [cdkConnectedOverlayPanelClass]="'state-dropdown-wrapper'"
+                  [cdkConnectedOverlayOrigin]="stateDropdown"
                   [cdkConnectedOverlayOpen]="stateDropdownOpen"
                   (overlayOutsideClick)="stateDropdownOpen = false"
                 >
@@ -271,7 +272,7 @@
           <table class="table-body">
             <colgroup>
               <col style="width:240px">
-              <col style="width:120px">
+              <col style="width:240px">
               <col style="width:120px">
               <col style="width:180px">
               <col style="width:180px">
@@ -297,8 +298,8 @@
                         class="tag"
                         [class.info]="title.state === 'ready'"
                         [class.success]="['user_approved', 'completed'].includes(title.state)"
-                        [class.pending]="['new', 'scheduled', 'in_progress'].includes(title.state)"
-                        [class.error]="title.state === 'failed'"
+                        [class.pending]="['scheduled', 'in_progress'].includes(title.state)"
+                        [class.error]="['new', 'failed'].includes(title.state)"
                       >
                         {{ titleStateDict[title.state] }}
                       </span>
@@ -655,3 +656,5 @@
     </div>
   </div>
 }
+
+<app-toast-container />

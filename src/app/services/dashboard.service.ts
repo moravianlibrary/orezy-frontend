@@ -1,11 +1,12 @@
 import { HttpClient } from '@angular/common/http';
 import { computed, inject, Injectable, signal } from '@angular/core';
-import { catchError, Observable, tap } from 'rxjs';
+import { catchError, from, map, mergeMap, Observable, switchMap, tap, toArray } from 'rxjs';
 import { AuthService } from './auth.service';
 import { DashboardPage, DrawerButton, DrawerContentType, Group, GroupDetail, Models, NewGroup, NewUser, Permission, PermissionType, Title, User } from '../app.types';
 import { Router } from '@angular/router';
 import { EditorService } from './editor.service';
 import { checkEmailValidity } from '../utils/utils';
+import { inlineErrors } from '../app.config';
 
 @Injectable({
   providedIn: 'root'
@@ -17,15 +18,7 @@ export class DashboardService {
   private router = inject(Router);
 
   dashboardPage = signal<DashboardPage>('my-groups');
-  errors: Record<string, string> = {
-    groupNameEmpty: 'Zadejte název skupiny.',
-    groupNameExists: 'Skupina s daným názvem už existuje. Zadejte prosím jiný název.',
-    titleNameEmpty: 'Zadejte název knihy.',
-    userNameEmpty: 'Zadejte jméno uživatele.',
-    userEmailEmpty: 'Zadejte e-mail uživatele.',
-    userEmailInvalid: 'Zadejte e-mail uživatele ve formátu uzivatel@domena.cz.',
-    userEmailExists: 'Uživatel s daným e-mailem už existuje. Zadejte prosím jiný e-mail.'
-  };
+  errors = inlineErrors;
 
   // My groups
   myGroups = signal<Group[]>([]);
@@ -35,6 +28,16 @@ export class DashboardService {
   titles = signal<Title[]>([]);
   displayedTitles = signal<Title[]>([]);
   searchTitles = signal<string>('');
+
+  // Titles
+  newTitleName = signal<string>('');
+  newTitleNameError = signal<string>('');
+  availableModels = signal<{ value: number, label: string }[]>([]);
+  selectedModelId = signal<number>(0);
+  selectedModel = computed<string>(() => this.availableModels()[this.selectedModelId()].label);
+  selectedModelUsed = signal<boolean>(false);
+  files = signal<File[]>([]);
+  uploadFilesError = signal<string>('');
 
   // Groups
   groups = computed(() => this.myGroups().filter(g => g.permissions.includes('upload')));
@@ -56,12 +59,6 @@ export class DashboardService {
 
     return nameChanged || descriptionChanged;
   });
-  newTitleName = signal<string>('');
-  newTitleNameError = signal<string>('');
-  availableModels = signal<{ value: number, label: string }[]>([]);
-  selectedModelId = signal<number>(0);
-  selectedModel = computed<string>(() => this.availableModels()[this.selectedModelId()].label);
-  selectedModelUsed = signal<boolean>(false);
 
   // Users
   users = signal<User[]>([]);
@@ -101,6 +98,32 @@ export class DashboardService {
 
   fetchModels(): Observable<Models> {
     return this.http.get<Models>(`${this.authSvc.apiUrl}/models`, { headers: this.authSvc.authHeaders() });
+  }
+
+  createTitle(groupId: string): Observable<{ id: string }> {
+    const payload = {
+      external_id: this.newTitleName(),
+      model: this.selectedModel()
+    };
+    return this.http.post<{ id: string }>(`${this.authSvc.apiUrl}/create?group_id=${groupId}`, payload, { headers: this.authSvc.authHeaders('json', true) });
+  }
+
+  uploadScan(titleId: string, file: File): Observable<void> {
+    const form = new FormData();
+    form.append('scan_data', file, file.name);
+    return this.http.post<void>(`${this.authSvc.apiUrl}/${titleId}/upload-scan`, form, { headers: this.authSvc.authHeaders() });
+  }
+
+  uploadAllScans(titleId: string, files: File[], concurrency: number = 5): Observable<string> {
+    return from(files).pipe(
+      mergeMap(file => this.uploadScan(titleId, file), concurrency),
+      toArray(), // collects all emitted values, and emits one single array
+      map(() => titleId)
+    );
+  }
+
+  processTitle(titleId: string): Observable<void> {
+    return this.http.post<void>(`${this.authSvc.apiUrl}/${titleId}/process`, {}, { headers: this.authSvc.authHeaders() });
   }
 
   createGroup(): Observable<NewGroup> {
@@ -293,6 +316,7 @@ export class DashboardService {
 
   createTitleDialog(): void {
     const edtSvc = this.edtSvc;
+    this.files.set([]);
     
     edtSvc.dialogTitle.set('Nová kniha');
     edtSvc.dialogContent.set(true);
@@ -310,47 +334,41 @@ export class DashboardService {
             return;
           }
 
+          if (!this.files().length) {
+            this.uploadFilesError.set(this.errors['filesEmpty']);
+            return;
+          }
+
           this.edtSvc.closeDialog();
           
-          return this.createGroup().pipe(
-            tap((res: NewGroup) => {
+          return this.createTitle(this.selectedMyGroup()?._id ?? '').pipe(
+            map(res => {
               const now = Date();
-              const user = this.authSvc.user();
-              const permissions = ['read_group', 'read_title', 'write', 'upload'] as PermissionType[];
-              const newGroup = {
+              const newTitle: Title = {
                 _id: res.id,
-                name: newTitleName,
-                api_key: {
-                  key: res?.api_key ?? '',
-                  created_at: now  
-                },
-                description: this.newGroupDescription(),
+                external_id: newTitleName,
+                model: this.selectedModel(),
                 created_at: now,
                 modified_at: now,
-                title_count: 0,
-                permissions: permissions,
-                users: [{
-                  _id: user?._id ?? '',
-                  full_name: user?.full_name ?? '',
-                  permission: permissions
-                }]
+                state: 'scheduled'
               };
 
-              this.myGroups.update(prev => [ ...prev, newGroup ]);
-              this.displayedGroups.set(this.myGroups());
-              this.selectedGroup.set(newGroup);
-              this.newGroupName.set('');
-              this.newGroupDescription.set('');
-              this.newGroupNameError.set('');
+              this.titles.update(prev => [ newTitle, ...prev ]);
+              this.displayedTitles.set(this.titles());
+
+              return res.id;
             }),
+            switchMap(id => this.uploadAllScans(id, this.files())),
+            switchMap(id => this.processTitle(id)),
             catchError(err => {
+              this.edtSvc.showToast(`Při nahrávání skenů se něco pokazilo. Knihu smažte a přidejte ji jako novou.`, { type: 'error', duration: 300000 });
               console.error(err);
               throw err;
             })
-          ).subscribe(() => this.openGroupDetail(this.selectedGroup()))
+          ).subscribe();
         }
       }
-    ])
+    ]);
 
     this.fetchModels().pipe(
       catchError(err => {
@@ -360,6 +378,7 @@ export class DashboardService {
     ).subscribe((res: Models) => {
       this.newTitleName.set('');
       this.newTitleNameError.set('');
+      this.uploadFilesError.set('');
       this.availableModels.set(res.available_models.map((m, index) => ({ value: index, label: m })));
       this.selectedModelId.set(this.availableModels().length - 1);
       this.selectedModelUsed.set(false);
@@ -370,6 +389,10 @@ export class DashboardService {
 
   onSelectModelUsed(used: boolean): void {
     this.selectedModelUsed.set(used);
+  }
+
+  uploadFiles(files: FileList) {
+    this.files.update(prev => [ ...prev, ...Array.from(files) ]);
   }
 
   createUserDialog(): void {
@@ -648,6 +671,10 @@ export class DashboardService {
           ? this.errors['groupNameExists']
           : ''
     );
+  }
+
+  checkNewTitleName(): void {
+    this.newTitleNameError.set('');
   }
 
   checkNewUserName(): void {

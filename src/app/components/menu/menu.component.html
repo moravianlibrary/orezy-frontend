@@ -3,7 +3,7 @@
     class="button secondary menu-icon"
     (click)="toggleMenu()"
     [class.clicked]="show"
-    #trigger
+    #menu
     cdkOverlayOrigin
   >
     @if (type() === 'menu-primary') {
@@ -26,7 +26,7 @@
 
   <ng-template
     cdkConnectedOverlay
-    [cdkConnectedOverlayOrigin]="trigger"
+    [cdkConnectedOverlayOrigin]="menu"
     [cdkConnectedOverlayOpen]="show"
     (overlayOutsideClick)="show = false"
   >

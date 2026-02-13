@@ -6,10 +6,11 @@ import { FormsModule } from '@angular/forms';
 import { DashboardService } from '../../services/dashboard.service';
 import { AuthService } from '../../services/auth.service';
 import { SelectComponent } from '../select/select.component';
+import { UploadComponent } from '../upload/upload.component';
 
 @Component({
   selector: 'app-dialog',
-  imports: [FormsModule, SelectComponent],
+  imports: [FormsModule, SelectComponent, UploadComponent],
   templateUrl: './dialog.component.html',
   styleUrl: './dialog.component.scss'
 })

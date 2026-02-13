@@ -196,6 +196,7 @@
                 name="new-title-name"
                 type="text"
                 [(ngModel)]="dashSvc.newTitleName"
+                (input)="dashSvc.checkNewTitleName()"
               />
             </label>
             @let newTitleNameError = dashSvc.newTitleNameError();
@@ -206,14 +207,37 @@
 
           <div class="block">
             <label class="above-input select">
-              VYBERTE AI MODEL
+              AI MODEL
               <app-select
                 [(ngModel)]="dashSvc.selectedModelId"
+                [maxDropdownHeight]="160"
                 [options]="dashSvc.availableModels()"
                 [usedIn]="dashSvc.selectedModelUsed()"
                 (usedOut)="dashSvc.onSelectModelUsed($event)"
               ></app-select>
             </label>
+          </div>
+
+          <div class="block">
+            <label class="above-input upload-wrapper">
+              SKENY
+              @let files = dashSvc.files();
+              <app-upload
+                (filesSelected)="dashSvc.uploadFiles($event)"
+                [h3]="
+                  files.length === 0
+                  ? 'Přetáhněte sem'
+                  : `Vybrán${[2, 3, 4].includes(files.length) ? 'y' : files.length === 1 ? '' : 'o' } ${ files.length } sken${ [2, 3, 4].includes(files.length) ? 'y' : files.length === 1 ? '' : 'ů' }. Chcete sem přetáhnout další?`
+                "
+                formatsAndSizeText="JPEG a PNG formáty, až do 2 MB"
+                [btnLabel]="`Vybrat ${files.length > 0 ? 'další ' : ''}skeny`"
+              >
+              </app-upload>
+            </label>
+            @let uploadFilesError = dashSvc.uploadFilesError();
+            @if (uploadFilesError) {
+              <span class="error">{{ uploadFilesError }}</span>
+            }
           </div>
         </div>
       }

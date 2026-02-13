@@ -2,9 +2,12 @@ import { Component, ElementRef, ViewChild, forwardRef, input, computed, signal, 
 import { ControlValueAccessor, NG_VALUE_ACCESSOR } from '@angular/forms';
 import { SelectOption } from '../../app.types';
 import { DashboardService } from '../../services/dashboard.service';
+import { OverlayScrollbars } from 'overlayscrollbars';
+import { defer } from '../../utils/utils';
 
 @Component({
   selector: 'app-select',
+  imports: [],
   templateUrl: './select.component.html',
   styleUrls: ['./select.component.scss'],
   providers: [
@@ -18,13 +21,17 @@ import { DashboardService } from '../../services/dashboard.service';
 export class SelectComponent implements ControlValueAccessor {
   dashSvc = inject(DashboardService);
   
+  maxDropdownHeight = input<number>(240);
   options = input<SelectOption[]>([]);
   placeholder = input<string>('');
   usedIn = input<boolean>(false);
   usedOut = output<boolean>();
 
   @ViewChild('comboInput', { static: true }) comboInput!: ElementRef<HTMLInputElement>;
+  @ViewChild('items', { static: false }) items!: ElementRef<HTMLDivElement>;
+  private osInstance?: ReturnType<typeof OverlayScrollbars>;
 
+  paddingRight = signal<number>(16);
   isOpen = signal<boolean>(false);
   value = signal<number>(0);
   label = signal<string>('');
@@ -64,6 +71,24 @@ export class SelectComponent implements ControlValueAccessor {
   open(): void {
     this.isOpen.set(true);
     this.label.set('');
+
+    defer(() => {
+      const el = this.items?.nativeElement;
+      this.osInstance = OverlayScrollbars(el, {
+        overflow: { x: 'hidden', y: 'scroll' },
+        scrollbars: {
+          theme: 'os-theme-orezy',
+          dragScroll: true,
+          clickScroll: true,
+        },
+      });
+      el.classList.remove('os-pending');
+
+      const hasScrollbar = this.osInstance.state().hasOverflow.y;
+      if (hasScrollbar) {
+        this.paddingRight.set(26);
+      }
+    }, 100);
   }
 
   close(): void {

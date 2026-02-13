@@ -13,11 +13,11 @@ export const transparentColor = '#00000000';
 export const gridColor = '#FF000050';
 
 export const flagMessages: Record<string, string> = {
-  prediction_overlap: 'Výřezy se překrývají',
-  page_count_mismatch: 'Chybějící výřez',
-  no_prediction: 'Neúspěšná predikce',
-  low_confidence: 'Nejistota',
-  odd_dimensions: 'Podezřelý rozměr'
+  'prediction_overlap': 'Výřezy se překrývají',
+  'page_count_mismatch': 'Chybějící výřez',
+  'no_prediction': 'Neúspěšná predikce',
+  'low_confidence': 'Nejistota',
+  'odd_dimensions': 'Podezřelý rozměr'
 };
 
 export const gridModeDict: Record<GridMode, string> = {
@@ -58,24 +58,35 @@ export const permissionDict: Record<PermissionType, string> = {
 };
 
 export const titleStateDict: Record<TitleState, string> = {
-  new: 'Založena',
-  scheduled: 'Bude se zpracovávat',
-  in_progress: 'Zpracovává se',
-  failed: 'Chyba',
-  ready: 'Nové',
-  user_approved: 'Uloženo',
-  completed: 'Uloženo'
+  'new': 'Skeny nenahrány',
+  'scheduled': 'Bude se zpracovávat',
+  'in_progress': 'Zpracovává se',
+  'failed': 'Chyba',
+  'ready': 'Nové',
+  'user_approved': 'Uloženo',
+  'completed': 'Uloženo'
 }
 
 export const titleStateFilterDict: Record<string, string> = {
   'Vše': 'all',
   'Nové': 'ready',
   'Uloženo': 'saved',
-  'Založena': 'new',
+  'Skeny nenahrány': 'new',
   'Bude se zpracovávat': 'scheduled',
   'Zpracovává se': 'in_progress',
   'Chyba': 'failed'
 }
+
+export const inlineErrors: Record<string, string> = {
+  'groupNameEmpty': 'Zadejte název skupiny.',
+  'groupNameExists': 'Skupina s daným názvem už existuje. Zadejte prosím jiný název.',
+  'titleNameEmpty': 'Zadejte název knihy.',
+  'filesEmpty': 'Nahrajte skeny.',
+  'userNameEmpty': 'Zadejte jméno uživatele.',
+  'userEmailEmpty': 'Zadejte e-mail uživatele.',
+  'userEmailInvalid': 'Zadejte e-mail uživatele ve formátu uzivatel@domena.cz.',
+  'userEmailExists': 'Uživatel s daným e-mailem už existuje. Zadejte prosím jiný e-mail.'
+};
 
 export const appConfig: ApplicationConfig = {
   providers: [
