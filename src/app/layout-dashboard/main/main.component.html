@@ -35,6 +35,7 @@
             <col style="width:120px">
             <col style="width:170px">
             <col style="width:170px">
+            @if (tableHasScrollbar()) { <col style="width:12px"> }
           </colgroup>
           <thead>
             <tr>
@@ -43,6 +44,7 @@
               <th>Právo</th>
               <th>Vytvořeno</th>
               <th>Upraveno</th>
+              @if (tableHasScrollbar()) { <th style="padding:0"></th> }
             </tr>
           </thead>
         </table>
@@ -55,6 +57,7 @@
               <col style="width:120px">
               <col style="width:170px">
               <col style="width:170px">
+              @if (tableHasScrollbar()) { <col style="width:12px"> }
             </colgroup>
             <tbody>
               @let myGroups = dashSvc.displayedMyGroups();
@@ -131,6 +134,7 @@
                       <span class="date">{{ modified[0] }}</span>{{ ' ' }}
                       <span class="time">{{ modified[1] }}</span>
                     </td>
+                    @if (tableHasScrollbar()) { <td style="padding:0"></td> }
                   </tr>
                 }
               } @else {
@@ -391,6 +395,7 @@
             <col style="width:500px">
             <col style="width:170px">
             <col style="width:170px">
+            @if (tableHasScrollbar()) { <col style="width:12px"> }
           </colgroup>
           <thead>
             <tr>
@@ -399,6 +404,7 @@
               <th>Uživatelé a jejich práva</th>
               <th>Vytvořeno</th>
               <th>Upraveno</th>
+              @if (tableHasScrollbar()) { <th style="padding:0"></th> }
             </tr>
           </thead>
         </table>
@@ -411,6 +417,7 @@
               <col style="width:500px">
               <col style="width:170px">
               <col style="width:170px">
+              @if (tableHasScrollbar()) { <col style="width:12px"> }
             </colgroup>
             <tbody>
               @let groups = dashSvc.displayedGroups();
@@ -491,6 +498,7 @@
                       <span class="date">{{ modified[0] }}</span>{{ ' ' }}
                       <span class="time">{{ modified[1] }}</span>
                     </td>
+                    @if (tableHasScrollbar()) { <td style="padding:0"></td> }
                   </tr>
                 }
               } @else {
@@ -552,6 +560,7 @@
             <col style="width:250px">
             <col style="width:540px">
             <col style="width:180px">
+            @if (tableHasScrollbar()) { <col style="width:12px"> }
           </colgroup>
           <thead>
             <tr>
@@ -559,6 +568,7 @@
               <th>E-mail</th>
               <th>Skupiny a práva</th>
               <th>Naposledy změněno</th>
+              @if (tableHasScrollbar()) { <th style="padding:0"></th> }
             </tr>
           </thead>
         </table>
@@ -570,6 +580,7 @@
               <col style="width:250px">
               <col style="width:540px">
               <col style="width:180px">
+              @if (tableHasScrollbar()) { <col style="width:12px"> }
             </colgroup>
             <tbody>
               @let users = dashSvc.displayedUsers();
@@ -646,6 +657,7 @@
                       <span class="date">{{ modified[0] }}</span>{{ ' ' }}
                       <span class="time">{{ modified[1] }}</span> -->
                     </td>
+                    @if (tableHasScrollbar()) { <td style="padding:0"></td> }
                   </tr>
                 }
               } @else {
