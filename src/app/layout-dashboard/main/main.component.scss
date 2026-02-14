@@ -406,10 +406,6 @@
           align-items: center;
           justify-content: center;
 
-          &:hover {
-            background: var(--bg-main-light);
-          }
-
           svg {
             fill: var(--icon-dark);
           }
@@ -445,6 +441,10 @@
 
         .icon-btn {
           background: #EEF1F4;
+
+          &:hover {
+            background: var(--bg-main-light);
+          }
         }
       }
 
@@ -457,6 +457,10 @@
 
         .icon-btn {
           background: var(--bg-base);
+
+          &:hover {
+            background: var(--bg-main-light);
+          }
         }
       }
     }
