@@ -31,7 +31,6 @@ export class MainComponent {
   maxUsers: number = 3;
   maxGroups: number = 3;
   tableHasScrollbar = signal<boolean>(false);
-  lastCellPaddingRight = signal<number>(24);
 
   @ViewChild('bodyScroll', { static: false }) bodyScroll!: ElementRef<HTMLDivElement>;
   private osInstance?: ReturnType<typeof OverlayScrollbars>;
@@ -201,6 +200,12 @@ export class MainComponent {
       this.visibleTooltip = true;
       this.updatePosition(event);
     }, 500);
+  }
+
+  onActionsHover(event: MouseEvent): void {
+    event.stopPropagation();
+    this.clearTimerTooltip();
+    this.visibleTooltip = false;
   }
 
   clearTimerTooltip(): void {

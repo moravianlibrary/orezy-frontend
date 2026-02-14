@@ -30,12 +30,13 @@
           cellspacing="0" cellpadding="0"
         >
           <colgroup>
-            <col style="width:200px">
-            <col style="width:100px">
-            <col style="width:120px">
-            <col style="width:170px">
-            <col style="width:170px">
+            <col style="min-width:200px">
+            <col style="min-width:100px">
+            <col style="min-width:120px">
+            <col style="min-width:170px">
+            <col style="min-width:170px">
             @if (tableHasScrollbar()) { <col style="width:12px"> }
+            <col style="max-width:0px">
           </colgroup>
           <thead>
             <tr>
@@ -52,12 +53,13 @@
         <div class="table-body-y-scroll os-pending" #bodyScroll>
           <table class="table-body">
             <colgroup>
-              <col style="width:200px">
-              <col style="width:100px">
-              <col style="width:120px">
-              <col style="width:170px">
-              <col style="width:170px">
+              <col style="min-width:200px">
+              <col style="min-width:100px">
+              <col style="min-width:120px">
+              <col style="min-width:170px">
+              <col style="min-width:170px">
               @if (tableHasScrollbar()) { <col style="width:12px"> }
+              <col style="max-width:0px">
             </colgroup>
             <tbody>
               @let myGroups = dashSvc.displayedMyGroups();
@@ -135,6 +137,10 @@
                       <span class="time">{{ modified[1] }}</span>
                     </td>
                     @if (tableHasScrollbar()) { <td style="padding:0"></td> }
+                    <td
+                      class="row-actions-cell"
+                      (click)="$event.stopPropagation()"
+                    >
                   </tr>
                 }
               } @else {
@@ -205,13 +211,14 @@
           cellspacing="0" cellpadding="0"
         >
           <colgroup>
-            <col style="width:240px">
-            <col style="width:240px">
-            <col style="width:120px">
-            <col style="width:180px">
-            <col style="width:180px">
-            <col style="width:180px">
+            <col style="min-width:240px">
+            <col style="min-width:240px">
+            <col style="min-width:120px">
+            <col style="min-width:180px">
+            <col style="min-width:180px">
+            <col style="min-width:180px">
             @if (tableHasScrollbar()) { <col style="width:12px"> }
+            <col style="max-width:0px">
           </colgroup>
           <thead>
             <tr>
@@ -277,13 +284,14 @@
         <div class="table-body-y-scroll os-pending" #bodyScroll>
           <table class="table-body">
             <colgroup>
-              <col style="width:240px">
-              <col style="width:240px">
-              <col style="width:120px">
-              <col style="width:180px">
-              <col style="width:180px">
-              <col style="width:180px">
+              <col style="min-width:240px">
+              <col style="min-width:240px">
+              <col style="min-width:120px">
+              <col style="min-width:180px">
+              <col style="min-width:180px">
+              <col style="min-width:180px">
               @if (tableHasScrollbar()) { <col style="width:12px"> }
+              <col style="max-width:0px">
             </colgroup>
             <tbody>
               @let titles = dashSvc.displayedTitles();
@@ -292,6 +300,7 @@
                   @let isClickable = authSvc.canReadTitle() && shouldHaveLink(title.state);
                   <tr
                     tabindex="0"
+                    class="row"
                     [class.clickable]="isClickable"
                     (click)="isClickable ? dashSvc.openTitle(title._id) : null"
                     (mousemove)="showTooltip($event, isClickable)"
@@ -322,7 +331,36 @@
                       <span class="time">{{ modified[1] }}</span>
                     </td>
                     @if (tableHasScrollbar()) { <td style="padding:0"></td> }
-                   </tr>
+                    <td
+                      class="row-actions-cell"
+                      (click)="$event.stopPropagation()"
+                      (mousemove)="onActionsHover($event)"
+                      (mouseenter)="onActionsHover($event)"
+                    >
+                      <div
+                        class="row-actions"
+                        [style]="`right:${tableHasScrollbar() ? (dashSvc.drawerOpen() ? 617 : 24) : (dashSvc.drawerOpen() ? 605 : 12)}px`"
+                      >
+                        <span class="empty-space">.</span>
+                        <button type="button" class="icon-btn" (click)="true">
+                          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path fill-rule="evenodd" clip-rule="evenodd" d="M10.3451 0.958477C11.1229 0.859013 11.9098 1.17709 12.7094 1.92946L12.7104 1.93033C13.5127 2.68905 13.8779 3.45872 13.8231 4.24264C13.7701 5.00014 13.331 5.64128 12.8303 6.17031M12.8303 6.17031L7.35964 11.9608C7.20542 12.1287 6.99776 12.271 6.80089 12.3762C6.6015 12.4828 6.37086 12.5741 6.15433 12.6126L6.151 12.6131L4.0051 12.9797C3.48472 13.0694 2.98572 12.9393 2.63025 12.6022C2.27528 12.2656 2.11843 11.7747 2.17654 11.2517L2.17671 11.2502L2.42444 9.08084C2.45322 8.86505 2.53336 8.63153 2.62783 8.42895C2.72196 8.2271 2.8504 8.01306 3.00239 7.85127L3.00336 7.85023L8.4767 2.0569C8.97772 1.52765 9.59341 1.05459 10.3451 0.958477M9.20325 2.74401V2.74401L3.73124 8.53594V8.53594C3.67659 8.59425 3.60152 8.70708 3.53413 8.85159C3.46795 8.99349 3.42821 9.12477 3.41629 9.20915L3.17042 11.3622L3.17034 11.3628C3.14201 11.6195 3.22176 11.785 3.31837 11.8766C3.41457 11.9679 3.58223 12.0378 3.83519 11.9942L3.83596 11.9941L5.9807 11.6277C6.06422 11.6126 6.19289 11.5673 6.3294 11.4943C6.46779 11.4203 6.57189 11.3405 6.624 11.2834L6.62997 11.2768L12.1034 5.48356C12.5491 5.01267 12.7968 4.58357 12.8255 4.17291C12.8524 3.7886 12.6944 3.29176 12.0238 2.6574C11.3569 2.03007 10.854 1.90154 10.4719 1.9504C10.0636 2.00261 9.6488 2.27342 9.20325 2.74401Z" />
+                            <path fill-rule="evenodd" clip-rule="evenodd" d="M7.84953 2.87255C8.12238 2.83004 8.37803 3.01677 8.42054 3.28962C8.67196 4.90336 9.98164 6.13844 11.6099 6.30244C11.8847 6.33011 12.085 6.57527 12.0573 6.85003C12.0296 7.12478 11.7845 7.32508 11.5097 7.2974C9.43136 7.08807 7.75438 5.50981 7.43246 3.44356C7.38995 3.17071 7.57668 2.91506 7.84953 2.87255Z" />
+                            <path fill-rule="evenodd" clip-rule="evenodd" d="M1.5 14.6666C1.5 14.3905 1.72386 14.1666 2 14.1666H14C14.2761 14.1666 14.5 14.3905 14.5 14.6666C14.5 14.9428 14.2761 15.1666 14 15.1666H2C1.72386 15.1666 1.5 14.9428 1.5 14.6666Z" />
+                          </svg>
+                        </button>
+                        <button type="button" class="icon-btn" (click)="true">
+                          <svg width="16" height="16" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg">
+                            <path fill-rule="evenodd" clip-rule="evenodd" d="M3.31052 3.35611C4.64689 3.22115 5.98341 3.15366 7.32004 3.15366C9.56362 3.15366 11.8134 3.26785 14.0493 3.48943C14.3241 3.51666 14.5248 3.7615 14.4976 4.0363C14.4704 4.31109 14.2255 4.51178 13.9507 4.48455C11.7467 4.26613 9.52978 4.15366 7.32004 4.15366C6.0169 4.15366 4.71367 4.21947 3.41029 4.35112L3.40882 4.35127L2.04882 4.4846C1.774 4.51155 1.52937 4.3106 1.50242 4.03577C1.47548 3.76095 1.67643 3.51632 1.95125 3.48938L3.31052 3.35611Z" />
+                            <path fill-rule="evenodd" clip-rule="evenodd" d="M6.30647 2.52305L6.15984 3.39615C6.11411 3.66848 5.85626 3.85217 5.58394 3.80644C5.31161 3.7607 5.12792 3.50286 5.17365 3.23053L5.32032 2.3572C5.32288 2.34199 5.32552 2.32606 5.32819 2.30993C5.37409 2.03267 5.44144 1.62592 5.71257 1.31847C6.02861 0.960088 6.51081 0.833344 7.12675 0.833344H8.87341C9.49684 0.833344 9.97856 0.970276 10.2927 1.33231C10.5642 1.64518 10.6299 2.05338 10.6737 2.32595C10.6759 2.33921 10.6779 2.35215 10.68 2.36475L10.8264 3.22991C10.8725 3.50219 10.6891 3.76026 10.4168 3.80633C10.1446 3.85241 9.8865 3.66904 9.84042 3.39677L9.69325 2.52714C9.63749 2.18512 9.60221 2.06236 9.53744 1.98771C9.5016 1.94641 9.37665 1.83334 8.87341 1.83334H7.12675C6.61601 1.83334 6.49488 1.94327 6.46259 1.97988C6.40118 2.04952 6.36652 2.16652 6.30647 2.52305Z" />
+                            <path fill-rule="evenodd" clip-rule="evenodd" d="M12.5985 5.59417C12.8741 5.61195 13.083 5.84977 13.0653 6.12533L12.6317 12.8414L12.6309 12.8541C12.6133 13.1049 12.594 13.3807 12.5423 13.6374C12.4887 13.9035 12.3942 14.1843 12.2028 14.4335C11.802 14.9553 11.12 15.1665 10.1396 15.1665H5.85963C4.87925 15.1665 4.19721 14.9553 3.79643 14.4335C3.60503 14.1843 3.51056 13.9035 3.45697 13.6374C3.40528 13.3807 3.38597 13.1049 3.3684 12.8541L3.36733 12.8387L2.934 6.12533C2.91621 5.84977 3.12518 5.61195 3.40075 5.59417C3.67632 5.57638 3.91413 5.78535 3.93192 6.06092L4.36507 12.7715L4.36517 12.7729C4.38398 13.0414 4.39991 13.2543 4.43729 13.4399C4.47369 13.6207 4.52423 13.7394 4.58949 13.8244C4.70205 13.9709 4.98 14.1665 5.85963 14.1665H10.1396C11.0193 14.1665 11.2972 13.9709 11.4098 13.8244C11.475 13.7394 11.5256 13.6207 11.562 13.4399C11.5993 13.2543 11.6153 13.0414 11.6341 12.7729L11.6342 12.7715L12.0673 6.06092C12.0851 5.78535 12.3229 5.57638 12.5985 5.59417Z" />
+                            <path fill-rule="evenodd" clip-rule="evenodd" d="M6.38672 11C6.38672 10.7239 6.61058 10.5 6.88672 10.5H9.10672C9.38286 10.5 9.60672 10.7239 9.60672 11C9.60672 11.2762 9.38286 11.5 9.10672 11.5H6.88672C6.61058 11.5 6.38672 11.2762 6.38672 11Z" />
+                            <path fill-rule="evenodd" clip-rule="evenodd" d="M5.83333 8.33334C5.83333 8.0572 6.05719 7.83334 6.33333 7.83334H9.66667C9.94281 7.83334 10.1667 8.0572 10.1667 8.33334C10.1667 8.60949 9.94281 8.83334 9.66667 8.83334H6.33333C6.05719 8.83334 5.83333 8.60949 5.83333 8.33334Z" />
+                          </svg>
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
                 }
               } @else {
                 <tr class="no-results">
@@ -390,12 +428,13 @@
           cellspacing="0" cellpadding="0"
         >
           <colgroup>
-            <col style="width:220px">
-            <col style="width:100px">
-            <col style="width:500px">
-            <col style="width:170px">
-            <col style="width:170px">
+            <col style="min-width:220px">
+            <col style="min-width:100px">
+            <col style="min-width:500px">
+            <col style="min-width:170px">
+            <col style="min-width:170px">
             @if (tableHasScrollbar()) { <col style="width:12px"> }
+            <col style="max-width:0px">
           </colgroup>
           <thead>
             <tr>
@@ -412,12 +451,13 @@
         <div class="table-body-y-scroll os-pending" #bodyScroll>
           <table class="table-body">
             <colgroup>
-              <col style="width:220px">
-              <col style="width:100px">
-              <col style="width:500px">
-              <col style="width:170px">
-              <col style="width:170px">
+              <col style="min-width:220px">
+              <col style="min-width:100px">
+              <col style="min-width:500px">
+              <col style="min-width:170px">
+              <col style="min-width:170px">
               @if (tableHasScrollbar()) { <col style="width:12px"> }
+              <col style="max-width:0px">
             </colgroup>
             <tbody>
               @let groups = dashSvc.displayedGroups();
@@ -499,6 +539,11 @@
                       <span class="time">{{ modified[1] }}</span>
                     </td>
                     @if (tableHasScrollbar()) { <td style="padding:0"></td> }
+                    <td
+                      class="row-actions-cell"
+                      (click)="$event.stopPropagation()"
+                    >
+                    </td>
                   </tr>
                 }
               } @else {
@@ -556,11 +601,12 @@
           cellspacing="0" cellpadding="0"
         >
           <colgroup>
-            <col style="width:200px">
-            <col style="width:250px">
-            <col style="width:540px">
-            <col style="width:180px">
+            <col style="min-width:200px">
+            <col style="min-width:250px">
+            <col style="min-width:540px">
+            <col style="min-width:180px">
             @if (tableHasScrollbar()) { <col style="width:12px"> }
+            <col style="max-width:0px">
           </colgroup>
           <thead>
             <tr>
@@ -576,11 +622,12 @@
         <div class="table-body-y-scroll os-pending" #bodyScroll>
           <table class="table-body">
             <colgroup>
-              <col style="width:200px">
-              <col style="width:250px">
-              <col style="width:540px">
-              <col style="width:180px">
+              <col style="min-width:200px">
+              <col style="min-width:250px">
+              <col style="min-width:540px">
+              <col style="min-width:180px">
               @if (tableHasScrollbar()) { <col style="width:12px"> }
+              <col style="max-width:0px">
             </colgroup>
             <tbody>
               @let users = dashSvc.displayedUsers();
@@ -658,6 +705,10 @@
                       <span class="time">{{ modified[1] }}</span> -->
                     </td>
                     @if (tableHasScrollbar()) { <td style="padding:0"></td> }
+                    <td
+                      class="row-actions-cell"
+                      (click)="$event.stopPropagation()"
+                    >
                   </tr>
                 }
               } @else {
