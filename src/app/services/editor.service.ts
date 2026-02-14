@@ -170,9 +170,12 @@ export class EditorService {
       .subscribe({
         next: () => {
           this.setDisplayedImages();
-          this.showToast('Proces byl úspěšně dokončen!', { type: 'success' });
+          this.showToast('Změny byly úspěšně uloženy!', { type: 'success' });
         },
-        error: (err: Error) => console.error(err)
+        error: (err: Error) => {
+          this.showToast('Při ukládání změn se něco pokazilo. Zkuste změny uložit znovu.', { type: 'error', duration: 300000 });
+          console.error(err);
+        }
       });
   }
 
