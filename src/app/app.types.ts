@@ -162,7 +162,7 @@ export interface Viewport {
   ------------------------------ */
 
 // Drawer
-export type DrawerContentType = 'groups' | 'users';
+export type DrawerContentType = 'groups' | 'titles' | 'users';
 export interface DrawerButton {
   label: string;
   primary?: boolean;

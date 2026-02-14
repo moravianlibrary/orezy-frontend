@@ -64,6 +64,7 @@
   padding: var(--spacing-x3) var(--spacing-x4);
   background-color: var(--bg-base);
   border-left: 1px solid var(--border-light);
+  z-index: 510;
 
   svg {
     fill: var(--icon-dark);
@@ -364,7 +365,7 @@
         .row-actions {
           position: absolute;
           top: 50%;
-          right: var(--spacing-x3);
+          right: 1px;
           transform: translateY(-50%);
 
           display: flex;
@@ -376,7 +377,7 @@
           pointer-events: none;
 
           .empty-space {
-            width: var(--spacing-x10);
+            width: var(--spacing-x4);
             height: var(--spacing-x9);
             color: transparent;
           }
@@ -427,8 +428,12 @@
         }
 
         .row-actions {
-          .empty-space {
+          .empty-space.gradient {
             background: linear-gradient(to left, #EEF1F4, transparent);
+          }
+
+          .empty-space.fill, .empty-space.last {
+            background: #EEF1F4;
           }
         }
 
@@ -443,8 +448,12 @@
 
       &:not(.clickable):hover {
         .row-actions {
-          .empty-space {
+          .empty-space.gradient {
             background: linear-gradient(to left, var(--bg-base), transparent);
+          }
+
+          .empty-space.fill, .empty-space.last {
+            background: var(--bg-base);
           }
         }
 

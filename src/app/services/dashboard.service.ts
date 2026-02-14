@@ -25,11 +25,12 @@ export class DashboardService {
   displayedMyGroups = signal<Group[]>([]);
   searchMyGroups = signal<string>('');
   selectedMyGroup = signal<GroupDetail | null>(null);
+
+  // Titles
   titles = signal<Title[]>([]);
   displayedTitles = signal<Title[]>([]);
   searchTitles = signal<string>('');
-
-  // Titles
+  selectedTitle = signal<Title | null>(null);
   newTitleName = signal<string>('');
   newTitleNameError = signal<string>('');
   availableModels = signal<{ value: number, label: string }[]>([]);
@@ -401,18 +402,35 @@ export class DashboardService {
     this.files.update(prev => [ ...prev, ...Array.from(files) ]);
   }
 
-  deleteTitleDialog(titleId: string): void {
-    this.deleteTitle(titleId).pipe(
-      catchError(err => {
-        this.edtSvc.showToast('Nepodařilo se smazat knihu. Zkuste to znovu.', { type: 'error', duration: 300000 })
-        console.error(err);
-        throw err;
-      })
-    ).subscribe(() => {
-      this.titles.update(prev => prev.filter(t => t._id !== titleId));
-      this.displayedTitles.set(this.titles());
-      this.edtSvc.showToast('Kniha byla úspěšně smazána!', { type: 'success' });
-    });
+  deleteTitleDialog(title: Title | null): void {
+    const edtSvc = this.edtSvc;
+    
+    edtSvc.dialogTitle.set('Smazat knihu');
+    edtSvc.dialogDescription.set(`Opravdu chcete smazat knihu${' ' + title?.external_id}?`);
+    edtSvc.dialogContent.set(false);
+    edtSvc.dialogButtons.set([
+      { label: 'Zrušit' },
+      {
+        label: 'Smazat knihu',
+        primary: true,
+        destructive: true,
+        action: () => this.deleteTitle(title?._id ?? '').pipe(
+          tap(() => {
+            this.titles.update(prev => prev.filter(t => t._id !== (title?._id ?? '')));
+            this.displayedTitles.set(this.titles());
+            this.selectedTitle.set(null);
+            this.edtSvc.closeDialog();
+          }),
+          catchError(err => {
+            this.edtSvc.showToast('Nepodařilo se smazat knihu. Zkuste to znovu.', { type: 'error', duration: 300000 })
+            console.error(err);
+            throw err;
+          })
+        ).subscribe(() => this.closeDrawer())
+      }
+    ])
+
+    edtSvc.openDialog();
   }
 
   // User
@@ -525,6 +543,7 @@ export class DashboardService {
     DRAWER ACTIONS
   ------------------------------ */
   drawerOpen = signal<boolean>(false);
+  drawerEditMode = signal<boolean>(false);
   drawerTitle = signal<string>('');
   drawerContent = signal<boolean>(false);
   drawerContentType = signal<DrawerContentType | null>(null);
@@ -533,10 +552,12 @@ export class DashboardService {
   
   openDrawer(): void {
     this.drawerOpen.set(true);
+    this.drawerEditMode.set(false);
   }
 
   closeDrawer(): void {
     this.drawerOpen.set(false);
+    this.drawerEditMode.set(false);
 
     switch (this.dashboardPage()) {
       case 'groups':
@@ -548,6 +569,19 @@ export class DashboardService {
       default:
         break;
     }
+  }
+
+  openTitleDetail(title: Title | null): void {
+    if (!title) return;
+    
+    this.selectedTitle.set(title);
+    this.files.set([]);
+    this.drawerTitle.set(title?.external_id ?? 'Bez názvu');
+    this.drawerContent.set(true);
+    this.drawerContentType.set('titles');
+    this.drawerButtons.set([]);
+
+    this.openDrawer();
   }
 
   openGroupDetail(group: Group | null): void {
@@ -571,6 +605,7 @@ export class DashboardService {
           primary: true,
           action: () => {
             if (!this.groupChanged()) return;
+            if (!this.drawerEditMode()) return;
             const group = this.selectedGroup();
             if (!group) return;
 
@@ -630,6 +665,7 @@ export class DashboardService {
         primary: true,
         action: () => {
           if (!this.userChanged()) return;
+          if (!this.drawerEditMode()) return;
 
           const userName = this.userFullname();
           const userEmail = this.userEmail();

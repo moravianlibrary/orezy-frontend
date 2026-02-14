@@ -37,8 +37,15 @@
     @include font(450, var(--font-size-x3), var(--spacing-x8), var(--text-base));
   }
 
-  svg {
-    fill: var(--icon-dark);
+  .drawer-actions {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-x4);
+
+    .action {
+      cursor: pointer;
+      fill: var(--icon-gray);
+    }
   }
 }
 
@@ -150,6 +157,42 @@
       .value {
         @include font(400, var(--font-size-x2), var(--spacing-x6), var(--text-base));
 
+        .tag {
+          display: flex;
+          gap: var(--spacing-x2);
+          width: fit-content;
+          @include font(500, var(--font-size-x1-5), var(--spacing-x4), var(--text-base));
+          border-radius: var(--spacing-x1);
+          padding: var(--spacing-x1) var(--spacing-x2);
+        }
+
+        .info {
+          color: #08203C;
+          background-color: #007BFF1A;
+          .tag-label { color: inherit; }
+        }
+
+        .success {
+          fill: #3F764D;
+          color: #00310D;
+          background-color: #34C7591A;
+          .tag-label { color: inherit; }
+        }
+        
+        .pending {
+          fill: #775A32;
+          color: #362000;
+          background-color: #FF95001A;
+          .tag-label { color: inherit; }
+        }
+
+        .error {
+          fill: #853D38;
+          color: #390400;
+          background-color: #FF3A301A;
+          .tag-label { color: inherit; }
+        }
+
         .date {
           @include font(400, var(--font-size-x2), var(--spacing-x6), var(--text-base));
         }
@@ -240,11 +283,11 @@
     & > :first-child {
       padding-top: var(--spacing-x3);
     }
-  }
-}
 
-.drawer-close {
-  cursor: pointer;
+    .delete.first {
+      padding-top: 0;
+    }
+  }
 }
 
 .drawer-footer {

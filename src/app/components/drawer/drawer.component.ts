@@ -1,7 +1,7 @@
 import { Component, inject } from '@angular/core';
 import { DashboardService } from '../../services/dashboard.service';
 import { getDate } from '../../utils/utils';
-import { permissionDict } from '../../app.config';
+import { permissionDict, titleStateDict } from '../../app.config';
 import { AuthService } from '../../services/auth.service';
 import { FormsModule } from '@angular/forms';
 
@@ -18,6 +18,7 @@ export class DrawerComponent {
 
   getDate = getDate;
   permissionDict = permissionDict;
+  titleStateDict = titleStateDict;
 
   copied: Record<string, boolean> = {};
   private copiedTimers: Record<string, number> = {};
