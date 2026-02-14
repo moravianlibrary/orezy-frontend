@@ -382,17 +382,10 @@
           }
         }
 
-        /* show on hover and keyboard focus */
-        tr:hover .row-actions,
-        tr:focus-within .row-actions {
+        /* show on hover */
+        tr:hover .row-actions {
           opacity: 1;
           pointer-events: auto;
-        }
-
-        /* hide on being active */
-        tr.active .row-actions {
-          opacity: 0;
-          pointer-events: none;
         }
 
         .icon-btn {

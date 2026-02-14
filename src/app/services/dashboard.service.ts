@@ -214,6 +214,7 @@ export class DashboardService {
   /* ------------------------------
     DIALOGS
   ------------------------------ */
+  // Group
   createGroupDialog(): void {
     const edtSvc = this.edtSvc;
     
@@ -318,6 +319,7 @@ export class DashboardService {
     edtSvc.openDialog();
   }
 
+  // Title
   createTitleDialog(): void {
     const edtSvc = this.edtSvc;
     this.files.set([]);
@@ -399,6 +401,21 @@ export class DashboardService {
     this.files.update(prev => [ ...prev, ...Array.from(files) ]);
   }
 
+  deleteTitleDialog(titleId: string): void {
+    this.deleteTitle(titleId).pipe(
+      catchError(err => {
+        this.edtSvc.showToast('Nepodařilo se smazat knihu. Zkuste to znovu.', { type: 'error', duration: 300000 })
+        console.error(err);
+        throw err;
+      })
+    ).subscribe(() => {
+      this.titles.update(prev => prev.filter(t => t._id !== titleId));
+      this.displayedTitles.set(this.titles());
+      this.edtSvc.showToast('Kniha byla úspěšně smazána!', { type: 'success' });
+    });
+  }
+
+  // User
   createUserDialog(): void {
     const edtSvc = this.edtSvc;
     
@@ -659,6 +676,7 @@ export class DashboardService {
   /* ------------------------------
     INPUT INLINE VALIDATION
   ------------------------------ */
+  // Group
   checkNewGroupNameUniqueness(): void {
     this.newGroupNameError.set(this.groups()
       .some(g => g.name === this.newGroupName())
@@ -677,10 +695,12 @@ export class DashboardService {
     );
   }
 
+  // Title
   checkNewTitleName(): void {
     this.newTitleNameError.set('');
   }
 
+  // User
   checkNewUserName(): void {
     this.newUserNameError.set('');
   }

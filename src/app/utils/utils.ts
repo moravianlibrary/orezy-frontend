@@ -58,7 +58,8 @@ export function defer(fn: () => void, delay: number = 0) {
 }
 
 export function focusMainWrapper(): void {
-  defer(() => (document.querySelector('.main-wrapper') as HTMLElement).focus());
+  const el = document.querySelector('.main-wrapper') as HTMLElement;
+  if (el) defer(() => (el.focus()));
 }
 
 export function scrollToSelectedImage(timeout: number = 100): void {
