@@ -1,4 +1,4 @@
-import { Component, ElementRef, inject, ViewChild } from '@angular/core';
+import { Component, ElementRef, inject, signal, ViewChild } from '@angular/core';
 import { DashboardService } from '../../services/dashboard.service';
 import { FormsModule } from '@angular/forms';
 import { AuthService } from '../../services/auth.service';
@@ -30,6 +30,8 @@ export class MainComponent {
   getDate = getDate;
   maxUsers: number = 3;
   maxGroups: number = 3;
+  tableHasScrollbar = signal<boolean>(false);
+  lastCellPaddingRight = signal<number>(24);
 
   @ViewChild('bodyScroll', { static: false }) bodyScroll!: ElementRef<HTMLDivElement>;
   private osInstance?: ReturnType<typeof OverlayScrollbars>;
@@ -135,6 +137,8 @@ export class MainComponent {
               },
             });
             el.classList.remove('os-pending');
+
+            this.tableHasScrollbar.set(this.osInstance.state().hasOverflow.y);
           }, 100);
         });
   }

@@ -320,17 +320,6 @@
             gap: var(--spacing-x2);
           }
         }
-
-        .clickable:hover {
-          cursor: pointer;
-          background-color: #8099B30D;
-          outline: 1px solid var(--primary);
-          outline-offset: -1px;
-
-          &:last-child {
-            border-radius: 0 0 var(--spacing-x1) var(--spacing-x1);
-          }
-        }
       }
 
       tr {
@@ -348,6 +337,27 @@
           &:last-child {
             padding-inline: var(--spacing-x2) var(--spacing-x6);
           }
+        }
+      }
+
+      .clickable:hover {
+        cursor: pointer;
+        background-color: #8099B30D;
+        outline: 1px solid var(--primary);
+        outline-offset: -1px;
+
+        &:last-child {
+          border-radius: 0 0 var(--spacing-x1) var(--spacing-x1);
+        }
+
+        td {
+          &:nth-last-child(2) {
+            border-right: 1px solid var(--primary);
+          }
+        }
+
+        .no-border-right {
+          border-right-width: 0px !important;
         }
       }
     }

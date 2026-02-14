@@ -121,7 +121,7 @@
                         }
                       </span>
                     </td>
-                    <td>
+                    <td [class.no-border-right]="!tableHasScrollbar()">
                       @let created = getDate(group.created_at);
                       <span class="date">{{ created[0] }}</span>{{ ' ' }}
                       <span class="time">{{ created[1] }}</span>
@@ -207,6 +207,7 @@
             <col style="width:180px">
             <col style="width:180px">
             <col style="width:180px">
+            @if (tableHasScrollbar()) { <col style="width:12px"> }
           </colgroup>
           <thead>
             <tr>
@@ -264,6 +265,7 @@
                 </svg> -->
               </th>
               <th>Upraveno</th>
+              @if (tableHasScrollbar()) { <th style="padding:0"></th> }
             </tr>
           </thead>
         </table>
@@ -277,6 +279,7 @@
               <col style="width:180px">
               <col style="width:180px">
               <col style="width:180px">
+              @if (tableHasScrollbar()) { <col style="width:12px"> }
             </colgroup>
             <tbody>
               @let titles = dashSvc.displayedTitles();
@@ -304,7 +307,7 @@
                         {{ titleStateDict[title.state] }}
                       </span>
                     </td>
-                    <td>
+                    <td [class.no-border-right]="!tableHasScrollbar()">
                       @let created = getDate(title.created_at);
                       <span class="date">{{ created[0] }}</span>{{ ' ' }}
                       <span class="time">{{ created[1] }}</span>
@@ -314,7 +317,8 @@
                       <span class="date">{{ modified[0] }}</span>{{ ' ' }}
                       <span class="time">{{ modified[1] }}</span>
                     </td>
-                  </tr>
+                    @if (tableHasScrollbar()) { <td style="padding:0"></td> }
+                   </tr>
                 }
               } @else {
                 <tr class="no-results">
@@ -477,7 +481,7 @@
                         }
                       </div>
                     </td>
-                    <td>
+                    <td [class.no-border-right]="!tableHasScrollbar()">
                       @let created = getDate(group.created_at);
                       <span class="date">{{ created[0] }}</span>{{ ' ' }}
                       <span class="time">{{ created[1] }}</span>
@@ -579,7 +583,7 @@
                   >
                     <td>{{ user.full_name }}</td>
                     <td>{{ user.email }}</td>
-                    <td>
+                    <td [class.no-border-right]="!tableHasScrollbar()">
                       <div class="tags">
                         @let groupsShort = getGroupsShort(user);
                         @let groupsLong = getGroupsLong(user);
