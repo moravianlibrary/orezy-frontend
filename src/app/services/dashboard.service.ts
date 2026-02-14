@@ -126,6 +126,10 @@ export class DashboardService {
     return this.http.post<void>(`${this.authSvc.apiUrl}/${titleId}/process`, {}, { headers: this.authSvc.authHeaders() });
   }
 
+  deleteTitle(titleId: string): Observable<void> {
+    return this.http.delete<void>(`${this.authSvc.apiUrl}/${titleId}`, { headers: this.authSvc.authHeaders() });
+  }
+
   createGroup(): Observable<NewGroup> {
     const payload = {
       name: this.newGroupName(),
