@@ -11,9 +11,7 @@ export const routes: Routes = [
   {
     path: '',
     pathMatch: 'full',
-    loadComponent: () => import('./routes/dashboard/dashboard.component').then((m) => m.DashboardComponent),
-    title: 'Moje skupiny | Skeny',
-    canActivate: [ AuthService ]
+    redirectTo: 'groups'
   },
   {
     path: 'group/:group_id',
@@ -26,14 +24,14 @@ export const routes: Routes = [
     path: 'groups',
     pathMatch: 'full',
     loadComponent: () => import('./routes/dashboard/dashboard.component').then((m) => m.DashboardComponent),
-    title: 'Správa skupin | Skeny',
+    title: 'Skupiny | Skeny',
     canActivate: [ AuthService ]
   },
   {
     path: 'users',
     pathMatch: 'full',
     loadComponent: () => import('./routes/dashboard/dashboard.component').then((m) => m.DashboardComponent),
-    title: 'Správa uživatelů | Skeny',
+    title: 'Uživatelé | Skeny',
     canActivate: [ AuthService ]
   },
   {

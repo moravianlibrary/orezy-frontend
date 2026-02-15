@@ -85,12 +85,12 @@ export class LeftPanelComponent {
     CLICKS
   ------------------------------ */
   backToMyGroupsTitles(groupId: string): void {
-    this.dashSvc.dashboardPage.set('my-groups-titles');
+    this.dashSvc.dashboardPage.set('titles');
     window.location.href = `${this.authSvc.baseUri}/group/${groupId}`;
   }
 
   backToHomepage(): void {
-    this.dashSvc.dashboardPage.set('my-groups');
+    this.dashSvc.dashboardPage.set('groups');
     window.location.href = this.authSvc.baseUri;
   }
 

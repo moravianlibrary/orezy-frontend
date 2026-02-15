@@ -115,6 +115,26 @@
             @include font(400, var(--font-size-x2), var(--spacing-x6), var(--text-label-bright));
           }
         }
+
+        #user-fullname {
+          width: 50%;
+        }
+      }
+
+      label.above-input {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: var(--spacing-x2);
+
+        input {
+          margin-top: 0;
+          padding: var(--spacing-x2) var(--spacing-x4);
+        }
+
+        #new-group-name {
+          width: 50%;
+        }
       }
 
       .error {
@@ -156,6 +176,9 @@
 
       .value {
         @include font(400, var(--font-size-x2), var(--spacing-x6), var(--text-base));
+        display: flex;
+        flex-direction: column;
+        gap: var(--spacing-x2);
 
         .tag {
           display: flex;
@@ -200,20 +223,17 @@
         .time {
           @include font(400, var(--font-size-x2), var(--spacing-x6), var(--text-light));
         }
+
+        .button {
+          width: fit-content;
+          padding-right: var(--spacing-x6);
+        }
       }
 
-      .delete {
+      .value.date-time {
         display: flex;
-        align-items: center;
-        gap: var(--spacing-x2);
-        width: min-content;
-        padding-inline: 0;
-        padding-bottom: var(--spacing-x1);
-        @include font(500, var(--font-size-x1-5), var(--spacing-x4), var(--text-destructive));
-
-        svg {
-          fill: var(--icon-destructive);
-        }
+        flex-direction: row;
+        // gap: 0;
       }
 
       .user-to-read {
@@ -282,10 +302,6 @@
 
     & > :first-child {
       padding-top: var(--spacing-x3);
-    }
-
-    .delete.first {
-      padding-top: 0;
     }
   }
 }

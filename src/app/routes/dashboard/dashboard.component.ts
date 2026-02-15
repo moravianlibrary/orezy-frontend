@@ -6,6 +6,7 @@ import { DashboardService } from '../../services/dashboard.service';
 import { AuthService } from '../../services/auth.service';
 import { EditorService } from '../../services/editor.service';
 import { DialogComponent } from '../../components/dialog/dialog.component';
+import { UiService } from '../../services/ui.service';
 
 @Component({
   selector: 'app-dashboard',
@@ -16,5 +17,6 @@ import { DialogComponent } from '../../components/dialog/dialog.component';
 export class DashboardComponent {
   dashSvc = inject(DashboardService);
   authSvc = inject(AuthService);
+  uiSvc = inject(UiService);
   edtSvc = inject(EditorService);
 }

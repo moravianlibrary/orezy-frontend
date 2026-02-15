@@ -2,11 +2,11 @@ import { HttpClient } from '@angular/common/http';
 import { computed, inject, Injectable, signal } from '@angular/core';
 import { catchError, from, map, mergeMap, Observable, switchMap, tap, toArray } from 'rxjs';
 import { AuthService } from './auth.service';
-import { DashboardPage, DrawerButton, DrawerContentType, Group, GroupDetail, Models, NewGroup, NewUser, Permission, PermissionType, Title, User } from '../app.types';
+import { DashboardPage, Group, GroupPage, Models, NewGroup, NewUser, Permission, PermissionType, Title, User } from '../app.types';
 import { Router } from '@angular/router';
-import { EditorService } from './editor.service';
 import { checkEmailValidity } from '../utils/utils';
 import { inlineErrors } from '../app.config';
+import { UiService } from './ui.service';
 
 @Injectable({
   providedIn: 'root'
@@ -14,17 +14,34 @@ import { inlineErrors } from '../app.config';
 export class DashboardService {
   private http = inject(HttpClient);
   private authSvc = inject(AuthService);
-  private edtSvc = inject(EditorService);
+  private uiSvc = inject(UiService);
   private router = inject(Router);
 
-  dashboardPage = signal<DashboardPage>('my-groups');
+  dashboardPage = signal<DashboardPage>('groups');
   errors = inlineErrors;
 
-  // My groups
-  myGroups = signal<Group[]>([]);
-  displayedMyGroups = signal<Group[]>([]);
-  searchMyGroups = signal<string>('');
-  selectedMyGroup = signal<GroupDetail | null>(null);
+  // Groups
+  groups = signal<Group[]>([]);
+  // groups = computed(() => this.myGroups().filter(g => g.permissions.includes('upload')));
+  displayedGroups = signal<Group[]>([]);
+  searchGroups = signal<string>('');
+  selectedGroupDetail = signal<Group | null>(null);
+  selectedGroupPage = signal<GroupPage | null>(null);
+  newGroupName = signal<string>('');
+  newGroupDescription = signal<string>('');
+  newGroupNameError = signal<string>('');
+  groupName = signal<string>('');
+  groupDescription = signal<string>('');
+  groupNameError = signal<string>('');
+  groupChanged = computed<boolean>(() => {
+    const group = this.selectedGroupDetail();
+    if (!group) return false;
+
+    const nameChanged = group.name !== this.groupName();
+    const descriptionChanged = group.description !== this.groupDescription();
+
+    return nameChanged || descriptionChanged;
+  });
 
   // Titles
   titles = signal<Title[]>([]);
@@ -39,27 +56,6 @@ export class DashboardService {
   selectedModelUsed = signal<boolean>(false);
   files = signal<File[]>([]);
   uploadFilesError = signal<string>('');
-
-  // Groups
-  groups = computed(() => this.myGroups().filter(g => g.permissions.includes('upload')));
-  displayedGroups = signal<Group[]>([]);
-  searchGroups = signal<string>('');
-  selectedGroup = signal<Group | null>(null);
-  newGroupName = signal<string>('');
-  newGroupDescription = signal<string>('');
-  newGroupNameError = signal<string>('');
-  groupName = signal<string>('');
-  groupDescription = signal<string>('');
-  groupNameError = signal<string>('');
-  groupChanged = computed<boolean>(() => {
-    const group = this.selectedGroup();
-    if (!group) return false;
-
-    const nameChanged = group.name !== this.groupName();
-    const descriptionChanged = group.description !== this.groupDescription();
-
-    return nameChanged || descriptionChanged;
-  });
 
   // Users
   users = signal<User[]>([]);
@@ -93,8 +89,8 @@ export class DashboardService {
     return this.http.get<Group[]>(`${this.authSvc.apiUrl}/groups`, { headers: this.authSvc.authHeaders() });
   }
 
-  fetchTitles(groupId: string): Observable<GroupDetail> {
-    return this.http.get<GroupDetail>(`${this.authSvc.apiUrl}/groups/${groupId}`, { headers: this.authSvc.authHeaders() });
+  fetchTitles(groupId: string): Observable<GroupPage> {
+    return this.http.get<GroupPage>(`${this.authSvc.apiUrl}/groups/${groupId}`, { headers: this.authSvc.authHeaders() });
   }
 
   fetchModels(): Observable<Models> {
@@ -184,25 +180,20 @@ export class DashboardService {
   /* ------------------------------
     DASHBOARD PAGES
   ------------------------------ */
-  navigateToMyGroups(): void {
+  navigateToGroups(): void {
     this.closeDrawer();
-    this.dashboardPage.set('my-groups');
-    this.router.navigate(['/']);
+    this.dashboardPage.set('groups');
+    this.router.navigate(['/groups']);
   }
-  
-  openMyGroupsTitles(groupId: string): void {
-    this.dashboardPage.set('my-groups-titles');
+
+  openGroupsTitles(groupId: string): void {
+    this.closeDrawer();
+    this.dashboardPage.set('titles');
     this.router.navigate(['/group', groupId]);
   }
 
   openTitle(bookId: string): void {
     window.location.href = `${this.authSvc.baseUri}/book/${bookId}`;
-  }
-
-  navigateToGroups(): void {
-    this.closeDrawer();
-    this.dashboardPage.set('groups');
-    this.router.navigate(['/groups']);
   }
 
   navigateToUsers(): void {
@@ -217,12 +208,12 @@ export class DashboardService {
   ------------------------------ */
   // Group
   createGroupDialog(): void {
-    const edtSvc = this.edtSvc;
+    const uiSvc = this.uiSvc;
     
-    edtSvc.dialogTitle.set('Nová skupina');
-    edtSvc.dialogContent.set(true);
-    edtSvc.dialogContentType.set('new-group');
-    edtSvc.dialogButtons.set([
+    uiSvc.dialogTitle.set('Nová skupina');
+    uiSvc.dialogContent.set(true);
+    uiSvc.dialogContentType.set('new-group');
+    uiSvc.dialogButtons.set([
       { label: 'Zrušit' },
       {
         label: 'Vytvořit',
@@ -240,7 +231,7 @@ export class DashboardService {
             return;
           }
 
-          this.edtSvc.closeDialog();
+          uiSvc.closeDialog();
           
           return this.createGroup().pipe(
             tap((res: NewGroup) => {
@@ -266,9 +257,9 @@ export class DashboardService {
                 }]
               };
 
-              this.myGroups.update(prev => [ ...prev, newGroup ]);
-              this.displayedGroups.set(this.myGroups());
-              this.selectedGroup.set(newGroup);
+              this.groups.update(prev => [ ...prev, newGroup ]);
+              this.displayedGroups.set(this.groups());
+              this.selectedGroupDetail.set(newGroup);
               this.newGroupName.set('');
               this.newGroupDescription.set('');
               this.newGroupNameError.set('');
@@ -277,7 +268,7 @@ export class DashboardService {
               console.error(err);
               throw err;
             })
-          ).subscribe(() => this.openGroupDetail(this.selectedGroup()))
+          ).subscribe(() => this.openGroupDetail(this.selectedGroupDetail()))
         }
       }
     ])
@@ -286,16 +277,16 @@ export class DashboardService {
     this.newGroupDescription.set('');
     this.newGroupNameError.set('');
     this.closeDrawer();
-    edtSvc.openDialog();
+    uiSvc.openDialog();
   }
 
   deleteGroupDialog(group: Group | null): void {
-    const edtSvc = this.edtSvc;
+    const uiSvc = this.uiSvc;
     
-    edtSvc.dialogTitle.set('Smazat skupinu');
-    edtSvc.dialogDescription.set(`Opravdu chcete smazat skupinu${' ' + group?.name}?`);
-    edtSvc.dialogContent.set(false);
-    edtSvc.dialogButtons.set([
+    uiSvc.dialogTitle.set('Smazat skupinu');
+    uiSvc.dialogDescription.set(`Opravdu chcete smazat skupinu${' ' + group?.name}?`);
+    uiSvc.dialogContent.set(false);
+    uiSvc.dialogButtons.set([
       { label: 'Zrušit' },
       {
         label: 'Smazat skupinu',
@@ -303,11 +294,11 @@ export class DashboardService {
         destructive: true,
         action: () => this.deleteGroup(group?._id ?? '').pipe(
           tap(() => {
-            const updated = this.myGroups().filter(g => g._id !== group?._id);
-            this.myGroups.set(updated);
+            const updated = this.groups().filter(g => g._id !== group?._id);
+            this.groups.set(updated);
             this.displayedGroups.set(updated);
-            this.selectedGroup.set(null);
-            this.edtSvc.closeDialog();
+            this.selectedGroupDetail.set(null);
+            uiSvc.closeDialog();
           }),
           catchError(err => {
             console.error(err);
@@ -317,18 +308,18 @@ export class DashboardService {
       }
     ])
 
-    edtSvc.openDialog();
+    uiSvc.openDialog();
   }
 
   // Title
   createTitleDialog(): void {
-    const edtSvc = this.edtSvc;
+    const uiSvc = this.uiSvc;
     this.files.set([]);
     
-    edtSvc.dialogTitle.set('Nová kniha');
-    edtSvc.dialogContent.set(true);
-    edtSvc.dialogContentType.set('new-title');
-    edtSvc.dialogButtons.set([
+    uiSvc.dialogTitle.set('Nová kniha');
+    uiSvc.dialogContent.set(true);
+    uiSvc.dialogContentType.set('new-title');
+    uiSvc.dialogButtons.set([
       { label: 'Zrušit' },
       {
         label: 'Vytvořit',
@@ -346,9 +337,9 @@ export class DashboardService {
             return;
           }
 
-          this.edtSvc.closeDialog();
+          uiSvc.closeDialog();
           
-          return this.createTitle(this.selectedMyGroup()?._id ?? '').pipe(
+          return this.createTitle(this.selectedGroupDetail()?._id ?? '').pipe(
             map(res => {
               const now = Date();
               const newTitle: Title = {
@@ -368,7 +359,7 @@ export class DashboardService {
             switchMap(id => this.uploadAllScans(id, this.files())),
             switchMap(id => this.processTitle(id)),
             catchError(err => {
-              this.edtSvc.showToast(`Při nahrávání skenů se něco pokazilo. Knihu smažte a přidejte ji jako novou.`, { type: 'error', duration: 300000 });
+              this.uiSvc.showToast(`Při nahrávání skenů se něco pokazilo. Knihu smažte a přidejte ji jako novou.`, { type: 'error' });
               console.error(err);
               throw err;
             })
@@ -390,7 +381,7 @@ export class DashboardService {
       this.selectedModelId.set(this.availableModels().length - 1);
       this.selectedModelUsed.set(false);
       this.closeDrawer();
-      edtSvc.openDialog();
+      uiSvc.openDialog();
     });
   }
 
@@ -403,12 +394,12 @@ export class DashboardService {
   }
 
   deleteTitleDialog(title: Title | null): void {
-    const edtSvc = this.edtSvc;
+    const uiSvc = this.uiSvc;
     
-    edtSvc.dialogTitle.set('Smazat knihu');
-    edtSvc.dialogDescription.set(`Opravdu chcete smazat knihu${' ' + title?.external_id}?`);
-    edtSvc.dialogContent.set(false);
-    edtSvc.dialogButtons.set([
+    uiSvc.dialogTitle.set('Smazat knihu');
+    uiSvc.dialogDescription.set(`Opravdu chcete smazat knihu${' ' + title?.external_id}?`);
+    uiSvc.dialogContent.set(false);
+    uiSvc.dialogButtons.set([
       { label: 'Zrušit' },
       {
         label: 'Smazat knihu',
@@ -419,10 +410,10 @@ export class DashboardService {
             this.titles.update(prev => prev.filter(t => t._id !== (title?._id ?? '')));
             this.displayedTitles.set(this.titles());
             this.selectedTitle.set(null);
-            this.edtSvc.closeDialog();
+            uiSvc.closeDialog();
           }),
           catchError(err => {
-            this.edtSvc.showToast('Nepodařilo se smazat knihu. Zkuste to znovu.', { type: 'error', duration: 300000 })
+            this.uiSvc.showToast('Nepodařilo se smazat knihu. Zkuste to znovu.', { type: 'error' })
             console.error(err);
             throw err;
           })
@@ -430,17 +421,17 @@ export class DashboardService {
       }
     ])
 
-    edtSvc.openDialog();
+    uiSvc.openDialog();
   }
 
   // User
   createUserDialog(): void {
-    const edtSvc = this.edtSvc;
+    const uiSvc = this.uiSvc;
     
-    edtSvc.dialogTitle.set('Nový uživatel');
-    edtSvc.dialogContent.set(true);
-    edtSvc.dialogContentType.set('new-user');
-    edtSvc.dialogButtons.set([
+    uiSvc.dialogTitle.set('Nový uživatel');
+    uiSvc.dialogContent.set(true);
+    uiSvc.dialogContentType.set('new-user');
+    uiSvc.dialogButtons.set([
       { label: 'Zrušit' },
       {
         label: 'Vytvořit',
@@ -467,7 +458,7 @@ export class DashboardService {
             return;
           }
           
-          this.edtSvc.closeDialog();
+          uiSvc.closeDialog();
 
           return this.createUser().pipe(
             tap((res: NewUser) => {
@@ -504,16 +495,16 @@ export class DashboardService {
     this.newUserNameError.set('');
     this.newUserEmailError.set('');
     this.closeDrawer();
-    edtSvc.openDialog();
+    uiSvc.openDialog();
   }
 
   deleteUserDialog(user: User | null): void {
-    const edtSvc = this.edtSvc;
+    const uiSvc = this.uiSvc;
     
-    edtSvc.dialogTitle.set('Smazat uživatele');
-    edtSvc.dialogDescription.set(`Opravdu chcete smazat uživatele${' ' + user?.full_name}?`);
-    edtSvc.dialogContent.set(false);
-    edtSvc.dialogButtons.set([
+    uiSvc.dialogTitle.set('Smazat uživatele');
+    uiSvc.dialogDescription.set(`Opravdu chcete smazat uživatele${' ' + user?.full_name}?`);
+    uiSvc.dialogContent.set(false);
+    uiSvc.dialogButtons.set([
       { label: 'Zrušit' },
       {
         label: 'Smazat uživatele',
@@ -525,7 +516,7 @@ export class DashboardService {
             this.users.set(updated);
             this.displayedUsers.set(updated);
             this.selectedUser.set(null);
-            this.edtSvc.closeDialog();
+            uiSvc.closeDialog();
           }),
           catchError(err => {
             console.error(err);
@@ -535,33 +526,22 @@ export class DashboardService {
       }
     ])
 
-    edtSvc.openDialog();
+    uiSvc.openDialog();
   }
 
 
   /* ------------------------------
     DRAWER ACTIONS
   ------------------------------ */
-  drawerOpen = signal<boolean>(false);
-  drawerEditMode = signal<boolean>(false);
-  drawerTitle = signal<string>('');
-  drawerContent = signal<boolean>(false);
-  drawerContentType = signal<DrawerContentType | null>(null);
-  drawerDescription = signal<string | null>(null);
-  drawerButtons = signal<DrawerButton[]>([]);
-  
-  openDrawer(): void {
-    this.drawerOpen.set(true);
-    this.drawerEditMode.set(false);
-  }
-
   closeDrawer(): void {
-    this.drawerOpen.set(false);
-    this.drawerEditMode.set(false);
-
+    this.uiSvc.closeDrawer();
+    
     switch (this.dashboardPage()) {
       case 'groups':
-        this.selectedGroup.set(null);
+        this.selectedGroupDetail.set(null);
+        break;
+      case 'titles':
+        this.selectedTitle.set(null);
         break;
       case 'users':
         this.selectedUser.set(null);
@@ -571,31 +551,20 @@ export class DashboardService {
     }
   }
 
-  openTitleDetail(title: Title | null): void {
-    if (!title) return;
-    
-    this.selectedTitle.set(title);
-    this.files.set([]);
-    this.drawerTitle.set(title?.external_id ?? 'Bez názvu');
-    this.drawerContent.set(true);
-    this.drawerContentType.set('titles');
-    this.drawerButtons.set([]);
-
-    this.openDrawer();
-  }
-
   openGroupDetail(group: Group | null): void {
+    const uiSvc = this.uiSvc;
     if (!group) return;
     
-    this.selectedGroup.set(group);
-    this.drawerTitle.set(group.name);
-    this.drawerContent.set(true);
-    this.drawerContentType.set('groups');
+    this.selectedGroupDetail.set(group);
+    uiSvc.drawerTitle.set(group.name);
+    uiSvc.drawerContent.set(true);
+    uiSvc.drawerContentType.set('groups');
     this.groupName.set(group.name);
+    this.groupNameError.set('');
     this.groupDescription.set(group.description);
     
     if (this.authSvc.user()?.role === 'admin') {
-      this.drawerButtons.set([
+      uiSvc.drawerButtons.set([
         {
           label: 'Zavřít',
           action: () => this.closeDrawer()
@@ -605,8 +574,8 @@ export class DashboardService {
           primary: true,
           action: () => {
             if (!this.groupChanged()) return;
-            if (!this.drawerEditMode()) return;
-            const group = this.selectedGroup();
+            if (!uiSvc.drawerEditMode()) return;
+            const group = this.selectedGroupDetail();
             if (!group) return;
 
             const groupName = this.groupName();
@@ -623,13 +592,13 @@ export class DashboardService {
 
             return this.updateGroup(group?._id ?? '').pipe(
               tap(() => {
-                this.myGroups.update(prev => prev.map(g => g._id === group?._id ? {
+                this.groups.update(prev => prev.map(g => g._id === group?._id ? {
                   ...group,
                   name: this.groupName(),
                   description: this.groupDescription()
                 } : g))
                 this.displayedGroups.set(this.groups());
-                this.selectedGroup.set(null);
+                this.selectedGroupDetail.set(null);
                 this.groupNameError.set('');
               }),
               catchError(err => {
@@ -642,20 +611,57 @@ export class DashboardService {
       ]);
     }
 
-    this.openDrawer();
+    uiSvc.openDrawer();
+  }
+
+  openTitleDetail(title: Title | null): void {
+    if (!title) return;
+    const uiSvc = this.uiSvc;
+    
+    this.selectedTitle.set(title);
+    this.files.set([]);
+    uiSvc.drawerTitle.set(title?.external_id ?? 'Bez názvu');
+    uiSvc.drawerContent.set(true);
+    uiSvc.drawerContentType.set('titles');
+    uiSvc.drawerButtons.set([]);
+
+    uiSvc.openDrawer();
+  }
+
+  applyAiModel(title: Title | null): void {
+    this.processTitle(title?._id ?? '').pipe(
+      catchError(err => {
+        this.uiSvc.showToast('Něco se pokazilo při aplikaci AI modelu. Zkuste to znovu.', { type: 'error' })
+        console.error(err);
+        throw err;
+      })
+    ).subscribe(() => {
+      const selectedTitle = this.selectedTitle();
+      if (!selectedTitle) return;
+
+      const updatedTitle: Title = {
+        ...selectedTitle,
+        state: 'ready'
+      };
+      this.titles.update( prev => prev.map(t => t._id === selectedTitle?._id ? updatedTitle : t));
+      this.displayedTitles.set(this.titles());
+      this.selectedTitle.set(updatedTitle);
+      this.uiSvc.showToast(`AI model byl úspěšně aplikován na knihu ${selectedTitle.external_id}!`, { type: 'success' });
+    });
   }
 
   openUserDetail(user: User | null): void {
     if (!user) return;
+    const uiSvc = this.uiSvc;
     
     this.selectedUser.set(user);
-    this.drawerTitle.set(user.full_name);
-    this.drawerContent.set(true);
-    this.drawerContentType.set('users');
+    uiSvc.drawerTitle.set(user.full_name);
+    uiSvc.drawerContent.set(true);
+    uiSvc.drawerContentType.set('users');
     this.userFullname.set(user.full_name);
     this.userEmail.set(user.email);
     
-    this.drawerButtons.set([
+    uiSvc.drawerButtons.set([
       {
         label: 'Zavřít',
         action: () => this.closeDrawer()
@@ -665,7 +671,7 @@ export class DashboardService {
         primary: true,
         action: () => {
           if (!this.userChanged()) return;
-          if (!this.drawerEditMode()) return;
+          if (!uiSvc.drawerEditMode()) return;
 
           const userName = this.userFullname();
           const userEmail = this.userEmail();
@@ -705,7 +711,7 @@ export class DashboardService {
       }
     ]);
 
-    this.openDrawer();
+    uiSvc.openDrawer();
   }
 
 
@@ -724,7 +730,7 @@ export class DashboardService {
   checkGroupNameUniqueness(): void {
     this.groupNameError.set(
       this.groups()
-        .filter(g => g._id !== this.selectedGroup()?._id)
+        .filter(g => g._id !== this.selectedGroupDetail()?._id)
         .some(g => g.name === this.groupName())
           ? this.errors['groupNameExists']
           : ''

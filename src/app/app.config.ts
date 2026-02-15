@@ -44,9 +44,9 @@ export const filterPageNumberStartDict: Record<PageNumberType, string> = {
   'double': 'Dva'
 };
 
-export const userRolesDict: Record<Role | 'manage', string> = {
+export const userRolesDict: Record<Role/*  | 'manage' */, string> = {
   'admin': 'Admin',
-  'manage': 'Správce',
+  // 'manage': 'Uživatel',
   'user': 'Uživatel'
 };
 
@@ -58,7 +58,7 @@ export const permissionDict: Record<PermissionType, string> = {
 };
 
 export const titleStateDict: Record<TitleState, string> = {
-  'new': 'Skeny nenahrány',
+  'new': 'Založena',
   'scheduled': 'Bude se zpracovávat',
   'in_progress': 'Zpracovává se',
   'failed': 'Chyba',

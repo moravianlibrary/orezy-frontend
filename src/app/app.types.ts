@@ -1,7 +1,7 @@
 /* ------------------------------
     DASHBOARD
   ------------------------------ */
-export type DashboardPage = 'my-groups' | 'my-groups-titles' | 'groups' | 'users';
+export type DashboardPage = 'groups' | 'titles' | 'users';
 export type PermissionType = 'read_group' | 'read_title' | 'write' | 'upload';
 
 export interface Models {
@@ -20,7 +20,7 @@ export interface Group {
   users?: UserInGroup[];
 }
 
-export interface GroupDetail {
+export interface GroupPage {
   _id: string;
   name: string;
   description: string;

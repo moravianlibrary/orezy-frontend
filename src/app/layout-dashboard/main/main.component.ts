@@ -3,7 +3,7 @@ import { DashboardService } from '../../services/dashboard.service';
 import { FormsModule } from '@angular/forms';
 import { AuthService } from '../../services/auth.service';
 import { permissionDict, titleStateDict, titleStateFilterDict } from '../../app.config';
-import { Group, GroupDetail, Permission, Position, User, UserInGroup } from '../../app.types';
+import { Group, GroupPage, Permission, Position, User, UserInGroup } from '../../app.types';
 import { defer, getDate } from '../../utils/utils';
 import { OverlayScrollbars } from 'overlayscrollbars';
 import { ActivatedRoute, Router } from '@angular/router';
@@ -12,6 +12,7 @@ import { CommonModule } from '@angular/common';
 import { OverlayModule } from '@angular/cdk/overlay';
 import { Title } from '@angular/platform-browser';
 import { ToastComponent } from '../../components/toast/toast.component';
+import { UiService } from '../../services/ui.service';
 
 @Component({
   selector: 'app-main-groups',
@@ -21,6 +22,7 @@ import { ToastComponent } from '../../components/toast/toast.component';
 })
 export class MainComponent {
   dashSvc = inject(DashboardService);
+  uiSvc = inject(UiService);
   authSvc = inject(AuthService);
   private title = inject(Title);
   private router = inject(Router);
@@ -50,14 +52,14 @@ export class MainComponent {
           const page = path.match(/^\/([^\/]+)/)?.[1] ?? null;
 
           switch (page) {
-            
-            // My groups
-            case null:
+
+            // Groups
+            case 'groups':
               return this.dashSvc.fetchGroups().pipe(
-                tap((res: Group[]) => {                  
-                  this.dashSvc.dashboardPage.set('my-groups');
-                  this.dashSvc.myGroups.set(res);
-                  this.dashSvc.displayedMyGroups.set(res);
+                tap((res: Group[]) => {
+                  this.dashSvc.dashboardPage.set('groups');
+                  this.dashSvc.groups.set(res);
+                  this.dashSvc.displayedGroups.set(this.dashSvc.groups());
                 }),
                 catchError(err => {
                   console.error('Fetching groups failed:', err);
@@ -65,12 +67,12 @@ export class MainComponent {
                 })
               );
 
-            // My groups - titles
+            // Titles
             case 'group':
               return this.dashSvc.fetchTitles(group_id).pipe(
-                tap((res: GroupDetail) => {
-                  this.dashSvc.dashboardPage.set('my-groups-titles');
-                  this.dashSvc.selectedMyGroup.set(res);
+                tap((res: GroupPage) => {
+                  this.dashSvc.dashboardPage.set('titles');
+                  this.dashSvc.selectedGroupPage.set(res);
                   this.dashSvc.titles.set(res.titles);
                   this.dashSvc.displayedTitles.set(res.titles);
                   this.title.setTitle(`Skupina: ${res.name} | Skeny`);
@@ -84,22 +86,6 @@ export class MainComponent {
                 catchError(err => {
                   if (err.status === 403) this.router.navigate(['/forbidden']);
                   console.error('Fetching titles failed:', err);
-                  throw err;
-                })
-              );
-
-            // Groups
-            case 'groups':
-              return this.dashSvc.fetchGroups().pipe(
-                tap((res: Group[]) => {
-                  if (!this.authSvc.isAdmin()) this.router.navigate(['/forbidden']);
-                  
-                  this.dashSvc.dashboardPage.set('groups');
-                  this.dashSvc.myGroups.set(res);
-                  this.dashSvc.displayedGroups.set(this.dashSvc.groups());
-                }),
-                catchError(err => {
-                  console.error('Fetching groups failed:', err);
                   throw err;
                 })
               );
@@ -150,22 +136,35 @@ export class MainComponent {
 
 
   /* ------------------------------
-    MY GROUPS
+    GROUPS
   ------------------------------ */
   permissionDict = permissionDict;
   
-  get totalMyGroupsLabel(): string {
-    const length = this.dashSvc.displayedMyGroups().length;
+  get totalGroupsLabel(): string {
+    const length = this.dashSvc.displayedGroups().length;
     return `Celkem ${length} skupin${length === 1 ? 'a' : [2, 3, 4].includes(length) ? 'y' : '' }`;
   }
 
-  filterMyGroups(): void {
-    this.dashSvc.displayedMyGroups.set(this.dashSvc.myGroups().filter(g => g.name.toLowerCase().includes(this.dashSvc.searchMyGroups())));
+  filterGroups(): void {
+    const searchGroups = this.dashSvc.searchGroups();
+    this.dashSvc.displayedGroups.set(this.dashSvc.groups().filter(g => 
+      g.name.toLowerCase().includes(searchGroups)
+      || g.description.toLowerCase().includes(searchGroups)
+      || g._id.toLowerCase().includes(searchGroups)
+    ));
+  }
+
+  getUsersShort(group: Group): UserInGroup[] {
+    return group.users?.slice(0, this.maxUsers) ?? [];
+  }
+
+  getUsersLong(group: Group): UserInGroup[] {
+    return group.users ?? [];
   }
 
 
   /* ------------------------------
-    MY GROUPS - TITLES
+    TITLES
   ------------------------------ */
   titleStateDict = titleStateDict;
 
@@ -177,9 +176,9 @@ export class MainComponent {
   filterTitles(): void {
     const searchTitles = this.dashSvc.searchTitles();
     this.dashSvc.displayedTitles.set(this.dashSvc.titles().filter(t => 
-      (t.external_id ?? '').includes(searchTitles)
-      || t._id.includes(searchTitles)
-      || (t.model ?? '').includes(searchTitles)
+      (t.external_id ?? '').toLowerCase().includes(searchTitles)
+      || t._id.toLowerCase().includes(searchTitles)
+      || (t.model ?? '').toLowerCase().includes(searchTitles)
     ));
   }
 
@@ -249,27 +248,6 @@ export class MainComponent {
 
 
   /* ------------------------------
-    GROUPS
-  ------------------------------ */
-  get totalGroupsLabel(): string {
-    const length = this.dashSvc.displayedGroups().length;
-    return `Celkem ${length} skupin${length === 1 ? 'a' : [2, 3, 4].includes(length) ? 'y' : '' }`;
-  }
-
-  filterGroups(): void {
-    this.dashSvc.displayedGroups.set(this.dashSvc.groups().filter(g => g.name.toLowerCase().includes(this.dashSvc.searchGroups())));
-  }
-
-  getUsersShort(group: Group): UserInGroup[] {
-    return group.users?.slice(0, this.maxUsers) ?? [];
-  }
-
-  getUsersLong(group: Group): UserInGroup[] {
-    return group.users ?? [];
-  }
-
-
-  /* ------------------------------
     USERS
   ------------------------------ */
   get totalUsersLabel(): string {
@@ -279,6 +257,13 @@ export class MainComponent {
 
   filterUsers(): void {
     this.dashSvc.displayedUsers.set(this.dashSvc.users().filter(u => u.full_name.toLowerCase().includes(this.dashSvc.searchUsers())));
+
+    const searchUsers = this.dashSvc.searchUsers();
+    this.dashSvc.displayedUsers.set(this.dashSvc.users().filter(u => 
+      u.full_name.toLowerCase().includes(searchUsers)
+      || u.email.toLowerCase().includes(searchUsers)
+      || u._id.toLowerCase().includes(searchUsers)
+    ));
   }
 
   getGroupsShort(user: User): Permission[] {

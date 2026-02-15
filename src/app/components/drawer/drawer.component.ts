@@ -4,17 +4,19 @@ import { getDate } from '../../utils/utils';
 import { permissionDict, titleStateDict } from '../../app.config';
 import { AuthService } from '../../services/auth.service';
 import { FormsModule } from '@angular/forms';
+import { UiService } from '../../services/ui.service';
 
 @Component({
   selector: 'app-drawer',
   imports: [FormsModule],
   templateUrl: './drawer.component.html',
   styleUrl: './drawer.component.scss',
-  host: { '[class.open]': 'dashSvc.drawerOpen()' },
+  host: { '[class.open]': 'uiSvc.drawerOpen()' },
 })
 export class DrawerComponent {
   dashSvc = inject(DashboardService);
   authSvc = inject(AuthService);
+  uiSvc = inject(UiService);
 
   getDate = getDate;
   permissionDict = permissionDict;

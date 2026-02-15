@@ -7,6 +7,7 @@ import { DashboardService } from '../../services/dashboard.service';
 import { AuthService } from '../../services/auth.service';
 import { SelectComponent } from '../select/select.component';
 import { UploadComponent } from '../upload/upload.component';
+import { UiService } from '../../services/ui.service';
 
 @Component({
   selector: 'app-dialog',
@@ -18,6 +19,7 @@ export class DialogComponent {
   dashSvc = inject(DashboardService);
   edtSvc = inject(EditorService);
   authSvc = inject(AuthService);
+  uiSvc = inject(UiService);
   
   closed = output<void>();
   backdropClick = output<void>();
@@ -43,12 +45,6 @@ export class DialogComponent {
     this.close();
 
     const edtSvc = this.edtSvc;
-    if (this.edtSvc.dialogTitle() === 'Nastavení') this.edtSvc.gridRadio.set(edtSvc.gridMode());
-  }
-
-  toggleOutline(): void {
-    const edtSvc = this.edtSvc;
-    edtSvc.outlineTransparent = !edtSvc.outlineTransparent;
-    localStorage.setItem('outlineTransparent', `${edtSvc.outlineTransparent}`);
+    if (this.uiSvc.dialogTitle() === 'Nastavení') this.edtSvc.gridRadio.set(edtSvc.gridMode());
   }
 }

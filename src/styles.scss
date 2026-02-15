@@ -125,12 +125,35 @@ html, body {
   background-color: var(--bg-base);
   border: 1px solid var(--border-tertiary-color);
   color: var(--text-secondary);
+
+  svg {
+    fill: var(--text-secondary);
+  }
 }
 
 .tertiary {
   background-color: var(--bg-base);
   border: 1px solid var(--border-tertiary-color);
   color: var(--text-tertiary);
+
+  svg {
+    fill: var(--text-tertiary);
+  }
+}
+
+.quaternary {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-x2);
+  width: min-content;
+  padding-inline: 0;
+  padding-bottom: var(--spacing-x1);
+  background-color: var(--bg-base);
+  @include font(500, var(--font-size-x1-5), var(--spacing-x4), var(--text-tertiary));
+
+  svg {
+    fill: var(--icon-tertiary);
+  }
 }
 
 .destructive {
@@ -162,6 +185,24 @@ html, body {
 
   svg {
     fill: var(--icon-disabled) !important;
+  }
+}
+
+.quaternary.primary {
+  color: var(--primary);
+  background-color: var(--bg-base);
+
+  svg {
+    fill: var(--primary);
+  }
+}
+
+.quaternary.destructive {
+  color: var(--bg-destructive);
+  background-color: var(--bg-base);
+
+  svg {
+    fill: var(--bg-destructive);
   }
 }
 

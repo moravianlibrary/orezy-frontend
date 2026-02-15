@@ -5,6 +5,7 @@ import { CornerName, EdgeLocalOrientation, EdgeSide, HitInfo, Page } from '../..
 import { LoaderComponent } from '../../components/loader/loader.component';
 import { ToastComponent } from '../../components/toast/toast.component';
 import { AuthService } from '../../services/auth.service';
+import { UiService } from '../../services/ui.service';
 
 @Component({
   selector: 'app-main-editor',
@@ -15,6 +16,7 @@ import { AuthService } from '../../services/auth.service';
 export class MainComponent {
   edtSvc = inject(EditorService);
   private authSvc = inject(AuthService);
+  private uiSvc = inject(UiService);
 
   private moveCursor: string = "url('/assets/move-cursor.png'), auto";
   private rotateCursorTopRight: string = "url('/assets/rotate-cursor-top-right.png') 9.5 9.5, auto";
@@ -60,8 +62,8 @@ export class MainComponent {
       if (tagName !== 'APP-LEFT-PANEL' && tagName !== 'DIV' && tagName !== 'APP-RIGHT-PANEL' && tagName !== 'APP-BOTTOM-PANEL') return;
       if (el.tagName === 'DIV' && tagName !== 'DIV') return;
       if (!edtSvc.selectedPage) return;
-      if (this.edtSvc.dialogOpened) {
-        this.edtSvc.dialogOpened = false;
+      if (this.uiSvc.dialogOpened) {
+        this.uiSvc.dialogOpened = false;
         return;
       }
       this.stopDragRotateResize();

@@ -27,22 +27,22 @@ export class MenuComponent {
   }
 
   onSettingsClick(): void {
-    this.edtSvc.openSettings();
+    this.edtSvc.openSettingsDialog();
     this.show = false;
   }
 
   onShortcutsClick(): void {
-    this.edtSvc.openShortcuts();
+    this.edtSvc.openShortcutsDialog();
     this.show = false;
   }
 
   onResetDocClick(): void {
-    this.edtSvc.openResetDoc();
+    this.edtSvc.openResetDocDialog();
     this.show = !this.authSvc.canWriteTitle();
   }
 
   onResetScanClick(): void {
-    this.edtSvc.openResetScan();
+    this.edtSvc.openResetScanDialog();
     this.show = !this.authSvc.canWriteTitle();
   }
 }

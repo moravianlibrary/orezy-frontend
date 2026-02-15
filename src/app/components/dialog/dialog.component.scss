@@ -262,6 +262,10 @@
         margin-top: 0;
         padding: var(--spacing-x2) var(--spacing-x4);
       }
+
+      #new-group-name {
+        width: 50%;
+      }
     }
 
     label.select {

@@ -9,6 +9,7 @@ import { catchError, map, of, Subscription, switchMap, tap } from 'rxjs';
 import { GridMode, ImageItem, Page, PageNumberType, ScanType, TitleDetail } from '../../app.types';
 import { AuthService } from '../../services/auth.service';
 import { DialogComponent } from '../../components/dialog/dialog.component';
+import { UiService } from '../../services/ui.service';
 
 @Component({
   selector: 'app-editor',
@@ -19,6 +20,7 @@ import { DialogComponent } from '../../components/dialog/dialog.component';
 export class EditorComponent {
   edtSvc = inject(EditorService);
   authSvc = inject(AuthService);
+  uiSvc = inject(UiService);
   private router = inject(Router);
   private activatedRoute = inject(ActivatedRoute);
   private paramsOnBookId = new Subscription();

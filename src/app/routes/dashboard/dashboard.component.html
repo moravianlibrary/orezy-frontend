@@ -1,11 +1,11 @@
 <app-left-panel-groups></app-left-panel-groups>
 <app-main-groups></app-main-groups>
-@if (dashSvc.drawerOpen()) {
+@if (uiSvc.drawerOpen()) {
   <div
     class="drawer-backdrop"
-    (click)="dashSvc.closeDrawer()"
+    (click)="uiSvc.closeDrawer()"
     aria-hidden="true"
   ></div>
 }
 <app-drawer />
-<app-dialog (closed)="edtSvc.closeDialog()" />
+<app-dialog (closed)="uiSvc.closeDialog()" />

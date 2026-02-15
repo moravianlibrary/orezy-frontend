@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { NgClass } from '@angular/common';
-import { EditorService } from '../../services/editor.service';
+import { UiService } from '../../services/ui.service';
 
 @Component({
   selector: 'app-toast-container',
@@ -10,5 +10,5 @@ import { EditorService } from '../../services/editor.service';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ToastComponent {
-  edtSvc = inject(EditorService);
+  uiSvc = inject(UiService);
 }
