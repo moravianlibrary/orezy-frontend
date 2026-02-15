@@ -30,8 +30,8 @@ export class MainComponent {
   private paramsOnGroupId = new Subscription();
 
   getDate = getDate;
-  maxUsers: number = 3;
-  maxGroups: number = 3;
+  maxUsers: number = 2;
+  maxGroups: number = 2;
   tableHasScrollbar = signal<boolean>(false);
 
   @ViewChild('bodyScroll', { static: false }) bodyScroll!: ElementRef<HTMLDivElement>;

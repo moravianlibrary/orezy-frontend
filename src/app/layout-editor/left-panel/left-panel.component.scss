@@ -66,7 +66,7 @@
       padding: var(--spacing-x1) var(--spacing-x2);
       background-color: var(--bg-base);
       border: 1px solid var(--border-tertiary-color);
-      border-radius: 4px;
+      border-radius: var(--spacing-x1);
       white-space: nowrap;
 
       &:hover { cursor: pointer; }
@@ -99,7 +99,7 @@
   width: 100%;
   background-color: var(--bg-bright);
   border: 1px solid var(--border-color);
-  border-radius: 4px;
+  border-radius: var(--spacing-x1);
   position: relative;
 
   &:hover { cursor: pointer; }
@@ -149,7 +149,7 @@
       color: var(--text-base);
       font-family: 'Karla', sans-serif;
       padding: var(--spacing-x2) var(--spacing-x3);
-      border-radius: 4px;
+      border-radius: var(--spacing-x1);
       font-size: var(--font-size-x1);
       display: inline-block;
       width: max-content;

@@ -276,7 +276,15 @@
               border: 1px solid var(--border-color);
             }
 
+            .combined {
+              fill: #6D3FA3;
+              color: #2E0F4F;
+              background-color: #8E44AD1A;
+              .tag-label { color: inherit; }
+            }
+
             .info {
+              fill: #0C3D77;
               color: #08203C;
               background-color: #007BFF1A;
               .tag-label { color: inherit; }

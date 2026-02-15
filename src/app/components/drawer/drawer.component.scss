@@ -233,7 +233,6 @@
       .value.date-time {
         display: flex;
         flex-direction: row;
-        // gap: 0;
       }
 
       .user-to-read {
@@ -296,6 +295,30 @@
           color: #390400;
           background-color: #FF3A301A;
           .tag-label { color: inherit; }
+        }
+      }
+
+      .permissions-row {
+        width: 100%;
+        padding: var(--spacing-x3) var(--spacing-x4);
+        border-radius: var(--spacing-x1);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        background-color: #8099B31A;
+
+        .name {
+          @include font(500, var(--font-size-x2), var(--spacing-x6), var(--text-tertiary));
+        }
+
+        .icons {
+          display: flex;
+          align-items: center;
+          gap: var(--spacing-x2);
+
+          svg {
+            fill: var(--icon-gray);
+          }
         }
       }
     }
