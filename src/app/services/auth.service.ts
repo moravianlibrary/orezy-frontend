@@ -58,9 +58,6 @@ export class AuthService {
 
       return this.verifyToken(titleId).pipe(
         catchError((err) => {
-          localStorage.removeItem('access_token');
-          this.router.navigate([localStorage.getItem('url') || '']);
-
           console.error('Token verification failed: ', err);
           throw err;
         })

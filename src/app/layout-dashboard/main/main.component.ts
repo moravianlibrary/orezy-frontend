@@ -62,6 +62,7 @@ export class MainComponent {
                   this.dashSvc.displayedGroups.set(this.dashSvc.groups());
                 }),
                 catchError(err => {
+                  this.uiSvc.showToast('Při načítání skupin se něco pokazilo. Zkuste stránku znovu načíst.', { type: 'error' });
                   console.error('Fetching groups failed:', err);
                   throw err;
                 })
@@ -84,7 +85,9 @@ export class MainComponent {
                   this.visibleTooltip = false;
                 }),
                 catchError(err => {
-                  if (err.status === 403) this.router.navigate(['/forbidden']);
+                  err.status === 403
+                    ? this.router.navigate(['/forbidden'])
+                    : this.uiSvc.showToast('Při načítání knih se něco pokazilo. Zkuste stránku znovu načíst.', { type: 'error' });
                   console.error('Fetching titles failed:', err);
                   throw err;
                 })
@@ -99,7 +102,9 @@ export class MainComponent {
                   this.dashSvc.displayedUsers.set(res);
                 }),
                 catchError(err => {
-                  if (err.status === 403) this.router.navigate(['/forbidden']);
+                  err.status === 403
+                    ? this.router.navigate(['/forbidden'])
+                    : this.uiSvc.showToast('Při načítání uživatelů se něco pokazilo. Zkuste stránku znovu načíst.', { type: 'error' });;
                   console.error('Fetching users failed:', err);
                   throw err;
                 })

@@ -265,6 +265,7 @@ export class DashboardService {
               this.newGroupNameError.set('');
             }),
             catchError(err => {
+              this.uiSvc.showToast('Při vytváření skupiny se něco pokazilo. Zkuste to znovu.', { type: 'error' });
               console.error(err);
               throw err;
             })
@@ -301,6 +302,7 @@ export class DashboardService {
             uiSvc.closeDialog();
           }),
           catchError(err => {
+            this.uiSvc.showToast('Při mazání skupiny se něco pokazilo. Zkuste to znovu.', { type: 'error' });
             console.error(err);
             throw err;
           })
@@ -370,6 +372,7 @@ export class DashboardService {
 
     this.fetchModels().pipe(
       catchError(err => {
+        this.uiSvc.showToast('Nepodařilo se načíst dostupné AI modely. Zkuste to dialogové okno zavřít a znovu otevřít.', { type: 'error' });
         console.error(err);
         throw err;
       })
@@ -481,6 +484,7 @@ export class DashboardService {
               this.newUserEmailError.set('');
             }),
             catchError(err => {
+              this.uiSvc.showToast('Nepodařilo se vytvořit uživatele. Zkuste to znovu.', { type: 'error' });
               console.error(err);
               throw err;
             })
@@ -519,6 +523,7 @@ export class DashboardService {
             uiSvc.closeDialog();
           }),
           catchError(err => {
+            this.uiSvc.showToast('Nepodařilo se smazat uživatele. Zkuste to znovu.', { type: 'error' });
             console.error(err);
             throw err;
           })
@@ -602,6 +607,7 @@ export class DashboardService {
                 this.groupNameError.set('');
               }),
               catchError(err => {
+                this.uiSvc.showToast('Nepodařilo se uložit změny. Zkuste to znovu.', { type: 'error' });
                 console.error(err);
                 throw err;
               })
@@ -703,6 +709,7 @@ export class DashboardService {
               this.selectedUser.set(null);
             }),
             catchError(err => {
+              this.uiSvc.showToast('Nepodařilo se uložit změny. Zkuste to znovu.', { type: 'error' });
               console.error(err);
               throw err;
             })

@@ -207,6 +207,7 @@ export class EditorService {
   resetDoc(): void {
     this.reset(this.book()).pipe(
       catchError(err => {
+        this.uiSvc.showToast('Při resetu změn dokumentu se něco pokazilo. Zkuste to znovu.', { type: 'error' });
         console.error('Fetch error:', err);
         throw err;
       })

@@ -46,14 +46,10 @@ export class EditorComponent {
         }),
         switchMap(() => edtSvc.fetchScans(edtSvc.book())),
         catchError(err => {
+          err.status === 403
+            ? this.router.navigate(['/forbidden'])
+            : this.router.navigate(['/not-found']);
           console.error('Fetch error:', err);
-
-          if (err.status === 403) {
-            this.router.navigate(['/forbidden']);
-          } else {
-            this.router.navigate(['/not-found']);
-          }
-          
           throw err;
         })
       )
