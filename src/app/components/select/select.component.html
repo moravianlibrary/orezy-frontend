@@ -1,11 +1,11 @@
 <div
   class="select"
 >
-  <label for="select-model" class="trigger">
+  <label [for]="`select-${inputName()}`" class="trigger">
     <input
       #comboInput
-      id="select-model"
-      name="select-model"
+      [id]="`select-${inputName()}`"
+      [name]="`select-${inputName()}`"
       class="combo-input"
       [class.used]="usedIn()"
       type="text"

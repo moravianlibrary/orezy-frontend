@@ -5,10 +5,11 @@ import { permissionDict, titleStateDict } from '../../app.config';
 import { AuthService } from '../../services/auth.service';
 import { FormsModule } from '@angular/forms';
 import { UiService } from '../../services/ui.service';
+import { SelectComponent } from '../select/select.component';
 
 @Component({
   selector: 'app-drawer',
-  imports: [FormsModule],
+  imports: [FormsModule, SelectComponent],
   templateUrl: './drawer.component.html',
   styleUrl: './drawer.component.scss',
   host: { '[class.open]': 'uiSvc.drawerOpen()' },

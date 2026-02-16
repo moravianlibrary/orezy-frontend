@@ -1,6 +1,7 @@
 import { Injectable, signal } from '@angular/core';
 import { DialogButton, DialogContentType, DrawerButton, DrawerContentType, Toast, ToastType } from '../app.types';
-import { focusMainWrapper } from '../utils/utils';
+import { defer, focusMainWrapper } from '../utils/utils';
+import { OverlayScrollbars } from 'overlayscrollbars';
 
 @Injectable({
   providedIn: 'root'
@@ -72,10 +73,27 @@ export class UiService {
   drawerContentType = signal<DrawerContentType | null>(null);
   drawerDescription = signal<string | null>(null);
   drawerButtons = signal<DrawerButton[]>([]);
+
+  private osInstance?: ReturnType<typeof OverlayScrollbars>;
   
   openDrawer(): void {
     this.drawerOpen.set(true);
     this.drawerEditMode.set(false);
+
+    defer(() => {
+      const el = document.getElementById('drawer-body') as HTMLElement;
+      this.osInstance = OverlayScrollbars(el, {
+        overflow: { x: 'hidden', y: 'scroll' },
+        scrollbars: {
+          theme: 'os-theme-orezy',
+          autoHide: 'leave',
+          autoHideDelay: 250,
+          dragScroll: true,
+          clickScroll: true,
+        },
+      });
+      el.classList.remove('os-pending');
+    }, 100);
   }
 
   closeDrawer(): void {

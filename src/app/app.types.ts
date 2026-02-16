@@ -62,7 +62,7 @@ export interface Permission {
   group_id: string;
   group_name: string;
   permission: PermissionType[];
-  created_at: string;
+  created_at?: string;
 }
 
 export interface User {
@@ -190,6 +190,6 @@ export interface Toast {
 
 // Select
 export interface SelectOption {
-  value: number;
+  value: number | string;
   label: string;
 };

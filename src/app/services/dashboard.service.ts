@@ -2,9 +2,9 @@ import { HttpClient } from '@angular/common/http';
 import { computed, inject, Injectable, signal } from '@angular/core';
 import { catchError, from, map, mergeMap, Observable, switchMap, tap, toArray } from 'rxjs';
 import { AuthService } from './auth.service';
-import { DashboardPage, Group, GroupPage, Models, NewGroup, NewUser, Permission, PermissionType, Title, User } from '../app.types';
+import { DashboardPage, Group, GroupPage, Models, NewGroup, NewUser, Permission, PermissionType, SelectOption, Title, User } from '../app.types';
 import { Router } from '@angular/router';
-import { checkEmailValidity } from '../utils/utils';
+import { checkEmailValidity, scrollToElement } from '../utils/utils';
 import { inlineErrors } from '../app.config';
 import { UiService } from './ui.service';
 
@@ -50,7 +50,7 @@ export class DashboardService {
   selectedTitle = signal<Title | null>(null);
   newTitleName = signal<string>('');
   newTitleNameError = signal<string>('');
-  availableModels = signal<{ value: number, label: string }[]>([]);
+  availableModels = signal<SelectOption[]>([]);
   selectedModelId = signal<number>(0);
   selectedModel = computed<string>(() => this.availableModels()[this.selectedModelId()].label);
   selectedModelUsed = signal<boolean>(false);
@@ -69,26 +69,56 @@ export class DashboardService {
   newUserEmailError = signal<string>('');
   userFullname = signal<string>('');
   userEmail = signal<string>('');
+  userPermissions = signal<Permission[]>([]);
+  availableGroups = signal<SelectOption[]>([]);
+  selectedGroupId = signal<string>('');
+  selectedGroupUsed = signal<boolean>(false);
   userNameError = signal<string>('');
   userEmailError = signal<string>('');
+  selectedGroupError = signal<string>('');
+  groupPermissionsError: Record<string, string> = {};
   userChanged = computed<boolean>(() => {
     const user = this.selectedUser();
     if (!user) return false;
 
     const fullnameChanged = user.full_name !== this.userFullname();
     const emailChanged = user.email !== this.userEmail();
+    const permissionsChanged = user.permissions !== this.userPermissions();
 
-    return fullnameChanged || emailChanged;
+    return fullnameChanged || emailChanged || permissionsChanged;
   });
 
 
   /* ------------------------------
     API
   ------------------------------ */
+  // Groups
   fetchGroups(): Observable<Group[]> {
     return this.http.get<Group[]>(`${this.authSvc.apiUrl}/groups`, { headers: this.authSvc.authHeaders() });
   }
 
+  createGroup(): Observable<NewGroup> {
+    const payload = {
+      name: this.newGroupName(),
+      description: this.newGroupDescription()
+    };
+    return this.http.post<NewGroup>(`${this.authSvc.apiUrl}/groups`, payload, { headers: this.authSvc.authHeaders('json', true) });
+  }
+
+  deleteGroup(groupId: string): Observable<void> {
+    return this.http.delete<void>(`${this.authSvc.apiUrl}/groups/${groupId}`, { headers: this.authSvc.authHeaders() });
+  }
+
+  updateGroup(groupId: string): Observable<void> {
+    const payload = {
+      name: this.groupName(),
+      description: this.groupDescription()
+    };
+
+    return this.http.patch<void>(`${this.authSvc.apiUrl}/groups/${groupId}`, payload, { headers: this.authSvc.authHeaders('json', true) });
+  }
+
+  // Titles
   fetchTitles(groupId: string): Observable<GroupPage> {
     return this.http.get<GroupPage>(`${this.authSvc.apiUrl}/groups/${groupId}`, { headers: this.authSvc.authHeaders() });
   }
@@ -127,27 +157,7 @@ export class DashboardService {
     return this.http.delete<void>(`${this.authSvc.apiUrl}/${titleId}`, { headers: this.authSvc.authHeaders() });
   }
 
-  createGroup(): Observable<NewGroup> {
-    const payload = {
-      name: this.newGroupName(),
-      description: this.newGroupDescription()
-    };
-    return this.http.post<NewGroup>(`${this.authSvc.apiUrl}/groups`, payload, { headers: this.authSvc.authHeaders('json', true) });
-  }
-
-  deleteGroup(groupId: string): Observable<void> {
-    return this.http.delete<void>(`${this.authSvc.apiUrl}/groups/${groupId}`, { headers: this.authSvc.authHeaders() });
-  }
-
-  updateGroup(groupId: string): Observable<void> {
-    const payload = {
-      name: this.groupName(),
-      description: this.groupDescription()
-    };
-
-    return this.http.patch<void>(`${this.authSvc.apiUrl}/groups/${groupId}`, payload, { headers: this.authSvc.authHeaders('json', true) });
-  }
-
+  // Users
   fetchUsers(groupId?: string): Observable<User[]> {
     return this.http.get<User[]>(`${this.authSvc.apiUrl}/users${groupId ? `?group_id=${groupId}` : ''}`, { headers: this.authSvc.authHeaders() });
   }
@@ -170,7 +180,8 @@ export class DashboardService {
   updateUser(userId: string): Observable<User> {
     const payload = {
       full_name: this.userFullname(),
-      email: this.userEmail()
+      email: this.userEmail(),
+      permissions: this.userPermissions()
     };
 
     return this.http.patch<User>(`${this.authSvc.apiUrl}/users/${userId}`, payload, { headers: this.authSvc.authHeaders('json', true) });
@@ -341,7 +352,7 @@ export class DashboardService {
 
           uiSvc.closeDialog();
           
-          return this.createTitle(this.selectedGroupDetail()?._id ?? '').pipe(
+          return this.createTitle(this.selectedGroupPage()?._id ?? '').pipe(
             map(res => {
               const now = Date();
               const newTitle: Title = {
@@ -556,6 +567,7 @@ export class DashboardService {
     }
   }
 
+  // Group
   openGroupDetail(group: Group | null): void {
     const uiSvc = this.uiSvc;
     if (!group) return;
@@ -587,11 +599,13 @@ export class DashboardService {
 
             if (!groupName) {
               this.groupNameError.set(this.errors['groupNameEmpty']);
+              scrollToElement(document.getElementById('new-group-name') as HTMLElement);
               return;
             }
 
-            if (this.groups().some(g => g.name === groupName)) {
+            if (this.groups().filter(g => g !== group).some(g => g.name === groupName)) {
               this.groupNameError.set(this.errors['groupNameExists']);
+              scrollToElement(document.getElementById('new-group-name') as HTMLElement);
               return;
             }
 
@@ -620,6 +634,7 @@ export class DashboardService {
     uiSvc.openDrawer();
   }
 
+  // Title
   openTitleDetail(title: Title | null): void {
     if (!title) return;
     const uiSvc = this.uiSvc;
@@ -656,11 +671,33 @@ export class DashboardService {
     });
   }
 
+  // User
   openUserDetail(user: User | null): void {
     if (!user) return;
     const uiSvc = this.uiSvc;
     
+    this.userNameError.set('');
+    this.userEmailError.set('');
+    this.selectedGroupError.set('');
+    this.groupPermissionsError = {};
+
     this.selectedUser.set(user);
+    this.selectedGroupId.set('');
+    this.userPermissions.set(user.permissions);
+
+    this.fetchGroups().pipe(
+      catchError(err => {
+        this.uiSvc.showToast('Při načítání skupin se něco pokazilo. Zkuste stránku znovu načíst.', { type: 'error' });
+        console.error('Fetching groups failed:', err);
+        throw err;
+      })
+    ).subscribe((res: Group[]) => {
+      this.groups.set(res);
+      this.availableGroups.set(res
+        .filter(g => !user.permissions.map(p => p.group_id).includes(g._id))
+        .map(g => ({ value: g._id, label: g.name })))
+    });
+
     uiSvc.drawerTitle.set(user.full_name);
     uiSvc.drawerContent.set(true);
     uiSvc.drawerContentType.set('users');
@@ -684,21 +721,32 @@ export class DashboardService {
 
           if (!userName) {
             this.userNameError.set(this.errors['userNameEmpty']);
+            scrollToElement(document.getElementById('user-fullname') as HTMLElement);
             return;
           }
 
           if (!userEmail) {
             this.userEmailError.set(this.errors['userEmailEmpty']);
+            scrollToElement(document.getElementById('user-email') as HTMLElement);
             return;
           }
 
           if (!checkEmailValidity(this.userEmail())) {
             this.userEmailError.set(this.errors['userEmailInvalid']);
+            scrollToElement(document.getElementById('user-email') as HTMLElement);
             return;
           }
 
           if (this.users().filter(u => u._id !== this.selectedUser()?._id).some(u => u.email === userEmail)) {
             this.userEmailError.set(this.errors['userEmailExists']);
+            scrollToElement(document.getElementById('user-email') as HTMLElement);
+            return;
+          }
+
+          const emptyGroups = this.userPermissions().filter(g => !g.permission.length);
+          if (emptyGroups.length) {
+            this.groupPermissionsError[emptyGroups[0].group_id] = this.errors['groupPermissionsEmpty'];
+            scrollToElement(document.getElementById(`permissions-row-${emptyGroups[0].group_id}`) as HTMLElement);
             return;
           }
 
@@ -719,6 +767,56 @@ export class DashboardService {
     ]);
 
     uiSvc.openDrawer();
+  }
+
+  removeFromAllGroups(): void {
+    this.userPermissions.set([]);
+    this.availableGroups.set(this.groups().map(g => ({ value: g._id, label: g.name })));
+  }
+
+  removeFromGroup(groupId: string): void {
+    this.userPermissions.update(prev => prev.filter(p => p.group_id !== groupId));
+    this.availableGroups.update(prev => 
+      this.groups()
+        .filter(g => prev.map(p => p.value).includes(g._id) || g._id === groupId)
+        .map(g => ({ value: g._id, label: g.name }))
+    );
+    this.groupPermissionsError[groupId] = '';
+  }
+
+  onSelectGroupUsed(used: boolean): void {
+    this.selectedGroupUsed.set(used);
+  }
+
+  addUserToGroup(groupId: string): void {
+    if (!this.selectedGroupId()) {
+      this.selectedGroupError.set(this.errors['selectedGroupEmpty']);
+      return;
+    }
+    
+    this.userPermissions.update(prev => [
+      {
+        group_id: groupId,
+        group_name: this.availableGroups().find(g => g.value === groupId)?.label ?? '',
+        permission: []
+      },
+      ...prev
+    ]);
+    this.availableGroups.update(prev => prev.filter(option => option.value !== groupId));
+    this.selectedGroupId.set('');
+    this.selectedGroupError.set('');
+  }
+
+  togglePermission(groupId: string, permissionType: PermissionType): void {
+    this.userPermissions.update(prev => prev.map(g => g.group_id === groupId
+      ? {
+        ...g,
+        permission: g.permission.includes(permissionType)
+          ? g.permission.filter(p => p !== permissionType)
+          : [ ...g.permission, permissionType ]
+      }
+      : g));
+    this.groupPermissionsError[groupId] = '';
   }
 
 

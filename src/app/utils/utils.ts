@@ -62,9 +62,13 @@ export function focusMainWrapper(): void {
   if (el) defer(() => (el.focus()));
 }
 
-export function scrollToSelectedImage(timeout: number = 100): void {
+export function scrollToSelectedImage(): void {
+  const element = document.querySelector('.thumbnail-wrapper.selected') as HTMLElement;
+  scrollToElement(element);
+}
+
+export function scrollToElement(element: HTMLElement, timeout: number = 100): void {
   defer(() => {
-    const element = document.querySelector('.thumbnail-wrapper.selected');
     if (element) (element as HTMLElement).scrollIntoView({ behavior: 'smooth', block: 'nearest' });
   }, timeout);
 }

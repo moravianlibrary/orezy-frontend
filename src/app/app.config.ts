@@ -85,7 +85,9 @@ export const inlineErrors: Record<string, string> = {
   'userNameEmpty': 'Zadejte jméno uživatele.',
   'userEmailEmpty': 'Zadejte e-mail uživatele.',
   'userEmailInvalid': 'Zadejte e-mail uživatele ve formátu uzivatel@domena.cz.',
-  'userEmailExists': 'Uživatel s daným e-mailem už existuje. Zadejte prosím jiný e-mail.'
+  'userEmailExists': 'Uživatel s daným e-mailem už existuje. Zadejte prosím jiný e-mail.',
+  'selectedGroupEmpty': 'Vyberte skupinu.',
+  'groupPermissionsEmpty': 'Vyberte práva ve skupině.'
 };
 
 export const appConfig: ApplicationConfig = {

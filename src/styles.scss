@@ -197,6 +197,19 @@ html, body {
   }
 }
 
+.quaternary.primary.disabled {
+  color: var(--primary-disabled) !important;
+  background-color: var(--bg-base) !important;
+
+  &:hover {
+    cursor: default;
+  }
+
+  svg {
+    fill: var(--primary-disabled) !important;
+  }
+}
+
 .quaternary.destructive {
   color: var(--bg-destructive);
   background-color: var(--bg-base);
@@ -341,6 +354,16 @@ html, body {
 }
 
 .items.os-pending::-webkit-scrollbar {
+  width: 0;
+  height: 0;
+  display: none;
+}
+
+.drawer-body.os-pending {
+  scrollbar-width: none;
+}
+
+.drawer-body.os-pending::-webkit-scrollbar {
   width: 0;
   height: 0;
   display: none;

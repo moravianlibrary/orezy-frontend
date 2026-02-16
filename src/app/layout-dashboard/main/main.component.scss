@@ -375,6 +375,7 @@
           top: 50%;
           right: 1px;
           transform: translateY(-50%);
+          transition: right .3s ease-out;
 
           display: flex;
           align-items: center;

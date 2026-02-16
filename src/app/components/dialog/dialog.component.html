@@ -210,7 +210,7 @@
               AI MODEL
               <app-select
                 [(ngModel)]="dashSvc.selectedModelId"
-                [maxDropdownHeight]="160"
+                [inputName]="'model'"
                 [options]="dashSvc.availableModels()"
                 [usedIn]="dashSvc.selectedModelUsed()"
                 (usedOut)="dashSvc.onSelectModelUsed($event)"

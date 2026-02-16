@@ -22,6 +22,7 @@ export class SelectComponent implements ControlValueAccessor {
   dashSvc = inject(DashboardService);
   
   maxDropdownHeight = input<number>(240);
+  inputName = input<string>('');
   options = input<SelectOption[]>([]);
   placeholder = input<string>('');
   usedIn = input<boolean>(false);
@@ -33,7 +34,7 @@ export class SelectComponent implements ControlValueAccessor {
 
   paddingRight = signal<number>(16);
   isOpen = signal<boolean>(false);
-  value = signal<number>(0);
+  value = signal<number | string>(0);
   label = signal<string>('');
 
   displayedLabel = computed<string>(() => {
@@ -45,6 +46,7 @@ export class SelectComponent implements ControlValueAccessor {
   });
 
   selectedOption = computed<SelectOption | undefined>(() => {
+    if (this.placeholder() && !this.usedIn()) return undefined;
     return this.options().find(o => o.value === this.value());
   });
 
@@ -55,7 +57,7 @@ export class SelectComponent implements ControlValueAccessor {
     return opts.filter(o => o.label.toLowerCase().includes(label));
   });
 
-  private onChange: (v: number | null) => void = () => {};
+  private onChange: (v: number | string | null) => void = () => {};
   private onTouched: () => void = () => {};
 
   writeValue(v: number | null): void {
@@ -115,6 +117,7 @@ export class SelectComponent implements ControlValueAccessor {
   onInput(e: Event): void {
     const v = (e.target as HTMLInputElement).value;
     this.label.set(v);
+    if (!this.usedIn()) this.usedOut.emit(true);
   }
 
   onKeyDown(e: KeyboardEvent): void {
