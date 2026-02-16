@@ -1,4 +1,4 @@
-import { Component, inject, output } from '@angular/core';
+import { Component, effect, ElementRef, inject, input, output, ViewChild } from '@angular/core';
 import { DimColor, GridMode, PageNumberType, ScanType } from '../../app.types';
 import { EditorService } from '../../services/editor.service';
 import { dimColorDict, filterPageNumberStartDict, filterScanTypeStartDict, gridModeDict } from '../../app.config';
@@ -8,6 +8,7 @@ import { AuthService } from '../../services/auth.service';
 import { SelectComponent } from '../select/select.component';
 import { UploadComponent } from '../upload/upload.component';
 import { UiService } from '../../services/ui.service';
+import { defer, focusElement } from '../../utils/utils';
 
 @Component({
   selector: 'app-dialog',
@@ -21,8 +22,32 @@ export class DialogComponent {
   authSvc = inject(AuthService);
   uiSvc = inject(UiService);
   
+  open = input<boolean>(false);
   closed = output<void>();
   backdropClick = output<void>();
+
+  @ViewChild('newGroupName', { static: false }) newGroupName!: ElementRef<HTMLElement>;
+  @ViewChild('newTitleName', { static: false }) newTitleName!: ElementRef<HTMLElement>;
+  @ViewChild('newUserName', { static: false }) newUserName!: ElementRef<HTMLElement>;
+
+  autoFocus = effect(() => {
+    const open = this.open();
+    if (open) {
+      defer(() => {
+        switch (this.uiSvc.dialogContentType()) {
+          case 'new-group':
+            focusElement(this.newGroupName.nativeElement);
+            break;
+          case 'new-title':
+            focusElement(this.newTitleName.nativeElement);
+            break;
+          case 'new-user':
+            focusElement(this.newUserName.nativeElement);
+            break;
+        }
+      }, 100);
+    }
+  });
 
   gridModeDict: Record<GridMode, string> = gridModeDict;
   gridModeDictKeys = Object.keys(gridModeDict) as GridMode[];

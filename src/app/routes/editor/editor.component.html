@@ -12,5 +12,8 @@
   </div>
   <app-right-panel-editor></app-right-panel-editor>
 
-  <app-dialog (closed)="uiSvc.closeDialog()" />
+  <app-dialog
+    [open]="uiSvc.dialogOpen()"
+    (closed)="uiSvc.closeDialog()"
+  />
 </div>

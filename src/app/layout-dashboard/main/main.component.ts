@@ -4,7 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { AuthService } from '../../services/auth.service';
 import { permissionDict, titleStateDict, titleStateFilterDict } from '../../app.config';
 import { Group, GroupPage, Permission, Position, User, UserInGroup } from '../../app.types';
-import { defer, getDate } from '../../utils/utils';
+import { defer, focusElement, getDate } from '../../utils/utils';
 import { OverlayScrollbars } from 'overlayscrollbars';
 import { ActivatedRoute, Router } from '@angular/router';
 import { catchError, map, of, Subscription, switchMap, tap } from 'rxjs';
@@ -34,6 +34,9 @@ export class MainComponent {
   maxGroups: number = 2;
   tableHasScrollbar = signal<boolean>(false);
 
+  @ViewChild('searchGroup', { static: false }) searchGroup!: ElementRef<HTMLElement>;
+  @ViewChild('searchTitle', { static: false }) searchTitle!: ElementRef<HTMLElement>;
+  @ViewChild('searchUser', { static: false }) searchUser!: ElementRef<HTMLElement>;
   @ViewChild('bodyScroll', { static: false }) bodyScroll!: ElementRef<HTMLDivElement>;
   private osInstance?: ReturnType<typeof OverlayScrollbars>;
 
@@ -131,6 +134,19 @@ export class MainComponent {
             this.tableHasScrollbar.set(this.osInstance.state().hasOverflow.y);
           }, 100);
         });
+  }
+
+  ngAfterViewInit(): void {
+    defer(() => {
+      const dashboardPage = this.dashSvc.dashboardPage();
+      focusElement(
+        dashboardPage === 'groups'
+          ? this.searchGroup.nativeElement
+          : dashboardPage === 'titles'
+            ? this.searchTitle.nativeElement
+            : this.searchUser.nativeElement
+      );
+    }, 100);
   }
 
   ngOnDestroy(): void {

@@ -153,6 +153,7 @@
               >
                 NÁZEV
                 <input
+                  #newGroupName
                   id="new-group-name"
                   name="new-group-name"
                   type="text"
@@ -205,6 +206,7 @@
             <label class="above-input" for="new-title-name">
               NÁZEV KNIHY
               <input
+                #newTitleName
                 id="new-title-name"
                 name="new-title-name"
                 type="text"
@@ -236,6 +238,7 @@
               SKENY
               @let files = dashSvc.files();
               <app-upload
+                id="new-title-upload"
                 (filesSelected)="dashSvc.uploadFiles($event)"
                 [h3]="
                   files.length === 0
@@ -266,6 +269,7 @@
                 <path fill-rule="evenodd" clip-rule="evenodd" d="M1.77344 14.6667C1.77344 11.7194 4.66485 9.50001 8.0001 9.50001C11.3354 9.50001 14.2268 11.7194 14.2268 14.6667C14.2268 14.9428 14.0029 15.1667 13.7268 15.1667C13.4506 15.1667 13.2268 14.9428 13.2268 14.6667C13.2268 12.4539 10.9849 10.5 8.0001 10.5C5.01535 10.5 2.77344 12.4539 2.77344 14.6667C2.77344 14.9428 2.54958 15.1667 2.27344 15.1667C1.9973 15.1667 1.77344 14.9428 1.77344 14.6667Z" />
               </svg>
               <input
+                #newUserName
                 id="new-user-fullname"
                 name="new-user-fullname"
                 type="text"

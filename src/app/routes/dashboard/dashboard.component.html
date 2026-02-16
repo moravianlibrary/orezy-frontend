@@ -8,4 +8,7 @@
   ></div>
 }
 <app-drawer />
-<app-dialog (closed)="uiSvc.closeDialog()" />
+<app-dialog
+  [open]="uiSvc.dialogOpen()"
+  (closed)="uiSvc.closeDialog()"
+/>

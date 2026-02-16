@@ -4,7 +4,7 @@ import { catchError, from, map, mergeMap, Observable, switchMap, tap, toArray } 
 import { AuthService } from './auth.service';
 import { DashboardPage, Group, GroupPage, Models, NewGroup, NewUser, Permission, PermissionType, SelectOption, Title, User } from '../app.types';
 import { Router } from '@angular/router';
-import { checkEmailValidity, scrollToElement } from '../utils/utils';
+import { checkEmailValidity, focusElement, scrollToElement } from '../utils/utils';
 import { inlineErrors } from '../app.config';
 import { UiService } from './ui.service';
 
@@ -235,11 +235,17 @@ export class DashboardService {
 
           if (!newGroupName) {
             this.newGroupNameError.set(this.errors['groupNameEmpty']);
+            const el = document.getElementById('new-group-name') as HTMLElement;
+            focusElement(el);
+            scrollToElement(el);
             return;
           }
 
           if (this.groups().some(g => g.name === newGroupName)) {
             this.newGroupNameError.set(this.errors['groupNameExists']);
+            const el = document.getElementById('new-group-name') as HTMLElement;
+            focusElement(el);
+            scrollToElement(el);
             return;
           }
 
@@ -355,11 +361,16 @@ export class DashboardService {
 
           if (!newTitleName) {
             this.newTitleNameError.set(this.errors['titleNameEmpty']);
+            const el = document.getElementById('new-title-name') as HTMLElement;
+            focusElement(el);
+            scrollToElement(el);
             return;
           }
 
           if (!this.files().length) {
             this.uploadFilesError.set(this.errors['filesEmpty']);
+            const el = document.getElementById('new-title-upload') as HTMLElement;
+            scrollToElement(el);
             return;
           }
 
@@ -466,22 +477,35 @@ export class DashboardService {
         action: () => {
           if (!this.newUserFullname()) {
             this.newUserNameError.set(this.errors['userNameEmpty']);
+            const el = document.getElementById('new-user-fullname') as HTMLElement;
+            focusElement(el);
+            scrollToElement(el);
+            return;
           }
 
           const newUserEmail = this.newUserEmail();
 
           if (!newUserEmail) {
             this.newUserEmailError.set(this.errors['userEmailEmpty']);
+            const el = document.getElementById('new-user-email') as HTMLElement;
+            focusElement(el);
+            scrollToElement(el);
             return;
           }
 
           if (!checkEmailValidity(newUserEmail)) {
             this.newUserEmailError.set(this.errors['userEmailInvalid']);
+            const el = document.getElementById('new-user-email') as HTMLElement;
+            focusElement(el);
+            scrollToElement(el);
             return;
           }
 
           if (this.users().some(u => u.email === this.newUserEmail())) {
             this.newUserEmailError.set(this.errors['userEmailExists']);
+            const el = document.getElementById('new-user-email') as HTMLElement;
+            focusElement(el);
+            scrollToElement(el);
             return;
           }
           

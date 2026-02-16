@@ -59,7 +59,11 @@ export function defer(fn: () => void, delay: number = 0) {
 
 export function focusMainWrapper(): void {
   const el = document.querySelector('.main-wrapper') as HTMLElement;
-  if (el) defer(() => (el.focus()));
+  focusElement(el);
+}
+
+export function focusElement(el: HTMLElement, delay: number = 0): void {
+  if (el) defer(() => el.focus(), delay);
 }
 
 export function scrollToSelectedImage(): void {
