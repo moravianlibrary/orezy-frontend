@@ -95,6 +95,7 @@
                   <tr
                     tabindex="0"
                     class="clickable"
+                    [class.active]="dashSvc.selectedGroupDetail() === group"
                     (click)="dashSvc.openGroupsTitles(group._id)"
                   >
                     <td>{{ group.name }}</td>

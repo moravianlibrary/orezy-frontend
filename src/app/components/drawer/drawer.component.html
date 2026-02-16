@@ -452,7 +452,7 @@
   <footer class="drawer-footer">
     @for (btn of uiSvc.drawerButtons(); track $index) {
       <span
-        (click)="btn.action ? btn.action() : uiSvc.closeDrawer()"
+        (click)="btn.action ? btn.action() : dashSvc.closeDrawer()"
         class="button real-button"
         [class.tertiary]="!btn.primary"
         [class.primary]="btn.primary"
