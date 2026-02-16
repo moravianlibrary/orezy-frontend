@@ -115,6 +115,7 @@
                               [class.info]="(isReadGroup || isUploadTitle) && !isWriteTitle && !isReadTitle"
                               [class.error]="(isWriteTitle || isReadTitle) && !isReadGroup && !isUploadTitle"
                             >
+                              <span class="tag-label">{{ user.full_name }}</span>
                               @if (isReadGroup) {
                                 <svg
                                   width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"
@@ -160,7 +161,6 @@
                                   <path fill-rule="evenodd" clip-rule="evenodd" d="M3.16634 7.66014C3.16634 7.38399 3.3902 7.16014 3.66634 7.16014H5.66634C5.94248 7.16014 6.16634 7.38399 6.16634 7.66014C6.16634 7.93628 5.94248 8.16014 5.66634 8.16014H3.66634C3.3902 8.16014 3.16634 7.93628 3.16634 7.66014Z" />
                                 </svg>
                               }
-                              <span class="tag-label">{{ user.full_name }}</span>
                             </span>
                           }
                           @if (usersShort.length !== usersLong.length) {
@@ -784,6 +784,7 @@
                             [class.info]="(isReadGroup || isUploadTitle) && !isWriteTitle && !isReadTitle"
                             [class.error]="(isWriteTitle || isReadTitle) && !isReadGroup && !isUploadTitle"
                           >
+                            <span class="tag-label">{{ group.group_name }}</span>
                             @if (isReadGroup) {
                               <svg
                                 width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"
@@ -829,7 +830,6 @@
                                 <path fill-rule="evenodd" clip-rule="evenodd" d="M3.16634 7.66014C3.16634 7.38399 3.3902 7.16014 3.66634 7.16014H5.66634C5.94248 7.16014 6.16634 7.38399 6.16634 7.66014C6.16634 7.93628 5.94248 8.16014 5.66634 8.16014H3.66634C3.3902 8.16014 3.16634 7.93628 3.16634 7.66014Z" />
                               </svg>
                             }
-                            <span class="tag-label">{{ group.group_name }}</span>
                           </span>
                         }
                         @if (groupsShort.length !== groupsLong.length) {
