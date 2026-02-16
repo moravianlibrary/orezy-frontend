@@ -186,7 +186,7 @@
             <label class="above-input select">
               AI MODEL
               <app-select
-                [(ngModel)]="dashSvc.selectedModelId"
+                [(ngModel)]="dashSvc.selectedModel"
                 [inputName]="'group-model'"
                 [maxDropdownHeight]="160"
                 [options]="dashSvc.availableModels()"
@@ -222,7 +222,7 @@
             <label class="above-input select">
               AI MODEL
               <app-select
-                [(ngModel)]="dashSvc.selectedModelId"
+                [(ngModel)]="dashSvc.selectedModel"
                 [inputName]="'title-model'"
                 [options]="dashSvc.availableModels()"
                 [usedIn]="dashSvc.selectedModelUsed()"

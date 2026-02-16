@@ -30,7 +30,7 @@ export class MainComponent {
   private paramsOnGroupId = new Subscription();
 
   getDate = getDate;
-  maxUsers: number = 2;
+  maxUsers: number = 1;
   maxGroups: number = 2;
   tableHasScrollbar = signal<boolean>(false);
 

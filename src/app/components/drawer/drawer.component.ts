@@ -6,6 +6,8 @@ import { AuthService } from '../../services/auth.service';
 import { FormsModule } from '@angular/forms';
 import { UiService } from '../../services/ui.service';
 import { SelectComponent } from '../select/select.component';
+import { catchError } from 'rxjs';
+import { Models } from '../../app.types';
 
 @Component({
   selector: 'app-drawer',
@@ -32,5 +34,24 @@ export class DrawerComponent {
     this.copied[key] = true;
     window.clearTimeout(this.copiedTimers[key]);
     this.copiedTimers[key] = window.setTimeout(() => this.copied[key] = false, 1200);
+  }
+
+  openEditMode(): void {
+    this.uiSvc.drawerEditMode.set(true)
+    const dashSvc = this.dashSvc;
+
+    if (dashSvc.dashboardPage() === 'groups') {
+      dashSvc.fetchModels().pipe(
+        catchError(err => {
+          this.uiSvc.showToast('Nepodařilo se načíst dostupné AI modely. Zkuste panel zavřít a znovu otevřít.', { type: 'error' });
+          console.error(err);
+          throw err;
+        })
+      ).subscribe((res: Models) => {
+        dashSvc.availableModels.set(res.available_models.map(m => ({ value: m, label: m })));
+        dashSvc.selectedModel.set(dashSvc.selectedGroupDetail()?.default_model ?? res.available_models[0]);
+        dashSvc.selectedModelUsed.set(false);
+      });
+    }
   }
 }

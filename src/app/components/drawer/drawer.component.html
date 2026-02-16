@@ -8,7 +8,7 @@
       <svg
         width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg"
         class="drawer-edit action"
-        (click)="uiSvc.drawerEditMode.set(true)"
+        (click)="openEditMode()"
       >
         <path fill-rule="evenodd" clip-rule="evenodd" d="M12.9313 1.19811C13.9036 1.07378 14.8873 1.47138 15.8868 2.41184L15.888 2.41292C16.8908 3.36133 17.3474 4.32341 17.2789 5.30331C17.2127 6.25019 16.6638 7.05161 16.0378 7.7129M16.0378 7.7129L9.19955 14.951C9.00677 15.1609 8.7472 15.3387 8.50112 15.4703C8.25187 15.6035 7.96357 15.7176 7.69291 15.7657L7.68875 15.7664L5.00637 16.2246C4.3559 16.3367 3.73215 16.1742 3.28782 15.7528C2.84411 15.332 2.64803 14.7184 2.72067 14.0647L2.72088 14.0628L3.03055 11.3511C3.06652 11.0813 3.1667 10.7894 3.28479 10.5362C3.40245 10.2839 3.563 10.0163 3.75298 9.8141L3.7542 9.8128L10.5959 2.57114C11.2221 1.90958 11.9918 1.31826 12.9313 1.19811M11.5041 3.43003V3.43003L4.66404 10.6699V10.6699C4.59574 10.7428 4.5019 10.8839 4.41766 11.0645C4.33494 11.2419 4.28526 11.406 4.27036 11.5115L3.96303 14.2027L3.96293 14.2036C3.92751 14.5243 4.0272 14.7313 4.14796 14.8458C4.26821 14.9598 4.47779 15.0473 4.79399 14.9928L4.79495 14.9926L7.47587 14.5347C7.58027 14.5158 7.74112 14.4592 7.91175 14.3679C8.08473 14.2754 8.21486 14.1757 8.28 14.1043L8.28747 14.0961L15.1292 6.85447C15.6864 6.26585 15.996 5.72947 16.0319 5.21615C16.0655 4.73576 15.868 4.11472 15.0298 3.32177C14.1962 2.53761 13.5675 2.37694 13.0899 2.43802C12.5795 2.50328 12.061 2.84179 11.5041 3.43003Z" />
         <path fill-rule="evenodd" clip-rule="evenodd" d="M9.81192 3.5907C10.153 3.53756 10.4725 3.77097 10.5257 4.11204C10.84 6.12922 12.4771 7.67306 14.5124 7.87806C14.8559 7.91265 15.1062 8.21911 15.0716 8.56255C15.0371 8.90599 14.7306 9.15636 14.3872 9.12177C11.7892 8.86011 9.69298 6.88728 9.29058 4.30446C9.23744 3.9634 9.47085 3.64384 9.81192 3.5907Z" />
@@ -39,10 +39,12 @@
             <div class="label">NÁZEV</div>
             <div class="value">{{ group?.name }}</div>
           </div>
-          <div class="block">
-            <div class="label">POPIS</div>
-            <div class="value">{{ group?.description?.length ? group?.description : '–' }}</div>
-          </div>
+          @if (group?.description?.length) {
+            <div class="block">
+              <div class="label">POPIS</div>
+              <div class="value">{{ group?.description }}</div>
+            </div>
+          }
         } @else {
           <div class="block">
             <label
@@ -126,6 +128,25 @@
             </span>
           </div>
           <div class="value">{{ group?.api_key?.key }}</div>
+        </div>
+
+        <div class="block">
+          @if (!uiSvc.drawerEditMode()) {
+            <div class="label">AI MODEL</div>
+            <div class="value">{{ group?.default_model }}</div>
+          } @else {
+            <label class="above-input select">
+            AI MODEL
+            <app-select
+              [(ngModel)]="dashSvc.selectedModel"
+              [inputName]="'group-model'"
+              [maxDropdownHeight]="160"
+              [options]="dashSvc.availableModels()"
+              [usedIn]="dashSvc.selectedModelUsed()"
+              (usedOut)="dashSvc.onSelectModelUsed($event)"
+            ></app-select>
+          </label>
+          }
         </div>
         
         <div class="block">

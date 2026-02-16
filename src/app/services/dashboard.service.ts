@@ -22,7 +22,6 @@ export class DashboardService {
 
   // Groups
   groups = signal<Group[]>([]);
-  // groups = computed(() => this.myGroups().filter(g => g.permissions.includes('upload')));
   displayedGroups = signal<Group[]>([]);
   searchGroups = signal<string>('');
   selectedGroupDetail = signal<Group | null>(null);
@@ -39,8 +38,9 @@ export class DashboardService {
 
     const nameChanged = group.name !== this.groupName();
     const descriptionChanged = group.description !== this.groupDescription();
+    const modelChanged = group.default_model !== this.selectedModel();
 
-    return nameChanged || descriptionChanged;
+    return nameChanged || descriptionChanged || modelChanged;
   });
 
   // Titles
@@ -51,8 +51,7 @@ export class DashboardService {
   newTitleName = signal<string>('');
   newTitleNameError = signal<string>('');
   availableModels = signal<SelectOption[]>([]);
-  selectedModelId = signal<number>(0);
-  selectedModel = computed<string>(() => this.availableModels()[this.selectedModelId()].label);
+  selectedModel = signal<string>('');
   selectedModelUsed = signal<boolean>(false);
   files = signal<File[]>([]);
   uploadFilesError = signal<string>('');
@@ -113,7 +112,8 @@ export class DashboardService {
   updateGroup(groupId: string): Observable<void> {
     const payload = {
       name: this.groupName(),
-      description: this.groupDescription()
+      description: this.groupDescription(),
+      default_model: this.selectedModel()
     };
 
     return this.http.patch<void>(`${this.authSvc.apiUrl}/groups/${groupId}`, payload, { headers: this.authSvc.authHeaders('json', true) });
@@ -258,6 +258,7 @@ export class DashboardService {
                   created_at: now  
                 },
                 description: this.newGroupDescription(),
+                default_model: this.selectedModel(),
                 created_at: now,
                 modified_at: now,
                 title_count: 0,
@@ -288,7 +289,7 @@ export class DashboardService {
 
     this.fetchModels().pipe(
       catchError(err => {
-        this.uiSvc.showToast('Nepodařilo se načíst dostupné AI modely. Zkuste to dialogové okno zavřít a znovu otevřít.', { type: 'error' });
+        this.uiSvc.showToast('Nepodařilo se načíst dostupné AI modely. Zkuste dialogové okno zavřít a znovu otevřít.', { type: 'error' });
         console.error(err);
         throw err;
       })
@@ -296,8 +297,8 @@ export class DashboardService {
       this.newGroupName.set('');
       this.newGroupDescription.set('');
       this.newGroupNameError.set('');
-      this.availableModels.set(res.available_models.map((m, index) => ({ value: index, label: m })));
-      this.selectedModelId.set(this.availableModels().length - 1);
+      this.availableModels.set(res.available_models.map(m => ({ value: m, label: m })));
+      this.selectedModel.set(res.available_models[0]);
       this.selectedModelUsed.set(false);
       this.closeDrawer();
       uiSvc.openDialog();
@@ -395,7 +396,7 @@ export class DashboardService {
 
     this.fetchModels().pipe(
       catchError(err => {
-        this.uiSvc.showToast('Nepodařilo se načíst dostupné AI modely. Zkuste to dialogové okno zavřít a znovu otevřít.', { type: 'error' });
+        this.uiSvc.showToast('Nepodařilo se načíst dostupné AI modely. Zkuste dialogové okno zavřít a znovu otevřít.', { type: 'error' });
         console.error(err);
         throw err;
       })
@@ -403,8 +404,8 @@ export class DashboardService {
       this.newTitleName.set('');
       this.newTitleNameError.set('');
       this.uploadFilesError.set('');
-      this.availableModels.set(res.available_models.map((m, index) => ({ value: index, label: m })));
-      this.selectedModelId.set(this.availableModels().length - 1);
+      this.availableModels.set(res.available_models.map(m => ({ value: m, label: m })));
+      this.selectedModel.set(this.selectedGroupPage()?.default_model ?? res.available_models[0]);
       this.selectedModelUsed.set(false);
       this.closeDrawer();
       uiSvc.openDialog();
@@ -591,6 +592,7 @@ export class DashboardService {
     this.groupName.set(group.name);
     this.groupNameError.set('');
     this.groupDescription.set(group.description);
+    this.selectedModel.set(group.default_model);
     
     if (this.authSvc.user()?.role === 'admin') {
       uiSvc.drawerButtons.set([
@@ -626,7 +628,8 @@ export class DashboardService {
                 this.groups.update(prev => prev.map(g => g._id === group?._id ? {
                   ...group,
                   name: this.groupName(),
-                  description: this.groupDescription()
+                  description: this.groupDescription(),
+                  default_model: this.selectedModel()
                 } : g))
                 this.displayedGroups.set(this.groups());
                 this.selectedGroupDetail.set(null);

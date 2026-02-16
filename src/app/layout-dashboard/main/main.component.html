@@ -47,9 +47,10 @@
         >
           <colgroup>
             <col style="min-width:200px">
+            <col style="min-width:120px">
             <col style="min-width:100px">
             @if (isAdmin) {
-              <col style="min-width:500px">
+              <col style="min-width:300px">
             } @else {
               <col style="min-width:120px">
             }
@@ -61,6 +62,7 @@
           <thead>
             <tr>
               <th>Název skupiny</th>
+              <th>AI model</th>
               <th>Počet knih</th>
               <th>{{ isAdmin ? 'Uživatelé a jejich práva' : 'Právo' }}</th>
               <th>Vytvořeno</th>
@@ -74,9 +76,10 @@
           <table class="table-body">
             <colgroup>
               <col style="min-width:200px">
+              <col style="min-width:120px">
               <col style="min-width:100px">
               @if (isAdmin) {
-                <col style="min-width:500px">
+                <col style="min-width:300px">
               } @else {
                 <col style="min-width:120px">
               }
@@ -99,6 +102,7 @@
                     (click)="dashSvc.openGroupsTitles(group._id)"
                   >
                     <td>{{ group.name }}</td>
+                    <td>{{ group.default_model }}</td>
                     <td>{{ group.title_count }}</td>
                     <td>
                       @if (isAdmin) {
