@@ -140,7 +140,6 @@
             <app-select
               [(ngModel)]="dashSvc.selectedModel"
               [inputName]="'group-model'"
-              [maxDropdownHeight]="160"
               [options]="dashSvc.availableModels()"
               [usedIn]="dashSvc.selectedModelUsed()"
               (usedOut)="dashSvc.onSelectModelUsed($event)"
