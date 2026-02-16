@@ -100,7 +100,8 @@ export class DashboardService {
   createGroup(): Observable<NewGroup> {
     const payload = {
       name: this.newGroupName(),
-      description: this.newGroupDescription()
+      description: this.newGroupDescription(),
+      default_model: this.selectedModel()
     };
     return this.http.post<NewGroup>(`${this.authSvc.apiUrl}/groups`, payload, { headers: this.authSvc.authHeaders('json', true) });
   }
@@ -283,13 +284,24 @@ export class DashboardService {
           ).subscribe(() => this.openGroupDetail(this.selectedGroupDetail()))
         }
       }
-    ])
+    ]);
 
-    this.newGroupName.set('');
-    this.newGroupDescription.set('');
-    this.newGroupNameError.set('');
-    this.closeDrawer();
-    uiSvc.openDialog();
+    this.fetchModels().pipe(
+      catchError(err => {
+        this.uiSvc.showToast('Nepodařilo se načíst dostupné AI modely. Zkuste to dialogové okno zavřít a znovu otevřít.', { type: 'error' });
+        console.error(err);
+        throw err;
+      })
+    ).subscribe((res: Models) => {
+      this.newGroupName.set('');
+      this.newGroupDescription.set('');
+      this.newGroupNameError.set('');
+      this.availableModels.set(res.available_models.map((m, index) => ({ value: index, label: m })));
+      this.selectedModelId.set(this.availableModels().length - 1);
+      this.selectedModelUsed.set(false);
+      this.closeDrawer();
+      uiSvc.openDialog();
+    });
   }
 
   deleteGroupDialog(group: Group | null): void {

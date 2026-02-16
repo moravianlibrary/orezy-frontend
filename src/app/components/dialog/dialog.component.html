@@ -182,6 +182,19 @@
               </label>
             </div>
           </div>
+          <div class="block">
+            <label class="above-input select">
+              AI MODEL
+              <app-select
+                [(ngModel)]="dashSvc.selectedModelId"
+                [inputName]="'group-model'"
+                [maxDropdownHeight]="160"
+                [options]="dashSvc.availableModels()"
+                [usedIn]="dashSvc.selectedModelUsed()"
+                (usedOut)="dashSvc.onSelectModelUsed($event)"
+              ></app-select>
+            </label>
+          </div>
         </div>
       }
 
@@ -210,7 +223,7 @@
               AI MODEL
               <app-select
                 [(ngModel)]="dashSvc.selectedModelId"
-                [inputName]="'model'"
+                [inputName]="'title-model'"
                 [options]="dashSvc.availableModels()"
                 [usedIn]="dashSvc.selectedModelUsed()"
                 (usedOut)="dashSvc.onSelectModelUsed($event)"
