@@ -76,6 +76,7 @@ export interface User {
   password?: string;
   role: Role;
   permissions: Permission[];
+  modified_at?: string;
 }
 
 export interface UserInGroup {

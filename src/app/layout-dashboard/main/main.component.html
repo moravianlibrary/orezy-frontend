@@ -672,10 +672,9 @@
                       </div>
                     </td>
                     <td>
-                      modified_at
-                      <!-- @let modified = getDate(user.modified_at);
+                      @let modified = getDate(user?.modified_at ?? '');
                       <span class="date">{{ modified[0] }}</span>{{ ' ' }}
-                      <span class="time">{{ modified[1] }}</span> -->
+                      <span class="time">{{ modified[1] }}</span>
                     </td>
                     @if (tableHasScrollbar()) { <td style="padding:0"></td> }
                     <td
