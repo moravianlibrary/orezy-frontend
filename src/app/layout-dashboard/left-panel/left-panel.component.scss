@@ -23,11 +23,6 @@
   display: flex;
   align-items: center;
   width: 100%;
-
-  h1 {
-    @include font(500, var(--font-size-x3), var(--spacing-x8), var(--text-base));
-    cursor: pointer;
-  }
 }
 
 .user-info {

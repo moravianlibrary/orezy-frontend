@@ -78,6 +78,29 @@ html, body {
   height: 100%;
 }
 
+#logo {
+  @include font(400, var(--font-size-x2), var(--spacing-x6), var(--text-base));
+  letter-spacing: 7%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: var(--spacing-x1);
+  cursor: default;
+
+  svg {
+    fill: var(--icon-black);
+    cursor: default;
+  }
+}
+
+#logo.clickable {
+  cursor: pointer;
+
+  svg {
+    cursor: pointer;
+  }
+}
+
 
 /* ------------------------------
   BUTTONS
