@@ -32,7 +32,7 @@ export class DialogComponent {
 
   autoFocus = effect(() => {
     const open = this.open();
-    if (open) {
+    if (open && this.uiSvc.dialogContent()) {
       defer(() => {
         let el;
 
