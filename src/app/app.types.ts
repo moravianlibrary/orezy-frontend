@@ -1,3 +1,5 @@
+import { B } from '@angular/cdk/keycodes';
+
 /* ------------------------------
     DASHBOARD
   ------------------------------ */
@@ -18,7 +20,7 @@ export interface Group {
   modified_at: string;
   title_count: number;
   permissions: PermissionType[];
-  users?: UserInGroup[];
+  users: UserInGroup[];
 }
 
 export interface GroupPage {
@@ -80,6 +82,11 @@ export interface UserInGroup {
   _id: string;
   full_name: string;
   permission: PermissionType[];
+}
+
+export interface ChangedGroupMember {
+  user_id: string;
+  user_permissions: PermissionType[];
 }
 
 export interface NewUser {

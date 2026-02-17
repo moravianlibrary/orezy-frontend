@@ -312,7 +312,7 @@
         }
       }
 
-      .add-user-to-group-wrapper {
+      .add-permission-wrapper {
         display: flex;
         flex-direction: column;
         gap: var(--spacing-x1);
@@ -490,7 +490,7 @@
     .block.permissions {
       gap: var(--spacing-x2);
 
-      .group-permission-error {
+      .permission-error {
         margin-top: -4px;
       }
     }

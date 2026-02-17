@@ -162,6 +162,11 @@ html, body {
   color: var(--text-white);
 }
 
+.hidden {
+  visibility: hidden;
+  pointer-events: none;
+}
+
 .primary.disabled {
   color: var(--text-white) !important;
   background-color: var(--primary-disabled) !important;

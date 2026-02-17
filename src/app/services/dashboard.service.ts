@@ -1,8 +1,8 @@
 import { HttpClient } from '@angular/common/http';
 import { computed, inject, Injectable, signal } from '@angular/core';
-import { catchError, from, map, mergeMap, Observable, switchMap, tap, toArray } from 'rxjs';
+import { catchError, forkJoin, from, map, mergeMap, Observable, switchMap, tap, toArray } from 'rxjs';
 import { AuthService } from './auth.service';
-import { DashboardPage, Group, GroupPage, Models, NewGroup, NewUser, Permission, PermissionType, SelectOption, Title, User } from '../app.types';
+import { ChangedGroupMember, DashboardPage, Group, GroupPage, Models, NewGroup, NewUser, Permission, PermissionType, SelectOption, Title, User, UserInGroup } from '../app.types';
 import { Router } from '@angular/router';
 import { checkEmailValidity, focusElement, scrollToElement } from '../utils/utils';
 import { inlineErrors } from '../app.config';
@@ -31,8 +31,23 @@ export class DashboardService {
   newGroupNameError = signal<string>('');
   groupName = signal<string>('');
   groupDescription = signal<string>('');
+  groupPermissions = signal<UserInGroup[]>([]);
+  availableUsers = signal<SelectOption[]>([]);
+  selectedUserId = signal<string>('');
+  selectedUserUsed = signal<boolean>(false);
   groupNameError = signal<string>('');
+  selectedUserError = signal<string>('');
+  userPermissionsError: Record<string, string> = {};
   groupChanged = computed<boolean>(() => {
+    const group = this.selectedGroupDetail();
+    if (!group) return false;
+    
+    const groupNonmembersDataChanged = this.groupNonmembersDataChanged();
+    const permissionsChanged = group.users !== this.groupPermissions();
+    
+    return groupNonmembersDataChanged || permissionsChanged;
+  });
+  groupNonmembersDataChanged = computed<boolean>(() => {
     const group = this.selectedGroupDetail();
     if (!group) return false;
 
@@ -41,6 +56,36 @@ export class DashboardService {
     const modelChanged = group.default_model !== this.selectedModel();
 
     return nameChanged || descriptionChanged || modelChanged;
+  });
+  membersAdded = computed<ChangedGroupMember[]>(() => {
+    const group = this.selectedGroupDetail();
+    const permissions = this.groupPermissions();
+    const permissionsChanged = group?.users !== permissions;
+
+    if (!permissionsChanged) return [];
+    return permissions
+      .filter(u => !group?.users.map(user => user._id).includes(u._id))
+      .map(u => ({ user_id: u._id, user_permissions: u.permission }));
+  });
+  membersUpdated = computed<ChangedGroupMember[]>(() => {
+    const group = this.selectedGroupDetail();
+    const permissions = this.groupPermissions();
+    const permissionsChanged = group?.users !== permissions;
+
+    if (!permissionsChanged) return [];
+    return permissions
+      .filter(u => group?.users.map(user => user._id).includes(u._id) && !group?.users.includes(u))
+      .map(u => ({ user_id: u._id, user_permissions: u.permission }));
+  });
+  membersRemoved = computed<string[]>(() => {
+    const group = this.selectedGroupDetail();
+    const permissions = this.groupPermissions();
+    const permissionsChanged = group?.users !== permissions;
+
+    if (!permissionsChanged || !group) return [];
+    return group?.users
+      .filter(u => !permissions.map(u => u._id).includes(u._id))
+      .map(u => u._id);
   });
 
   // Titles
@@ -117,6 +162,24 @@ export class DashboardService {
     };
 
     return this.http.patch<void>(`${this.authSvc.apiUrl}/groups/${groupId}`, payload, { headers: this.authSvc.authHeaders('json', true) });
+  }
+
+  bulkAddGroupMembers(groupId: string): Observable<void> {
+    const payload = this.membersAdded();
+    return this.http.post<void>(`${this.authSvc.apiUrl}/groups/${groupId}/members`, payload, { headers: this.authSvc.authHeaders('json', true) });
+  }
+
+  bulkUpdateGroupMembers(groupId: string): Observable<void> {
+    const payload = this.membersUpdated();
+    return this.http.patch<void>(`${this.authSvc.apiUrl}/groups/${groupId}/members`, payload, { headers: this.authSvc.authHeaders('json', true) });
+  }
+
+  bulkRemoveGroupMembers(groupId: string): Observable<void> {
+    const payload = this.membersRemoved();
+    return this.http.delete<void>(`${this.authSvc.apiUrl}/groups/${groupId}/members`, {
+      headers: this.authSvc.authHeaders('json', true),
+      body: payload
+    });
   }
 
   // Titles
@@ -609,14 +672,31 @@ export class DashboardService {
     const uiSvc = this.uiSvc;
     if (!group) return;
     
-    this.selectedGroupDetail.set(group);
     uiSvc.drawerTitle.set(group.name);
     uiSvc.drawerContent.set(true);
     uiSvc.drawerContentType.set('groups');
+    
+    this.selectedGroupDetail.set(group);
     this.groupName.set(group.name);
     this.groupNameError.set('');
     this.groupDescription.set(group.description);
     this.selectedModel.set(group.default_model);
+
+    this.selectedUserId.set('');
+    this.groupPermissions.set(group.users);
+
+    this.fetchUsers().pipe(
+      catchError(err => {
+        this.uiSvc.showToast('Při načítání uživatelů se něco pokazilo. Zkuste stránku znovu načíst.', { type: 'error' });
+        console.error('Fetching users failed:', err);
+        throw err;
+      })
+    ).subscribe((res: User[]) => {
+      this.users.set(res);
+      this.availableUsers.set(res
+        .filter(u => !group.users.map(p => p._id).includes(u._id))
+        .map(u => ({ value: u._id, label: u.full_name })))
+    });
     
     if (this.authSvc.user()?.role === 'admin') {
       uiSvc.drawerButtons.set([
@@ -628,10 +708,16 @@ export class DashboardService {
           label: 'Uložit změny',
           primary: true,
           action: () => {
-            if (!this.groupChanged()) return;
             if (!uiSvc.drawerEditMode()) return;
             const group = this.selectedGroupDetail();
             if (!group) return;
+
+            const requests = [];
+            if (this.groupNonmembersDataChanged()) requests.push(this.updateGroup(group._id));
+            if (this.membersAdded().length) requests.push(this.bulkAddGroupMembers(group._id));
+            if (this.membersUpdated().length) requests.push(this.bulkUpdateGroupMembers(group._id));
+            if (this.membersRemoved().length) requests.push(this.bulkRemoveGroupMembers(group._id));
+            if (!requests.length) return;
 
             const groupName = this.groupName();
 
@@ -647,13 +733,21 @@ export class DashboardService {
               return;
             }
 
-            return this.updateGroup(group?._id ?? '').pipe(
+            const emptyUsers = this.groupPermissions().filter(u => !u.permission.length);
+            if (emptyUsers.length) {
+              this.userPermissionsError[emptyUsers[0]._id] = this.errors['userPermissionsEmpty'];
+              scrollToElement(document.getElementById(`permissions-row-${emptyUsers[0]._id}`) as HTMLElement);
+              return;
+            }
+
+            return forkJoin(requests).pipe(
               tap(() => {
                 this.groups.update(prev => prev.map(g => g._id === group?._id ? {
                   ...group,
                   name: this.groupName(),
                   description: this.groupDescription(),
-                  default_model: this.selectedModel()
+                  default_model: this.selectedModel(),
+                  users: this.groupPermissions()
                 } : g))
                 this.displayedGroups.set(this.groups());
                 this.selectedGroupDetail.set(null);
@@ -671,6 +765,56 @@ export class DashboardService {
     }
 
     uiSvc.openDrawer();
+  }
+
+  removeAllUsers(): void {
+    this.groupPermissions.set([]);
+    this.availableUsers.set(this.users().map(u => ({ value: u._id, label: u.full_name })));
+  }
+
+  removeFromGroup(userId: string): void {
+    this.groupPermissions.update(prev => prev.filter(u => u._id !== userId));
+    this.availableUsers.update(prev => 
+      this.users()
+        .filter(u => prev.map(p => p.value).includes(u._id) || u._id === userId)
+        .map(u => ({ value: u._id, label: u.full_name }))
+    );
+    this.groupPermissionsError[userId] = '';
+  }
+
+  onSelectUserUsed(used: boolean): void {
+    this.selectedUserUsed.set(used);
+  }
+
+  addUserToGroup(userId: string): void {
+    if (!this.selectedUserId()) {
+      this.selectedUserError.set(this.errors['selectedUserEmpty']);
+      return;
+    }
+    
+    this.groupPermissions.update(prev => [
+      {
+        _id: userId,
+        full_name: this.availableUsers().find(u => u.value === userId)?.label ?? '',
+        permission: []
+      },
+      ...prev
+    ]);
+    this.availableUsers.update(prev => prev.filter(option => option.value !== userId));
+    this.selectedUserId.set('');
+    this.selectedUserError.set('');
+  }
+
+  toggleUserPermission(userId: string, permissionType: PermissionType): void {
+    this.groupPermissions.update(prev => prev.map(u => u._id === userId
+      ? {
+        ...u,
+        permission: u.permission.includes(permissionType)
+          ? u.permission.filter(p => p !== permissionType)
+          : [ ...u.permission, permissionType ]
+      }
+      : u));
+    this.userPermissionsError[userId] = '';
   }
 
   // Title
@@ -714,13 +858,13 @@ export class DashboardService {
   openUserDetail(user: User | null): void {
     if (!user) return;
     const uiSvc = this.uiSvc;
-    
+
+    this.selectedUser.set(user);
     this.userNameError.set('');
     this.userEmailError.set('');
     this.selectedGroupError.set('');
     this.groupPermissionsError = {};
 
-    this.selectedUser.set(user);
     this.selectedGroupId.set('');
     this.userPermissions.set(user.permissions);
 
@@ -813,7 +957,7 @@ export class DashboardService {
     this.availableGroups.set(this.groups().map(g => ({ value: g._id, label: g.name })));
   }
 
-  removeFromGroup(groupId: string): void {
+  unassignGroupFromUser(groupId: string): void {
     this.userPermissions.update(prev => prev.filter(p => p.group_id !== groupId));
     this.availableGroups.update(prev => 
       this.groups()
@@ -827,7 +971,7 @@ export class DashboardService {
     this.selectedGroupUsed.set(used);
   }
 
-  addUserToGroup(groupId: string): void {
+  assignGroupToUser(groupId: string): void {
     if (!this.selectedGroupId()) {
       this.selectedGroupError.set(this.errors['selectedGroupEmpty']);
       return;
@@ -846,7 +990,7 @@ export class DashboardService {
     this.selectedGroupError.set('');
   }
 
-  togglePermission(groupId: string, permissionType: PermissionType): void {
+  toggleGroupPermission(groupId: string, permissionType: PermissionType): void {
     this.userPermissions.update(prev => prev.map(g => g.group_id === groupId
       ? {
         ...g,
