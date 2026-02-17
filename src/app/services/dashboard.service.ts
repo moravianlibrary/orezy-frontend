@@ -374,8 +374,9 @@ export class DashboardService {
     });
   }
 
-  deleteGroupDialog(group: Group | null): void {
+  deleteGroupDialog(/* group: Group | null */): void {
     const uiSvc = this.uiSvc;
+    const group = this.selectedGroupDetail();
     
     uiSvc.dialogTitle.set('Smazat skupinu');
     uiSvc.dialogDescription.set(`Opravdu chcete smazat skupinu${' ' + group?.name}?`);
@@ -494,8 +495,9 @@ export class DashboardService {
     this.files.update(prev => [ ...prev, ...Array.from(files) ]);
   }
 
-  deleteTitleDialog(title: Title | null): void {
+  deleteTitleDialog(/* title: Title | null */): void {
     const uiSvc = this.uiSvc;
+    const title = this.selectedTitle();
     
     uiSvc.dialogTitle.set('Smazat knihu');
     uiSvc.dialogDescription.set(`Opravdu chcete smazat knihu${' ' + title?.external_id}?`);
@@ -613,8 +615,9 @@ export class DashboardService {
     uiSvc.openDialog();
   }
 
-  deleteUserDialog(user: User | null): void {
+  deleteUserDialog(/* user: User | null */): void {
     const uiSvc = this.uiSvc;
+    const user = this.selectedUser();
     
     uiSvc.dialogTitle.set('Smazat uživatele');
     uiSvc.dialogDescription.set(`Opravdu chcete smazat uživatele${' ' + user?.full_name}?`);

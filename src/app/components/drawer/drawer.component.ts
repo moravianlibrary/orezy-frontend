@@ -54,4 +54,19 @@ export class DrawerComponent {
       });
     }
   }
+
+  drawerDeleteAction(): void {
+    const dashSvc = this.dashSvc;
+    switch (dashSvc.dashboardPage()) {
+      case 'groups':
+        dashSvc.deleteGroupDialog();
+        break;
+      case 'titles':
+        dashSvc.deleteTitleDialog();
+        break;
+      case 'users':
+        dashSvc.deleteUserDialog();
+        break;
+    }
+  }
 }

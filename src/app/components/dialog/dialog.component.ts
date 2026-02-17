@@ -34,17 +34,21 @@ export class DialogComponent {
     const open = this.open();
     if (open) {
       defer(() => {
+        let el;
+
         switch (this.uiSvc.dialogContentType()) {
           case 'new-group':
-            focusElement(this.newGroupName.nativeElement);
+            el = this.newGroupName.nativeElement;
             break;
           case 'new-title':
-            focusElement(this.newTitleName.nativeElement);
+            el = this.newTitleName.nativeElement;
             break;
           case 'new-user':
-            focusElement(this.newUserName.nativeElement);
+            el = this.newUserName.nativeElement;
             break;
         }
+
+        if (el) focusElement(el);
       }, 100);
     }
   });

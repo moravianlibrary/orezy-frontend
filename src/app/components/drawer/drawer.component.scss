@@ -43,8 +43,32 @@
     gap: var(--spacing-x4);
 
     .action {
+      display: flex;
+      justify-content: center;
+      align-items: center;
       cursor: pointer;
-      fill: var(--icon-gray);
+      
+      svg {
+        fill: var(--icon-gray);
+      }
+    }
+
+    .icon-button-actions {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: var(--spacing-x3);
+
+      .icon-button {
+        background-color: var(--bg-base);
+        padding: var(--spacing-x2);
+        border-radius: var(--spacing-x1);
+        border: 1px solid var(--border-tertiary-color);
+
+        svg {
+          fill: var(--icon-dark);
+        }
+      };
     }
   }
 }
