@@ -363,47 +363,6 @@
           flex-direction: column;
           gap: var(--spacing-x2);
 
-          // .checkboxes {
-          //   input {
-          //     appearance: none;
-          //     -webkit-appearance: none;
-          //     background-color: #fff;
-          //     margin: 0 8px 0 0;
-          //     min-width: 18px;
-          //     min-height: 18px;
-          //     border: 2px solid #ccc;
-          //     border-radius: 4px;
-          //     display: inline-grid;
-          //     place-content: center;
-          //     cursor: pointer;
-          //     transition: all 0.2s ease;
-
-          //     &::before {
-          //       content: "";
-          //       width: 10px;
-          //       height: 10px;
-          //       transform: scale(0);
-          //       transition: transform 0.2s ease-in-out;
-          //       box-shadow: inset 1em 1em $primary;
-          //       transform-origin: center;
-          //       border-radius: 2px;
-          //     }
-
-          //     &:checked::before {
-          //       transform: scale(1);
-          //     }
-              
-          //     &:hover {
-          //       border-color: $primary;
-          //     }
-
-          //     &:focus {
-          //       border-color: $primary;
-          //       outline: none;
-          //     }
-          //   }
-          // }
-
           .permission {
             position: relative;
             display: flex;

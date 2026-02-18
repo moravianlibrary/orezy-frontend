@@ -87,6 +87,7 @@ export interface UserInGroup {
 
 export interface ChangedGroupMember {
   user_id: string;
+  full_name?: string;
   user_permissions: PermissionType[];
 }
 

@@ -1,10 +1,10 @@
 import { HttpClient } from '@angular/common/http';
 import { computed, inject, Injectable, signal } from '@angular/core';
-import { catchError, forkJoin, from, map, mergeMap, Observable, switchMap, tap, toArray } from 'rxjs';
+import { catchError, forkJoin, from, map, mergeMap, Observable, of, switchMap, tap, toArray } from 'rxjs';
 import { AuthService } from './auth.service';
 import { ChangedGroupMember, DashboardPage, Group, GroupPage, Models, NewGroup, NewUser, Permission, PermissionType, SelectOption, Title, User, UserInGroup } from '../app.types';
 import { Router } from '@angular/router';
-import { checkEmailValidity, focusElement, scrollToElement } from '../utils/utils';
+import { checkEmailValidity, scrollToAndFocusElement, scrollToElement } from '../utils/utils';
 import { inlineErrors } from '../app.config';
 import { UiService } from './ui.service';
 
@@ -66,6 +66,16 @@ export class DashboardService {
     return permissions
       .filter(u => !group?.users.map(user => user._id).includes(u._id))
       .map(u => ({ user_id: u._id, user_permissions: u.permission }));
+  });
+  membersAddedWithFullname = computed<UserInGroup[]>(() => {
+    const group = this.selectedGroupDetail();
+    const permissions = this.groupPermissions();
+    const permissionsChanged = group?.users !== permissions;
+
+    if (!permissionsChanged) return [];
+    return permissions
+      .filter(u => !group?.users.map(user => user._id).includes(u._id))
+      .map(u => ({ _id: u._id, full_name: u.full_name, permission: u.permission }));
   });
   membersUpdated = computed<ChangedGroupMember[]>(() => {
     const group = this.selectedGroupDetail();
@@ -299,15 +309,21 @@ export class DashboardService {
           if (!newGroupName) {
             this.newGroupNameError.set(this.errors['groupNameEmpty']);
             const el = document.getElementById('new-group-name') as HTMLElement;
-            focusElement(el);
-            scrollToElement(el);
+            scrollToAndFocusElement(el);
             return;
           }
 
           if (this.groups().some(g => g.name === newGroupName)) {
             this.newGroupNameError.set(this.errors['groupNameExists']);
             const el = document.getElementById('new-group-name') as HTMLElement;
-            focusElement(el);
+            scrollToAndFocusElement(el);
+            return;
+          }
+
+          const emptyUsers = this.groupPermissions().filter(u => !u.permission.length);
+          if (emptyUsers.length) {
+            this.userPermissionsError[emptyUsers[0]._id] = this.errors['userPermissionsEmpty'];
+            const el = document.getElementById(`permissions-row-${emptyUsers[0]._id}`) as HTMLElement;
             scrollToElement(el);
             return;
           }
@@ -315,6 +331,10 @@ export class DashboardService {
           uiSvc.closeDialog();
           
           return this.createGroup().pipe(
+            switchMap((res: NewGroup) => this.membersAdded().length
+              ? this.bulkAddGroupMembers(res.id).pipe(map(() => res))
+              : of(res)
+            ),
             tap((res: NewGroup) => {
               const now = Date();
               const user = this.authSvc.user();
@@ -336,7 +356,7 @@ export class DashboardService {
                   _id: user?._id ?? '',
                   full_name: user?.full_name ?? '',
                   permission: permissions
-                }]
+                }, ...this.membersAddedWithFullname()]
               };
 
               this.groups.update(prev => [ ...prev, newGroup ]);
@@ -356,19 +376,28 @@ export class DashboardService {
       }
     ]);
 
+    this.newGroupName.set('');
+    this.newGroupDescription.set('');
+    this.newGroupNameError.set('');
+
     this.fetchModels().pipe(
+      tap((res: Models) => {
+        this.availableModels.set(res.available_models.map(m => ({ value: m, label: m })));
+        this.selectedModel.set(res.available_models[0]);
+        this.selectedModelUsed.set(false);
+      }),
+      switchMap(() => this.fetchUsers()),
       catchError(err => {
-        this.uiSvc.showToast('Nepodařilo se načíst dostupné AI modely. Zkuste dialogové okno zavřít a znovu otevřít.', { type: 'error' });
+        this.uiSvc.showToast('Nepodařilo se načíst data. Zkuste dialogové okno zavřít a znovu otevřít.', { type: 'error' });
         console.error(err);
         throw err;
       })
-    ).subscribe((res: Models) => {
-      this.newGroupName.set('');
-      this.newGroupDescription.set('');
-      this.newGroupNameError.set('');
-      this.availableModels.set(res.available_models.map(m => ({ value: m, label: m })));
-      this.selectedModel.set(res.available_models[0]);
-      this.selectedModelUsed.set(false);
+    ).subscribe((res: User[]) => {
+      this.users.set(res);
+      this.availableUsers.set(res.map(u => ({ value: u._id, label: u.full_name })));
+      this.selectedUserError.set('');
+      this.groupPermissions.set([]);
+      this.userPermissionsError = {};
       this.closeDrawer();
       uiSvc.openDialog();
     });
@@ -426,8 +455,7 @@ export class DashboardService {
           if (!newTitleName) {
             this.newTitleNameError.set(this.errors['titleNameEmpty']);
             const el = document.getElementById('new-title-name') as HTMLElement;
-            focusElement(el);
-            scrollToElement(el);
+            scrollToAndFocusElement(el);
             return;
           }
 
@@ -543,8 +571,7 @@ export class DashboardService {
           if (!this.newUserFullname()) {
             this.newUserNameError.set(this.errors['userNameEmpty']);
             const el = document.getElementById('new-user-fullname') as HTMLElement;
-            focusElement(el);
-            scrollToElement(el);
+            scrollToAndFocusElement(el);
             return;
           }
 
@@ -553,24 +580,21 @@ export class DashboardService {
           if (!newUserEmail) {
             this.newUserEmailError.set(this.errors['userEmailEmpty']);
             const el = document.getElementById('new-user-email') as HTMLElement;
-            focusElement(el);
-            scrollToElement(el);
+            scrollToAndFocusElement(el);
             return;
           }
 
           if (!checkEmailValidity(newUserEmail)) {
             this.newUserEmailError.set(this.errors['userEmailInvalid']);
             const el = document.getElementById('new-user-email') as HTMLElement;
-            focusElement(el);
-            scrollToElement(el);
+            scrollToAndFocusElement(el);
             return;
           }
 
           if (this.users().some(u => u.email === this.newUserEmail())) {
             this.newUserEmailError.set(this.errors['userEmailExists']);
             const el = document.getElementById('new-user-email') as HTMLElement;
-            focusElement(el);
-            scrollToElement(el);
+            scrollToAndFocusElement(el);
             return;
           }
           
@@ -726,20 +750,23 @@ export class DashboardService {
 
             if (!groupName) {
               this.groupNameError.set(this.errors['groupNameEmpty']);
-              scrollToElement(document.getElementById('new-group-name') as HTMLElement);
+              const el = document.getElementById('new-group-name') as HTMLElement;
+              scrollToAndFocusElement(el);
               return;
             }
 
             if (this.groups().filter(g => g !== group).some(g => g.name === groupName)) {
               this.groupNameError.set(this.errors['groupNameExists']);
-              scrollToElement(document.getElementById('new-group-name') as HTMLElement);
+              const el = document.getElementById('new-group-name') as HTMLElement;
+              scrollToAndFocusElement(el);
               return;
             }
 
             const emptyUsers = this.groupPermissions().filter(u => !u.permission.length);
             if (emptyUsers.length) {
               this.userPermissionsError[emptyUsers[0]._id] = this.errors['userPermissionsEmpty'];
-              scrollToElement(document.getElementById(`permissions-row-${emptyUsers[0]._id}`) as HTMLElement);
+              const el = document.getElementById(`permissions-row-${emptyUsers[0]._id}`) as HTMLElement;
+              scrollToElement(el);
               return;
             }
 
@@ -907,32 +934,37 @@ export class DashboardService {
 
           if (!userName) {
             this.userNameError.set(this.errors['userNameEmpty']);
-            scrollToElement(document.getElementById('user-fullname') as HTMLElement);
+            const el = document.getElementById('user-fullname') as HTMLElement;
+            scrollToAndFocusElement(el);
             return;
           }
 
           if (!userEmail) {
             this.userEmailError.set(this.errors['userEmailEmpty']);
-            scrollToElement(document.getElementById('user-email') as HTMLElement);
+            const el = document.getElementById('user-email') as HTMLElement;
+            scrollToAndFocusElement(el);
             return;
           }
 
           if (!checkEmailValidity(this.userEmail())) {
             this.userEmailError.set(this.errors['userEmailInvalid']);
-            scrollToElement(document.getElementById('user-email') as HTMLElement);
+            const el = document.getElementById('user-email') as HTMLElement;
+            scrollToAndFocusElement(el);
             return;
           }
 
           if (this.users().filter(u => u._id !== this.selectedUser()?._id).some(u => u.email === userEmail)) {
             this.userEmailError.set(this.errors['userEmailExists']);
-            scrollToElement(document.getElementById('user-email') as HTMLElement);
+            const el = document.getElementById('user-email') as HTMLElement;
+            scrollToAndFocusElement(el);
             return;
           }
 
           const emptyGroups = this.userPermissions().filter(g => !g.permission.length);
           if (emptyGroups.length) {
             this.groupPermissionsError[emptyGroups[0].group_id] = this.errors['groupPermissionsEmpty'];
-            scrollToElement(document.getElementById(`permissions-row-${emptyGroups[0].group_id}`) as HTMLElement);
+            const el = document.getElementById(`permissions-row-${emptyGroups[0].group_id}`) as HTMLElement;
+            scrollToElement(el);
             return;
           }
 

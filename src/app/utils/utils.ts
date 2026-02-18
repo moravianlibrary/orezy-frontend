@@ -77,6 +77,15 @@ export function scrollToElement(element: HTMLElement, timeout: number = 100): vo
   }, timeout);
 }
 
+export function scrollToAndFocusElement(element: HTMLElement, timeout: number = 100): void {
+  defer(() => {
+    if (element) {
+      (element as HTMLElement).scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      defer(() => focusElement(element), timeout + 100);
+    }
+  }, timeout);
+}
+
 
 /* ------------------------------
     PAGES
