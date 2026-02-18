@@ -54,7 +54,6 @@
 }
 
 .dialog-body {
-  padding: var(--spacing-x4);
   border-top: 1px solid var(--border-color);
   border-bottom: 1px solid var(--border-color);
   height: 100%;
@@ -87,8 +86,10 @@
 .settings-content-wrapper {
   display: flex;
   flex-direction: column;
-  padding: 0;
+  padding: var(--spacing-x4);
+  padding-bottom: 0;
   margin-block: -16px;
+  height: 100%;
 
   .settings-block {
     display: flex;
@@ -172,6 +173,10 @@
   SHORTCUTS DIALOG
 ------------------------------ */
 .shortcuts-content-wrapper {
+  padding: var(--spacing-x4);
+  height: 100%;
+  overflow-y: auto;
+  
   table {
     width: 100%;
     border: none;
@@ -207,6 +212,9 @@
   display: flex;
   flex-direction: column;
   gap: 14px;
+  padding: var(--spacing-x4);
+  height: 100%;
+  overflow-y: auto;
 
   .block {
     display: flex;

@@ -7,6 +7,7 @@ import { OverlayScrollbars } from 'overlayscrollbars';
   providedIn: 'root'
 })
 export class UiService {
+  private osInstance?: ReturnType<typeof OverlayScrollbars>;
   
   /* ------------------------------
     TOAST MESSAGES
@@ -54,7 +55,26 @@ export class UiService {
   openDialog(): void {
     this.dialogOpen.set(true);
     this.dialogOpened = true;
-    if (document.activeElement?.className !== 'main-wrapper' && document.querySelector('.main-wrapper')) focusMainWrapper();
+
+    defer(() => {
+      const dialogContentType = this.dialogContentType();
+      const id = ['settings'].includes(dialogContentType as string)
+        ? 'dialog-body'
+        : `${dialogContentType}-content-wrapper`;
+      const el = document.getElementById(id) as HTMLElement;
+      this.osInstance = OverlayScrollbars(el, {
+        overflow: { x: 'hidden', y: 'scroll' },
+        scrollbars: {
+          theme: 'os-theme-orezy',
+          autoHide: 'leave',
+          autoHideDelay: 250,
+          dragScroll: true,
+          clickScroll: true,
+        },
+      });
+      el.classList.remove('os-pending');
+      if (document.activeElement?.className !== 'main-wrapper' && document.querySelector('.main-wrapper')) focusMainWrapper();
+    }, 100);
   }
 
   closeDialog(): void {
@@ -73,8 +93,6 @@ export class UiService {
   drawerContentType = signal<DrawerContentType | null>(null);
   drawerDescription = signal<string | null>(null);
   drawerButtons = signal<DrawerButton[]>([]);
-
-  private osInstance?: ReturnType<typeof OverlayScrollbars>;
   
   openDrawer(): void {
     this.drawerOpen.set(true);

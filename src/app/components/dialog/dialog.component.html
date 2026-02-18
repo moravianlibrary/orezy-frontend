@@ -22,12 +22,12 @@
   </header>
 
   @if (uiSvc.dialogContent()) {
-    <section class="dialog-body">
+    <section id="dialog-body" class="dialog-body os-pending">
       @let canWriteTitle = authSvc.canWriteTitle();
 
       <!-- Setting -->
       @if (uiSvc.dialogContentType() === 'settings') {
-        <div class="settings-content-wrapper">
+        <div id="settings-content-wrapper" class="settings-content-wrapper os-pending">
           @if (canWriteTitle) {
             <div class="settings-block">
               <div class="settings-block-label">Zobrazení mřížky</div>
@@ -109,7 +109,7 @@
 
       <!-- Shortcuts -->
       @if (uiSvc.dialogContentType() === 'shortcuts') {
-        <div class="shortcuts-content-wrapper">
+        <div id="shortcuts-content-wrapper" class="shortcuts-content-wrapper os-pending">
           <table cellspacing="0" cellpadding="0">
             @if (canWriteTitle) {
               <tr><th>Vybrat výřez</th><td>1, 2</td></tr>
@@ -144,7 +144,7 @@
 
       <!-- New group -->
       @if (uiSvc.dialogContentType() === 'new-group') {
-        <div class="new-group-content-wrapper">
+        <div id="new-group-content-wrapper" class="new-group-content-wrapper os-pending">
           <div class="many-blocks">
             <div class="block">
               <label
@@ -357,7 +357,7 @@
 
       <!-- New title -->
       @if (uiSvc.dialogContentType() === 'new-title') {
-        <div class="new-title-content-wrapper">
+        <div id="new-title-content-wrapper" class="new-title-content-wrapper os-pending">
           <div class="block">
             <label class="above-input" for="new-title-name">
               NÁZEV KNIHY
@@ -416,7 +416,7 @@
 
       <!-- New user -->
       @if (uiSvc.dialogContentType() === 'new-user') {
-        <div class="new-user-content-wrapper">
+        <div id="new-user-content-wrapper" class="new-user-content-wrapper os-pending">
           <div class="block">
             <label>ZÁKLADNÍ ÚDAJE</label>
             <label for="new-user-fullname">
