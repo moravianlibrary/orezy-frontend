@@ -57,22 +57,20 @@ export class UiService {
     this.dialogOpened = true;
 
     defer(() => {
-      const dialogContentType = this.dialogContentType();
-      const id = ['settings'].includes(dialogContentType as string)
-        ? 'dialog-body'
-        : `${dialogContentType}-content-wrapper`;
-      const el = document.getElementById(id) as HTMLElement;
-      this.osInstance = OverlayScrollbars(el, {
-        overflow: { x: 'hidden', y: 'scroll' },
-        scrollbars: {
-          theme: 'os-theme-orezy',
-          autoHide: 'leave',
-          autoHideDelay: 250,
-          dragScroll: true,
-          clickScroll: true,
-        },
-      });
-      el.classList.remove('os-pending');
+      const el = document.getElementById('dialog-body') as HTMLElement;
+      if (el) {
+        this.osInstance = OverlayScrollbars(el, {
+          overflow: { x: 'hidden', y: 'scroll' },
+          scrollbars: {
+            theme: 'os-theme-orezy',
+            autoHide: 'leave',
+            autoHideDelay: 250,
+            dragScroll: true,
+            clickScroll: true,
+          },
+        });
+        el.classList.remove('os-pending');
+      }
       if (document.activeElement?.className !== 'main-wrapper' && document.querySelector('.main-wrapper')) focusMainWrapper();
     }, 100);
   }

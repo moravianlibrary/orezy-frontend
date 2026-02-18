@@ -118,7 +118,6 @@ export class DashboardService {
   selectedUser = signal<User | null>(null);
   newUserEmail = signal<string>('');
   newUserFullname = signal<string>('');
-  newUserPermissions = signal<Permission[]>([]);
   newUserNameError = signal<string>('');
   newUserEmailError = signal<string>('');
   userFullname = signal<string>('');
@@ -237,7 +236,7 @@ export class DashboardService {
   }
 
   createUser(): Observable<NewUser> {
-    const permissions = this.newUserPermissions();
+    const permissions = this.userPermissions();
     const payload = {
       email: this.newUserEmail(),
       full_name: this.newUserFullname(),
@@ -320,7 +319,7 @@ export class DashboardService {
             return;
           }
 
-          const emptyUsers = this.groupPermissions().filter(u => !u.permission.length);
+          const emptyUsers = this.groupPermissions().filter(g => !g.permission.length);
           if (emptyUsers.length) {
             this.userPermissionsError[emptyUsers[0]._id] = this.errors['userPermissionsEmpty'];
             const el = document.getElementById(`permissions-row-${emptyUsers[0]._id}`) as HTMLElement;
@@ -403,7 +402,7 @@ export class DashboardService {
     });
   }
 
-  deleteGroupDialog(/* group: Group | null */): void {
+  deleteGroupDialog(): void {
     const uiSvc = this.uiSvc;
     const group = this.selectedGroupDetail();
     
@@ -523,7 +522,7 @@ export class DashboardService {
     this.files.update(prev => [ ...prev, ...Array.from(files) ]);
   }
 
-  deleteTitleDialog(/* title: Title | null */): void {
+  deleteTitleDialog(): void {
     const uiSvc = this.uiSvc;
     const title = this.selectedTitle();
     
@@ -597,6 +596,14 @@ export class DashboardService {
             scrollToAndFocusElement(el);
             return;
           }
+
+          const emptyGroups = this.userPermissions().filter(u => !u.permission.length);
+          if (emptyGroups.length) {
+            this.groupPermissionsError[emptyGroups[0].group_id] = this.errors['groupPermissionsEmpty'];
+            const el = document.getElementById(`permissions-row-${emptyGroups[0].group_id}`) as HTMLElement;
+            scrollToElement(el);
+            return;
+          }
           
           uiSvc.closeDialog();
 
@@ -608,7 +615,7 @@ export class DashboardService {
                 full_name: this.newUserFullname(),
                 password: res.password,
                 role: 'user',
-                permissions: this.newUserPermissions()
+                permissions: this.userPermissions()
               };
 
               this.users.update(prev => [ ...prev, newUser ]);
@@ -616,7 +623,7 @@ export class DashboardService {
               this.selectedUser.set(newUser);
               this.newUserEmail.set('');
               this.newUserFullname.set('');
-              this.newUserPermissions.set([]);
+              this.userPermissions.set([]);
               this.newUserNameError.set('');
               this.newUserEmailError.set('');
             }),
@@ -632,14 +639,28 @@ export class DashboardService {
 
     this.newUserEmail.set('');
     this.newUserFullname.set('');
-    this.newUserPermissions.set([]);
+    this.userPermissions.set([]);
     this.newUserNameError.set('');
     this.newUserEmailError.set('');
-    this.closeDrawer();
-    uiSvc.openDialog();
+
+    this.fetchGroups().pipe(
+      catchError(err => {
+        this.uiSvc.showToast('Nepodařilo se načíst data. Zkuste dialogové okno zavřít a znovu otevřít.', { type: 'error' });
+        console.error(err);
+        throw err;
+      })
+    ).subscribe((res: Group[]) => {
+      this.groups.set(res);
+      this.availableGroups.set(res.map(g => ({ value: g._id, label: g.name })));
+      this.selectedGroupError.set('');
+      this.userPermissions.set([]);
+      this.groupPermissionsError = {};
+      this.closeDrawer();
+      uiSvc.openDialog();
+    });
   }
 
-  deleteUserDialog(/* user: User | null */): void {
+  deleteUserDialog(): void {
     const uiSvc = this.uiSvc;
     const user = this.selectedUser();
     
@@ -809,7 +830,7 @@ export class DashboardService {
         .filter(u => prev.map(p => p.value).includes(u._id) || u._id === userId)
         .map(u => ({ value: u._id, label: u.full_name }))
     );
-    this.groupPermissionsError[userId] = '';
+    this.userPermissionsError[userId] = '';
   }
 
   onSelectUserUsed(used: boolean): void {
