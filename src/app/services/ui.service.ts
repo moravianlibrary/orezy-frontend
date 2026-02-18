@@ -1,6 +1,6 @@
 import { Injectable, signal } from '@angular/core';
 import { DialogButton, DialogContentType, DrawerButton, DrawerContentType, Toast, ToastType } from '../app.types';
-import { defer, focusMainWrapper } from '../utils/utils';
+import { defer, focusElement, focusMainWrapper } from '../utils/utils';
 import { OverlayScrollbars } from 'overlayscrollbars';
 
 @Injectable({
@@ -109,6 +109,7 @@ export class UiService {
         },
       });
       el.classList.remove('os-pending');
+      focusElement(el);
     }, 100);
   }
 

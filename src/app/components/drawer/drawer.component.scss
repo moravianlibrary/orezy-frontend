@@ -80,6 +80,10 @@
   height: 100%;
   overflow-y: auto;
 
+  &:focus {
+    outline: none;
+  }
+
   .content-wrapper {
     display: flex;
     flex-direction: column;

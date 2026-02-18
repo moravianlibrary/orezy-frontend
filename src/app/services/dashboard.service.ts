@@ -1,10 +1,10 @@
 import { HttpClient } from '@angular/common/http';
-import { computed, inject, Injectable, signal } from '@angular/core';
+import { computed, inject, Injectable, signal, WritableSignal } from '@angular/core';
 import { catchError, forkJoin, from, map, mergeMap, Observable, of, switchMap, tap, toArray } from 'rxjs';
 import { AuthService } from './auth.service';
 import { ChangedGroupMember, DashboardPage, Group, GroupPage, Models, NewGroup, NewUser, Permission, PermissionType, SelectOption, Title, User, UserInGroup } from '../app.types';
 import { Router } from '@angular/router';
-import { checkEmailValidity, scrollToAndFocusElement, scrollToElement } from '../utils/utils';
+import { checkEmailValidity, focusMainWrapper, scrollToAndFocusElement, scrollToElement } from '../utils/utils';
 import { inlineErrors } from '../app.config';
 import { UiService } from './ui.service';
 
@@ -1136,5 +1136,100 @@ export class DashboardService {
           ? this.errors['userEmailExists']
           : ''
     );
+  }
+
+
+  /* ------------------------------
+    KEYBOARD SHORTCUTS
+  ------------------------------ */
+  private isHandledKey(key: string): boolean {
+    return [
+      '+', 'ě', 'Ě', '1', '2',                              // Open groups or users
+      'Escape',                                             // Close dialog or drawer
+      'p', 'P',                                             // Add group, title or user
+      'ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown',    // Prev/next table row detail
+    ].includes(key);
+  }
+
+  onKeyDown(event: KeyboardEvent): void {
+    const key = event.key;
+    if (!this.isHandledKey(key)) return;
+    const dialogOpen = this.uiSvc.dialogOpen();
+    const drawerOpen = this.uiSvc.drawerOpen();
+    const dashboardPage = this.dashboardPage();
+
+    const el = (event.target as HTMLElement);
+    if (el.tagName === 'INPUT') {
+      if (key !== 'Escape') return;
+      focusMainWrapper();
+      return;
+    }
+
+    event.preventDefault();
+    event.stopPropagation();
+
+    // Open groups or users
+    if ((key === '+' || key === 'ě' || key === 'Ě' || key === '1' || key === '2') && !dialogOpen) {
+      const isGroupKey = key === '+' || key === '1';
+      this.router.navigate([isGroupKey ? '/groups' : '/users']);
+    }
+
+    // Close dialog or drawer
+    if (key === 'Escape') {
+      if (dialogOpen) {
+        this.uiSvc.closeDialog();
+        return;
+      }
+
+      if (drawerOpen) {
+        this.closeDrawer();
+        return;
+      }
+    }
+
+    // Add group, title or user
+    if (['p', 'P'].includes(key) && !dialogOpen) {
+      switch (dashboardPage) {
+        case 'groups':
+          this.createGroupDialog();
+          break;
+        case 'titles':
+          this.createTitleDialog();
+          break;
+        case 'users':
+          this.createUserDialog();
+          break;
+      }
+    }
+
+    // Prev/next table row detail
+    if (['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].includes(key) && drawerOpen && !dialogOpen) {
+      let table: WritableSignal<any[]>;
+      let selectedItem: WritableSignal<any>;
+
+      switch (dashboardPage) {
+        case 'groups':
+          table = this.displayedGroups;
+          selectedItem = this.selectedGroupDetail;
+          break;
+        case 'titles':
+          table = this.displayedTitles;
+          selectedItem = this.selectedTitle;
+          break;
+        case 'users':
+          table = this.displayedUsers;
+          selectedItem = this.selectedUser;
+          break;
+      }
+      
+
+      if (table().length <= 1) return;
+
+      const selectedIndex = table().findIndex(row => row._id === selectedItem()?._id)
+      const prevKeys = new Set(['ArrowLeft', 'ArrowUp']);
+      selectedItem.set(table()[prevKeys.has(key)
+        ? (selectedIndex > 0 ? selectedIndex - 1 : 0)
+        : (selectedIndex < table().length - 1 ? selectedIndex + 1 : selectedIndex)]);
+    }
   }
 }

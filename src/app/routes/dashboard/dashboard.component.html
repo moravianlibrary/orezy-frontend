@@ -1,14 +1,21 @@
-<app-left-panel-groups></app-left-panel-groups>
-<app-main-groups></app-main-groups>
-@if (uiSvc.drawerOpen()) {
-  <div
-    class="drawer-backdrop"
-    (click)="dashSvc.closeDrawer()"
-    aria-hidden="true"
-  ></div>
-}
-<app-drawer />
-<app-dialog
-  [open]="uiSvc.dialogOpen()"
-  (closed)="uiSvc.closeDialog()"
-/>
+<div 
+  #mainWrapper
+  class="main-wrapper"
+  (keydown)="dashSvc.onKeyDown($event)"
+  tabindex="0"
+>
+  <app-left-panel-groups></app-left-panel-groups>
+  <app-main-groups></app-main-groups>
+  @if (uiSvc.drawerOpen()) {
+    <div
+      class="drawer-backdrop"
+      (click)="dashSvc.closeDrawer()"
+      aria-hidden="true"
+    ></div>
+  }
+  <app-drawer />
+  <app-dialog
+    [open]="uiSvc.dialogOpen()"
+    (closed)="uiSvc.closeDialog()"
+  />
+</div>
