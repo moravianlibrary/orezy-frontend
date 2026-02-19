@@ -24,6 +24,7 @@ export class UploadComponent {
     const input = event.target as HTMLInputElement;
     if (input.files?.length) {
       this.filesSelected.emit(input.files);
+      input.value = '';
     }
   }
 
