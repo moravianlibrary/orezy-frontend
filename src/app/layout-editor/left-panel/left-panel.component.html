@@ -80,23 +80,26 @@
   </div>
 </div>
 
+<!-- Thumbnails -->
 @if (edtSvc.displayedImagesFinal().length) {
-  <div class="thumbnails-wrapper">
-    @for (image of edtSvc.displayedImagesFinal(); track image._id) {
-      @let mainImageItem = edtSvc.mainImageItem();
-      <div
-        class="thumbnail-wrapper"
-        [class.selected]="mainImageItem._id === image._id"
-        (click)="clickThumbnail(image)"
-      >
-        <img #lazyImg [attr.data-id]="image._id" />
-        <span
-          class="status-icon"
-          [ngClass]="getStatus(image)"
-          [attr.data-tooltip]="getStatusIconTooltip(image)"
-        ></span>
-      </div>
-    }
+  <div class="thumbnails-scroll os-pending" #thumbnailsScroll>
+    <div class="thumbnails-wrapper">
+      @for (image of edtSvc.displayedImagesFinal(); track image._id) {
+        @let mainImageItem = edtSvc.mainImageItem();
+        <div
+          class="thumbnail-wrapper"
+          [class.selected]="mainImageItem._id === image._id"
+          (click)="clickThumbnail(image)"
+        >
+          <img #lazyImg [attr.data-id]="image._id" />
+          <span
+            class="status-icon"
+            [ngClass]="getStatus(image)"
+            [attr.data-tooltip]="getStatusIconTooltip(image)"
+          ></span>
+        </div>
+      }
+    </div>
   </div>
 } @else {
   @if (edtSvc.loadingLeft) { <app-loader /> }

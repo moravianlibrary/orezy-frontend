@@ -1,4 +1,4 @@
-import { Component, ElementRef, inject, QueryList, ViewChildren } from '@angular/core';
+import { Component, ElementRef, inject, QueryList, ViewChild, ViewChildren } from '@angular/core';
 import { EditorService } from '../../services/editor.service';
 import { ImageItem } from '../../app.types';
 import { LoaderComponent } from '../../components/loader/loader.component';
@@ -7,6 +7,8 @@ import { MenuComponent } from "../../components/menu/menu.component";
 import { flagMessages } from '../../app.config';
 import { AuthService } from '../../services/auth.service';
 import { DashboardService } from '../../services/dashboard.service';
+import { OverlayScrollbars } from 'overlayscrollbars';
+import { defer } from '../../utils/utils';
 // import { Subscription } from 'rxjs';
 
 @Component({
@@ -19,6 +21,9 @@ export class LeftPanelComponent {
   edtSvc = inject(EditorService);
   dashSvc = inject(DashboardService);
   authSvc = inject(AuthService);
+
+  @ViewChild('thumbnailsScroll', { static: false }) thumbnailsScroll!: ElementRef<HTMLDivElement>;
+  private osInstance?: ReturnType<typeof OverlayScrollbars>;
 
   pageImagesNumber(number: number): number {
     return this.edtSvc.displayedImages().filter(img => img.pages.length === number).length;
@@ -69,6 +74,21 @@ export class LeftPanelComponent {
   ngAfterViewInit(): void {
     // this.observeNewImages();
     /* this.imagesSub =  */this.images.changes.subscribe(() => this.observeNewImages());
+
+    defer(() => {
+      const el = this.thumbnailsScroll?.nativeElement;
+      this.osInstance = OverlayScrollbars(el, {
+        overflow: { x: 'hidden', y: 'scroll' },
+        scrollbars: {
+          theme: 'os-theme-orezy',
+          autoHide: 'leave',
+          autoHideDelay: 250,
+          dragScroll: true,
+          clickScroll: true,
+        },
+      });
+      el.classList.remove('os-pending');
+    }, 100);
   }
 
   ngOnDestroy(): void {
@@ -124,7 +144,6 @@ export class LeftPanelComponent {
 
     return 'success';
   }
-
 
   getStatusIconTooltip(image: ImageItem): string {
     if (image.edited) {

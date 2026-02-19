@@ -61,8 +61,8 @@
 
   .padding-wrapper {
     padding: var(--spacing-x4);
-    padding-bottom: 0;
-    height: 100%;
+    // padding-bottom: 0;
+    // height: 100%;
   }
 }
 
@@ -446,5 +446,11 @@
     .new-user-content-wrapper {
       height: 434px;
     }
+  }
+}
+
+@media (min-height: 750px) {
+  .dialog-body:has(.settings-content-wrapper) {
+    min-height: 610px;
   }
 }
