@@ -1,5 +1,3 @@
-import { B } from '@angular/cdk/keycodes';
-
 /* ------------------------------
     DASHBOARD
   ------------------------------ */
@@ -96,6 +94,11 @@ export interface NewUser {
   password: string;
 }
 
+export interface NewPassword {
+  detail?: string;
+  new_password: string;
+}
+
 export interface Position {
   x: number;
   y: number;
@@ -182,7 +185,7 @@ export interface DrawerButton {
 }
 
 // Dialog
-export type DialogContentType = 'settings' | 'shortcuts' | 'new-group' | 'new-title' | 'new-user' | 'new-user-password';
+export type DialogContentType = 'settings' | 'shortcuts' | 'new-group' | 'new-title' | 'new-user' | 'new-password';
 export interface DialogButton {
   label: string;
   primary?: boolean;

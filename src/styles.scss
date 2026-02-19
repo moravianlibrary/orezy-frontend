@@ -192,6 +192,15 @@ html, body {
   pointer-events: none;
 }
 
+.primary.soft {
+  @include font(500, var(--font-size-x1-5), var(--spacing-x4), var(--primary));
+  background-color: var(--bg-selected);
+
+  svg {
+    fill: var(--primary);
+  }
+}
+
 .primary.disabled {
   color: var(--text-white) !important;
   background-color: var(--primary-disabled) !important;

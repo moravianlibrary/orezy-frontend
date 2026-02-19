@@ -69,7 +69,7 @@ export class DialogComponent {
   private copiedTimer!: number;
 
   copy(): void {
-    navigator.clipboard.writeText(this.dashSvc.newUserPassword());
+    navigator.clipboard.writeText(this.dashSvc.newPassword());
 
     this.copied = true;
     window.clearTimeout(this.copiedTimer);

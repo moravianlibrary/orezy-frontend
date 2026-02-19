@@ -2,7 +2,7 @@ import { HttpClient } from '@angular/common/http';
 import { computed, inject, Injectable, signal, WritableSignal } from '@angular/core';
 import { catchError, forkJoin, from, map, mergeMap, Observable, of, switchMap, tap, toArray } from 'rxjs';
 import { AuthService } from './auth.service';
-import { ChangedGroupMember, DashboardPage, Group, GroupPage, Models, NewGroup, NewUser, Permission, PermissionType, SelectOption, Title, User, UserInGroup } from '../app.types';
+import { ChangedGroupMember, DashboardPage, Group, GroupPage, Models, NewGroup, NewPassword, NewUser, Permission, PermissionType, SelectOption, Title, User, UserInGroup } from '../app.types';
 import { Router } from '@angular/router';
 import { checkEmailValidity, defer, focusMainWrapper, scrollToAndFocusElement, scrollToElement } from '../utils/utils';
 import { inlineErrors } from '../app.config';
@@ -120,7 +120,7 @@ export class DashboardService {
   newUserFullname = signal<string>('');
   newUserNameError = signal<string>('');
   newUserEmailError = signal<string>('');
-  newUserPassword = signal<string>('');
+  newPassword = signal<string>('');
   userFullname = signal<string>('');
   userEmail = signal<string>('');
   userPermissions = signal<Permission[]>([]);
@@ -259,6 +259,10 @@ export class DashboardService {
     };
 
     return this.http.patch<User>(`${this.authSvc.apiUrl}/users/${userId}`, payload, { headers: this.authSvc.authHeaders('json', true) });
+  }
+
+  resetPassword(userId: string): Observable<NewPassword> {
+    return this.http.patch<NewPassword>(`${this.authSvc.apiUrl}/users/${userId}/reset-password`, {}, { headers: this.authSvc.authHeaders() });
   }
 
 
@@ -623,7 +627,7 @@ export class DashboardService {
 
           return this.createUser().pipe(
             tap((res: NewUser) => {
-              this.newUserPassword.set(res.password);
+              this.newPassword.set(res.password);
 
               const newUser: User = {
                 _id: res.id,
@@ -648,15 +652,15 @@ export class DashboardService {
               
               uiSvc.dialogTitle.set('Nový uživatel');
               uiSvc.dialogContent.set(true);
-              uiSvc.dialogContentType.set('new-user-password');
+              uiSvc.dialogContentType.set('new-password');
               uiSvc.dialogButtons.set([{
                 label: 'Rozumím',
                 primary: true,
-                action: () => this.uiSvc.closeDialog()
+                action: () => uiSvc.closeDialog()
               }]);
             }),
             catchError(err => {
-              this.uiSvc.showToast('Nepodařilo se vytvořit uživatele. Zkuste to znovu.', { type: 'error' });
+              uiSvc.showToast('Nepodařilo se vytvořit uživatele. Zkuste to znovu.', { type: 'error' });
               console.error(err);
               throw err;
             })
@@ -719,6 +723,33 @@ export class DashboardService {
     ])
 
     uiSvc.openDialog();
+  }
+
+  resetPasswordDialog(userId: string): void {
+    const uiSvc = this.uiSvc;
+    
+    this.resetPassword(userId).pipe(
+      catchError(err => {
+        uiSvc.showToast('Při generování nového hesla se něco pokazilo. Zkuste to znovu.', { type: 'error' });
+        console.error(err);
+        throw err;
+      })
+    ).subscribe((res: NewPassword) => {
+      this.newPassword.set(res.new_password);
+    
+      uiSvc.dialogTitle.set('Nové heslo');
+      uiSvc.dialogContent.set(true);
+      uiSvc.dialogContentType.set('new-password');
+      uiSvc.dialogButtons.set([
+        {
+          label: 'Rozumím',
+          primary: true,
+          action: () => uiSvc.closeDialog()
+        }
+      ])
+
+      uiSvc.openDialog();
+    });
   }
 
 

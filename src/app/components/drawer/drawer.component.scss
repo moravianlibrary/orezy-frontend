@@ -183,6 +183,12 @@
         @include font(400, var(--font-size-x1-5), var(--spacing-x6), var(--text-destructive));
       }
 
+      .reset-password {
+        width: fit-content;
+        padding-inline: var(--spacing-x4);
+        margin-top: var(--spacing-x1);
+      }
+
       .copy-wrap {
         position: relative;
         display: inline-flex;

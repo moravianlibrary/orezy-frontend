@@ -616,7 +616,7 @@
           </div>
         }
 
-        @if (uiSvc.dialogContentType() === 'new-user-password') {
+        @if (uiSvc.dialogContentType() === 'new-password') {
           <div class="new-user-password-content-wrapper">
             <div class="block">
               <div class="warning">
@@ -643,7 +643,7 @@
                   id="new-user-password"
                   name="new-user-password"
                   type="text"
-                  [value]="dashSvc.newUserPassword()"
+                  [value]="dashSvc.newPassword()"
                   readonly
                 />
                 <span class="copy-wrap">
