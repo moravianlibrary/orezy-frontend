@@ -534,8 +534,7 @@
         <div class="block">
           <div class="label">NAPOSLEDY ZMĚNĚNO</div>
           <div class="value date-time">
-            <!-- @let modified = getDate(user?.modified_at ?? ''); -->
-             @let modified = ['již', 'brzy'];
+            @let modified = getDate(user?.modified_at ?? '');
             <span class="date">{{ modified[0] }}</span>{{ ' ' }}
             <span class="time">{{ modified[1] }}</span>
           </div>
