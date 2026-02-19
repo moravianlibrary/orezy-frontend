@@ -79,7 +79,7 @@ export class MainComponent {
                   this.dashSvc.selectedGroupPage.set(res);
                   this.dashSvc.titles.set(res.titles);
                   this.dashSvc.displayedTitles.set(res.titles);
-                  this.title.setTitle(`Skupina: ${res.name} | Skeny`);
+                  this.title.setTitle(`Skupina: ${res.name} | CROPILOT`);
                   
                   this.authSvc.canReadTitle.set(false);
                   if (this.authSvc.user()?.permissions.find(group => group.group_id === group_id && group.permission.includes('read_title'))) this.authSvc.canReadTitle.set(true);
