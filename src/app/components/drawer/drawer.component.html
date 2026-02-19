@@ -562,6 +562,9 @@
             }
           </div>
           @if (!uiSvc.drawerEditMode()) {
+            @if (!user?.permissions?.length) {
+              <p class="no-results">Uživatel není v žádných skupinách</p>
+            }
             @for (group of user?.permissions; track group.group_id) {
               <div class="permissions-row not-edit">
                 <span class="name">{{ group.group_name }}</span>

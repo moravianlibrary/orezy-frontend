@@ -477,6 +477,11 @@
     .block.permissions {
       gap: var(--spacing-x2);
 
+      .no-results {
+        @include font(400, var(--font-size-x2), var(--spacing-x4), var(--text-base));
+        font-style: italic;
+      }
+
       .permission-error {
         margin-top: -4px;
       }
