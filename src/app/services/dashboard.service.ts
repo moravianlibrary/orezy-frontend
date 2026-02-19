@@ -120,6 +120,7 @@ export class DashboardService {
   newUserFullname = signal<string>('');
   newUserNameError = signal<string>('');
   newUserEmailError = signal<string>('');
+  newUserPassword = signal<string>('');
   userFullname = signal<string>('');
   userEmail = signal<string>('');
   userPermissions = signal<Permission[]>([]);
@@ -619,18 +620,19 @@ export class DashboardService {
             scrollToElement(el);
             return;
           }
-          
-          uiSvc.closeDialog();
 
           return this.createUser().pipe(
             tap((res: NewUser) => {
+              this.newUserPassword.set(res.password);
+
               const newUser: User = {
                 _id: res.id,
                 email: this.newUserEmail(),
                 full_name: this.newUserFullname(),
                 password: res.password,
                 role: 'user',
-                permissions: this.userPermissions()
+                permissions: this.userPermissions(),
+                modified_at: Date()
               };
 
               this.searchUsers.set('');
@@ -642,13 +644,23 @@ export class DashboardService {
               this.userPermissions.set([]);
               this.newUserNameError.set('');
               this.newUserEmailError.set('');
+              this.openUserDetail(this.selectedUser());
+              
+              uiSvc.dialogTitle.set('Nový uživatel');
+              uiSvc.dialogContent.set(true);
+              uiSvc.dialogContentType.set('new-user-password');
+              uiSvc.dialogButtons.set([{
+                label: 'Rozumím',
+                primary: true,
+                action: () => this.uiSvc.closeDialog()
+              }]);
             }),
             catchError(err => {
               this.uiSvc.showToast('Nepodařilo se vytvořit uživatele. Zkuste to znovu.', { type: 'error' });
               console.error(err);
               throw err;
             })
-          ).subscribe(() => this.openUserDetail(this.selectedUser()))
+          ).subscribe();
         }
       }
     ])

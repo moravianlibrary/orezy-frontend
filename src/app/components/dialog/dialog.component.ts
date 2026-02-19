@@ -65,6 +65,17 @@ export class DialogComponent {
   filterPageNumberStartDict: Record<PageNumberType, string> = filterPageNumberStartDict;
   filterPageNumberStartDictKeys = Object.keys(filterPageNumberStartDict) as PageNumberType[];
 
+  copied: boolean = false;
+  private copiedTimer!: number;
+
+  copy(): void {
+    navigator.clipboard.writeText(this.dashSvc.newUserPassword());
+
+    this.copied = true;
+    window.clearTimeout(this.copiedTimer);
+    this.copiedTimer = window.setTimeout(() => this.copied = false, 1200);
+  }
+
   close(): void {
     this.closed.emit();
   }
