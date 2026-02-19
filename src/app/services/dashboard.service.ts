@@ -4,7 +4,7 @@ import { catchError, forkJoin, from, map, mergeMap, Observable, of, switchMap, t
 import { AuthService } from './auth.service';
 import { ChangedGroupMember, DashboardPage, Group, GroupPage, Models, NewGroup, NewUser, Permission, PermissionType, SelectOption, Title, User, UserInGroup } from '../app.types';
 import { Router } from '@angular/router';
-import { checkEmailValidity, focusMainWrapper, scrollToAndFocusElement, scrollToElement } from '../utils/utils';
+import { checkEmailValidity, defer, focusMainWrapper, scrollToAndFocusElement, scrollToElement } from '../utils/utils';
 import { inlineErrors } from '../app.config';
 import { UiService } from './ui.service';
 
@@ -716,19 +716,22 @@ export class DashboardService {
   closeDrawer(): void {
     this.uiSvc.closeDrawer();
     
-    switch (this.dashboardPage()) {
-      case 'groups':
-        this.selectedGroupDetail.set(null);
-        break;
-      case 'titles':
-        this.selectedTitle.set(null);
-        break;
-      case 'users':
-        this.selectedUser.set(null);
-        break;
-      default:
-        break;
-    }
+    defer(() => {
+      if (this.uiSvc.drawerOpen()) return;
+      switch (this.dashboardPage()) {
+        case 'groups':
+          this.selectedGroupDetail.set(null);
+          break;
+        case 'titles':
+          this.selectedTitle.set(null);
+          break;
+        case 'users':
+          this.selectedUser.set(null);
+          break;
+        default:
+          break;
+      }
+    }, 300);
   }
 
   // Group

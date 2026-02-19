@@ -115,6 +115,6 @@ export class UiService {
 
   closeDrawer(): void {
     this.drawerOpen.set(false);
-    this.drawerEditMode.set(false);
+    defer(() => this.drawerEditMode.set(false), 300);
   }
 }
