@@ -9,6 +9,7 @@
 
 :host {
   min-width: 250px;
+  height: 100%;
   flex-basis: 250px;
   flex: 1;
   display: flex;
@@ -83,6 +84,7 @@
 
 .thumbnails-scroll {
   width: 100%;
+  height: 100%;
 }
 
 .thumbnails-wrapper {
@@ -92,14 +94,15 @@
   padding: var(--spacing-x4);
   padding-top: var(--spacing-x5);
   width: 100%;
-  // overflow-y: auto;
+  height: 100%;
+  // overflow-y: hidden;
 }
 
 .thumbnail-wrapper {
   display: flex;
   justify-content: center;
   align-items: center;
-  height: 100px;
+  min-height: 100px;
   width: 100%;
   background-color: var(--bg-bright);
   border: 1px solid var(--border-color);

@@ -62,28 +62,38 @@ export function focusMainWrapper(): void {
   focusElement(el);
 }
 
-export function focusElement(el: HTMLElement, delay: number = 0): void {
-  if (el) defer(() => el.focus(), delay);
+export function focusElement(el: HTMLElement, delay: number = 0, preventScroll: boolean = false): void {
+  if (el) {
+    if (delay < 0) {
+      el.focus({ preventScroll: preventScroll });
+      return;
+    }
+
+    defer(() => el.focus({ preventScroll: preventScroll }), delay);
+  }
 }
 
 export function scrollToSelectedImage(): void {
-  const element = document.querySelector('.thumbnail-wrapper.selected') as HTMLElement;
-  scrollToElement(element);
+  defer(() => {
+    const element = document.querySelector('.thumbnail-wrapper.selected') as HTMLElement;
+    scrollToElement(element, -1);
+  }, 100);
 }
 
 export function scrollToElement(element: HTMLElement, timeout: number = 100): void {
+  if (timeout < 0 && element) {
+    (element as HTMLElement).scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    return;
+  }
+  
   defer(() => {
     if (element) (element as HTMLElement).scrollIntoView({ behavior: 'smooth', block: 'nearest' });
   }, timeout);
 }
 
-export function scrollToAndFocusElement(element: HTMLElement, timeout: number = 100): void {
-  defer(() => {
-    if (element) {
-      (element as HTMLElement).scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-      defer(() => focusElement(element), timeout + 100);
-    }
-  }, timeout);
+export function scrollToAndFocusElement(element: HTMLElement): void {
+  scrollToElement(element, -1);
+  focusElement(element, -1, true);
 }
 
 
