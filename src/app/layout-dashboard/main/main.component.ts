@@ -166,15 +166,6 @@ export class MainComponent {
     return `Celkem ${length} skupin${length === 1 ? 'a' : [2, 3, 4].includes(length) ? 'y' : '' }`;
   }
 
-  filterGroups(): void {
-    const searchGroups = this.dashSvc.searchGroups();
-    this.dashSvc.displayedGroups.set(this.dashSvc.groups().filter(g => 
-      g.name.toLowerCase().includes(searchGroups)
-      || g.description.toLowerCase().includes(searchGroups)
-      || g._id.toLowerCase().includes(searchGroups)
-    ));
-  }
-
   getUsersShort(group: Group): UserInGroup[] {
     return group.users?.slice(0, this.maxUsers) ?? [];
   }

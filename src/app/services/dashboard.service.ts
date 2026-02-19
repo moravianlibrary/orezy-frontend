@@ -288,6 +288,19 @@ export class DashboardService {
 
 
   /* ------------------------------
+    SEARCH INPUT
+  ------------------------------ */
+  filterGroups(): void {
+    const searchGroups = this.searchGroups();
+    this.displayedGroups.set(this.groups().filter(g => 
+      g.name.toLowerCase().includes(searchGroups)
+      || g.description.toLowerCase().includes(searchGroups)
+      || g._id.toLowerCase().includes(searchGroups)
+    ));
+  }
+
+
+  /* ------------------------------
     DIALOGS
   ------------------------------ */
   // Group
@@ -358,8 +371,9 @@ export class DashboardService {
                 }, ...this.membersAddedWithFullname()]
               };
 
+              this.searchGroups.set('');
               this.groups.update(prev => [ ...prev, newGroup ]);
-              this.displayedGroups.set(this.groups());
+              this.displayedGroups.set(this.groups());;
               this.selectedGroupDetail.set(newGroup);
               this.newGroupName.set('');
               this.newGroupDescription.set('');
@@ -479,6 +493,7 @@ export class DashboardService {
                 state: 'scheduled'
               };
 
+              this.searchTitles.set('');
               this.titles.update(prev => [ newTitle, ...prev ]);
               this.displayedTitles.set(this.titles());
 
@@ -618,6 +633,7 @@ export class DashboardService {
                 permissions: this.userPermissions()
               };
 
+              this.searchUsers.set('');
               this.users.update(prev => [ ...prev, newUser ]);
               this.displayedUsers.set(this.users());
               this.selectedUser.set(newUser);
@@ -793,6 +809,7 @@ export class DashboardService {
 
             return forkJoin(requests).pipe(
               tap(() => {
+                this.searchGroups.set('');
                 this.groups.update(prev => prev.map(g => g._id === group?._id ? {
                   ...group,
                   name: this.groupName(),
@@ -991,6 +1008,7 @@ export class DashboardService {
 
           return this.updateUser(this.selectedUser()?._id ?? '').pipe(
             tap((res: User) => {
+              this.searchUsers.set('');
               this.users.update(prev => prev.map(u => u._id === res._id ? res : u));
               this.displayedUsers.set(this.users());
               this.selectedUser.set(null);

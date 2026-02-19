@@ -20,7 +20,7 @@
             type="text"
             placeholder="Hledat skupinu"
             [(ngModel)]="dashSvc.searchGroups"
-            (input)="filterGroups()"
+            (input)="dashSvc.filterGroups()"
           />
         </label>
         @if (isAdmin) {
