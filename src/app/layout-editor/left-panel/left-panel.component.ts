@@ -88,7 +88,7 @@ export class LeftPanelComponent {
         },
       });
       el.classList.remove('os-pending');
-    }, 100);
+    }, 500);
   }
 
   ngOnDestroy(): void {
