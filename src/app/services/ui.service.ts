@@ -1,6 +1,6 @@
 import { Injectable, signal } from '@angular/core';
 import { DialogButton, DialogContentType, DrawerButton, DrawerContentType, Toast, ToastType } from '../app.types';
-import { defer, focusElement, focusMainWrapper } from '../utils/utils';
+import { defer, focusElement, focusMainWrapper, waitForElement } from '../utils/utils';
 import { OverlayScrollbars } from 'overlayscrollbars';
 
 @Injectable({
@@ -52,27 +52,23 @@ export class UiService {
   dialogDescription = signal<string | null>(null);
   dialogButtons = signal<DialogButton[]>([]);
   
-  openDialog(): void {
+  async openDialog(): Promise<void> {
     this.dialogOpen.set(true);
     this.dialogOpened = true;
 
-    defer(() => {
-      const el = document.getElementById('dialog-body') as HTMLElement;
-      if (el) {
-        this.osInstance = OverlayScrollbars(el, {
-          overflow: { x: 'hidden', y: 'scroll' },
-          scrollbars: {
-            theme: 'os-theme-orezy',
-            autoHide: 'leave',
-            autoHideDelay: 250,
-            dragScroll: true,
-            clickScroll: true,
-          },
-        });
-        el.classList.remove('os-pending');
-      }
-      if (document.activeElement?.className !== 'main-wrapper' && document.querySelector('.main-wrapper')) focusMainWrapper();
-    }, 100);
+    const dialogBody = await waitForElement('#dialog-body');
+    this.osInstance = OverlayScrollbars(dialogBody, {
+      overflow: { x: 'hidden', y: 'scroll' },
+      scrollbars: {
+        theme: 'os-theme-orezy',
+        autoHide: 'leave',
+        autoHideDelay: 250,
+        dragScroll: true,
+        clickScroll: true,
+      },
+    });
+    dialogBody.classList.remove('os-pending');
+    if (document.activeElement?.className !== 'main-wrapper') focusMainWrapper();
   }
 
   closeDialog(): void {
@@ -92,25 +88,23 @@ export class UiService {
   drawerDescription = signal<string | null>(null);
   drawerButtons = signal<DrawerButton[]>([]);
   
-  openDrawer(): void {
+  async openDrawer(): Promise<void> {
     this.drawerOpen.set(true);
     this.drawerEditMode.set(false);
 
-    defer(() => {
-      const el = document.getElementById('drawer-body') as HTMLElement;
-      this.osInstance = OverlayScrollbars(el, {
-        overflow: { x: 'hidden', y: 'scroll' },
-        scrollbars: {
-          theme: 'os-theme-orezy',
-          autoHide: 'leave',
-          autoHideDelay: 250,
-          dragScroll: true,
-          clickScroll: true,
-        },
-      });
-      el.classList.remove('os-pending');
-      focusElement(el);
-    }, 100);
+    const drawerBody = await waitForElement('#drawer-body');
+    this.osInstance = OverlayScrollbars(drawerBody, {
+      overflow: { x: 'hidden', y: 'scroll' },
+      scrollbars: {
+        theme: 'os-theme-orezy',
+        autoHide: 'leave',
+        autoHideDelay: 250,
+        dragScroll: true,
+        clickScroll: true,
+      },
+    });
+    drawerBody.classList.remove('os-pending');
+    focusElement(drawerBody);
   }
 
   closeDrawer(): void {

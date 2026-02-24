@@ -76,8 +76,8 @@ export class LeftPanelComponent {
     /* this.imagesSub =  */this.images.changes.subscribe(() => {
       this.observeNewImages();
 
-      const el = this.thumbnailsScroll?.nativeElement;
-      this.osInstance = OverlayScrollbars(el, {
+      const thumbnailsScroll = this.thumbnailsScroll?.nativeElement;
+      this.osInstance = OverlayScrollbars(thumbnailsScroll, {
         overflow: { x: 'hidden', y: 'scroll' },
         scrollbars: {
           theme: 'os-theme-orezy',
@@ -87,23 +87,8 @@ export class LeftPanelComponent {
           clickScroll: true,
         },
       });
-      el.classList.remove('os-pending');
+      thumbnailsScroll.classList.remove('os-pending');
     });
-
-    // defer(() => {
-    //   const el = this.thumbnailsScroll?.nativeElement;
-    //   this.osInstance = OverlayScrollbars(el, {
-    //     overflow: { x: 'hidden', y: 'scroll' },
-    //     scrollbars: {
-    //       theme: 'os-theme-orezy',
-    //       autoHide: 'leave',
-    //       autoHideDelay: 250,
-    //       dragScroll: true,
-    //       clickScroll: true,
-    //     },
-    //   });
-    //   el.classList.remove('os-pending');
-    // }, 500);
   }
 
   ngOnDestroy(): void {

@@ -4,7 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { AuthService } from '../../services/auth.service';
 import { permissionDict, titleStateDict, titleStateFilterDict } from '../../app.config';
 import { Group, GroupPage, Permission, Position, User, UserInGroup } from '../../app.types';
-import { defer, focusElement, getDate } from '../../utils/utils';
+import { defer, focusElement, getDate, waitForElement } from '../../utils/utils';
 import { OverlayScrollbars } from 'overlayscrollbars';
 import { ActivatedRoute, Router } from '@angular/router';
 import { catchError, map, of, Subscription, switchMap, tap } from 'rxjs';
@@ -116,23 +116,22 @@ export class MainComponent {
             default:
               return of(null);
           }
-        })).subscribe(() => {      
-          defer(() => {
-            const el = this.bodyScroll?.nativeElement;
-            this.osInstance = OverlayScrollbars(el, {
-              overflow: { x: 'hidden', y: 'scroll' },
-              scrollbars: {
-                theme: 'os-theme-orezy',
-                autoHide: 'leave',
-                autoHideDelay: 250,
-                dragScroll: true,
-                clickScroll: true,
-              },
-            });
-            el.classList.remove('os-pending');
+        })).subscribe(async () => {      
+          const someResults = await waitForElement('tbody tr:not(.no-results)');
+          const tableScroll = this.bodyScroll.nativeElement;
+          this.osInstance = OverlayScrollbars(tableScroll, {
+            overflow: { x: 'hidden', y: 'scroll' },
+            scrollbars: {
+              theme: 'os-theme-orezy',
+              autoHide: 'leave',
+              autoHideDelay: 250,
+              dragScroll: true,
+              clickScroll: true,
+            },
+          });
+          tableScroll.classList.remove('os-pending');
 
-            this.tableHasScrollbar.set(this.osInstance.state().hasOverflow.y);
-          }, 100);
+          this.tableHasScrollbar.set(this.osInstance.state().hasOverflow.y);
         });
   }
 

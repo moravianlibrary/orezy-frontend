@@ -3,7 +3,7 @@ import { ControlValueAccessor, NG_VALUE_ACCESSOR } from '@angular/forms';
 import { SelectOption } from '../../app.types';
 import { DashboardService } from '../../services/dashboard.service';
 import { OverlayScrollbars } from 'overlayscrollbars';
-import { defer } from '../../utils/utils';
+import { waitForElement } from '../../utils/utils';
 
 @Component({
   selector: 'app-select',
@@ -28,8 +28,8 @@ export class SelectComponent implements ControlValueAccessor {
   usedIn = input<boolean>(false);
   usedOut = output<boolean>();
 
+  @ViewChild('selectWrapper', { static: false }) selectWrapper!: ElementRef<HTMLDivElement>;
   @ViewChild('comboInput', { static: true }) comboInput!: ElementRef<HTMLInputElement>;
-  @ViewChild('items', { static: false }) items!: ElementRef<HTMLDivElement>;
   private osInstance?: ReturnType<typeof OverlayScrollbars>;
 
   paddingRight = signal<number>(16);
@@ -70,27 +70,26 @@ export class SelectComponent implements ControlValueAccessor {
     this.onTouched = fn;
   }
 
-  open(): void {
+  async open(): Promise<void> {
     this.isOpen.set(true);
     this.label.set('');
 
-    defer(() => {
-      const el = this.items?.nativeElement;
-      this.osInstance = OverlayScrollbars(el, {
-        overflow: { x: 'hidden', y: 'scroll' },
-        scrollbars: {
-          theme: 'os-theme-orezy',
-          dragScroll: true,
-          clickScroll: true,
-        },
-      });
-      el.classList.remove('os-pending');
+    const items = await waitForElement('.items', this.selectWrapper.nativeElement);
+      
+    this.osInstance = OverlayScrollbars(items, {
+      overflow: { x: 'hidden', y: 'scroll' },
+      scrollbars: {
+        theme: 'os-theme-orezy',
+        dragScroll: true,
+        clickScroll: true,
+      },
+    });
+    items.classList.remove('os-pending');
 
-      const hasScrollbar = this.osInstance.state().hasOverflow.y;
-      if (hasScrollbar) {
-        this.paddingRight.set(26);
-      }
-    }, 100);
+    const hasScrollbar = this.osInstance.state().hasOverflow.y;
+    if (hasScrollbar) {
+      this.paddingRight.set(26);
+    }
   }
 
   close(): void {

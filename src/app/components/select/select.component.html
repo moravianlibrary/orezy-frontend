@@ -1,4 +1,5 @@
 <div
+  #selectWrapper
   class="select"
 >
   <label [for]="`select-${inputName()}`" class="trigger">
@@ -25,7 +26,6 @@
   @if (isOpen()) {
     <div class="dropdown">
       <div
-        #items
         class="items os-pending"
         [style]="`max-height:${maxDropdownHeight()}px`"
       >

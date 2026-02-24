@@ -57,11 +57,6 @@ export function defer(fn: () => void, delay: number = 0) {
   return setTimeout(fn, delay);
 }
 
-export function focusMainWrapper(): void {
-  const el = document.querySelector('.main-wrapper') as HTMLElement;
-  focusElement(el);
-}
-
 export function focusElement(el: HTMLElement, delay: number = 0, preventScroll: boolean = false): void {
   if (el) {
     if (delay < 0) {
@@ -73,6 +68,27 @@ export function focusElement(el: HTMLElement, delay: number = 0, preventScroll: 
   }
 }
 
+export function focusMainWrapper(): void {
+  const el = document.querySelector('.main-wrapper') as HTMLElement;
+  focusElement(el);
+}
+
+export function scrollToElement(el: HTMLElement, delay: number = 100): void {
+  if (delay < 0 && el) {
+    (el as HTMLElement).scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    return;
+  }
+  
+  defer(() => {
+    if (el) (el as HTMLElement).scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  }, delay);
+}
+
+export function scrollToAndFocusElement(el: HTMLElement): void {
+  scrollToElement(el, -1);
+  focusElement(el, -1, true);
+}
+
 export function scrollToSelectedImage(): void {
   defer(() => {
     const element = document.querySelector('.thumbnail-wrapper.selected') as HTMLElement;
@@ -80,20 +96,24 @@ export function scrollToSelectedImage(): void {
   }, 100);
 }
 
-export function scrollToElement(element: HTMLElement, timeout: number = 100): void {
-  if (timeout < 0 && element) {
-    (element as HTMLElement).scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-    return;
-  }
-  
-  defer(() => {
-    if (element) (element as HTMLElement).scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-  }, timeout);
-}
+export function waitForElement(selector: string, root: ParentNode = document): Promise<HTMLElement> {
+  const el = root.querySelector(selector) as HTMLElement | null;
+  if (el) return Promise.resolve(el);
 
-export function scrollToAndFocusElement(element: HTMLElement): void {
-  scrollToElement(element, -1);
-  focusElement(element, -1, true);
+  return new Promise(resolve => {
+    const observer = new MutationObserver(() => {
+      const el = root.querySelector(selector) as HTMLElement | null;
+      if (el) {
+        observer.disconnect();
+        resolve(el);
+      }
+    });
+
+    observer.observe(
+      root === document ? document.documentElement : (root as Node),
+      { childList: true, subtree: true }
+    );
+  });
 }
 
 
