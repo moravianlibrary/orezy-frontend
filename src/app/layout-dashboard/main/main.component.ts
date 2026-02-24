@@ -34,9 +34,7 @@ export class MainComponent {
   maxGroups: number = 2;
   tableHasScrollbar = signal<boolean>(false);
 
-  @ViewChild('searchGroup', { static: false }) searchGroup!: ElementRef<HTMLElement>;
-  @ViewChild('searchTitle', { static: false }) searchTitle!: ElementRef<HTMLElement>;
-  @ViewChild('searchUser', { static: false }) searchUser!: ElementRef<HTMLElement>;
+  @ViewChild('searchLabel', { static: false }) searchLabel!: ElementRef<HTMLElement>;
   @ViewChild('bodyScroll', { static: false }) bodyScroll!: ElementRef<HTMLDivElement>;
   private osInstance?: ReturnType<typeof OverlayScrollbars>;
 
@@ -130,22 +128,12 @@ export class MainComponent {
             },
           });
           tableScroll.classList.remove('os-pending');
-
           this.tableHasScrollbar.set(this.osInstance.state().hasOverflow.y);
-        });
-  }
 
-  ngAfterViewInit(): void {
-    defer(() => {
-      const dashboardPage = this.dashSvc.dashboardPage();
-      focusElement(
-        dashboardPage === 'groups'
-          ? this.searchGroup.nativeElement
-          : dashboardPage === 'titles'
-            ? this.searchTitle.nativeElement
-            : this.searchUser.nativeElement
-      );
-    }, 100);
+          // Focus input
+          const searchInput = await waitForElement('input', this.searchLabel.nativeElement);
+          focusElement(searchInput);
+        });
   }
 
   ngOnDestroy(): void {
