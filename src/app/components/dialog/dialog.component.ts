@@ -8,7 +8,7 @@ import { AuthService } from '../../services/auth.service';
 import { SelectComponent } from '../select/select.component';
 import { UploadComponent } from '../upload/upload.component';
 import { UiService } from '../../services/ui.service';
-import { defer, focusElement } from '../../utils/utils';
+import { defer, focusElement, waitForElement } from '../../utils/utils';
 
 @Component({
   selector: 'app-dialog',
@@ -26,30 +26,13 @@ export class DialogComponent {
   closed = output<void>();
   backdropClick = output<void>();
 
-  @ViewChild('newGroupName', { static: false }) newGroupName!: ElementRef<HTMLElement>;
-  @ViewChild('newTitleName', { static: false }) newTitleName!: ElementRef<HTMLElement>;
-  @ViewChild('newUserName', { static: false }) newUserName!: ElementRef<HTMLElement>;
+  @ViewChild('newNameLabel', { static: false }) newNameLabel!: ElementRef<HTMLElement>;
 
-  autoFocus = effect(() => {
+  autoFocus = effect(async () => {
     const open = this.open();
     if (open && this.uiSvc.dialogContent()) {
-      defer(() => {
-        let el;
-
-        switch (this.uiSvc.dialogContentType()) {
-          case 'new-group':
-            el = this.newGroupName.nativeElement;
-            break;
-          case 'new-title':
-            el = this.newTitleName.nativeElement;
-            break;
-          case 'new-user':
-            el = this.newUserName.nativeElement;
-            break;
-        }
-
-        if (el) focusElement(el);
-      }, 100);
+      const el = await waitForElement('input:first-of-type', this.newNameLabel.nativeElement);
+      focusElement(el, 100);
     }
   });
 
