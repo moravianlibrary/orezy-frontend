@@ -761,19 +761,9 @@ export class DashboardService {
     
     defer(() => {
       if (this.uiSvc.drawerOpen()) return;
-      switch (this.dashboardPage()) {
-        case 'groups':
-          this.selectedGroupDetail.set(null);
-          break;
-        case 'titles':
-          this.selectedTitle.set(null);
-          break;
-        case 'users':
-          this.selectedUser.set(null);
-          break;
-        default:
-          break;
-      }
+      this.selectedGroupDetail.set(null);
+      this.selectedTitle.set(null);
+      this.selectedUser.set(null);
     }, 300);
   }
 
