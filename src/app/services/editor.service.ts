@@ -1078,6 +1078,8 @@ export class EditorService {
     this.imgWasEdited.set(true);
     this.redrawImageOnCanvas();
     this.currentPages.forEach(p => this.drawPage(p));
+
+    this.resetZoom();
   }
 
   removePage(): void {
