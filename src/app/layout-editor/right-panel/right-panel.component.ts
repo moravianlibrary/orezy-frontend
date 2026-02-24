@@ -444,7 +444,7 @@ export class RightPanelComponent {
 
   private updateAndRedraw(page: Page): void {
     const edtSvc = this.edtSvc;
-    edtSvc.imgWasEdited = true;
+    edtSvc.imgWasEdited.set(true);
     edtSvc.lastSelectedPage = page;
     edtSvc.currentPages = edtSvc.currentPages.map(p => (p._id === page._id ? page : p));
 

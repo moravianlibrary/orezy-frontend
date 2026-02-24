@@ -233,7 +233,7 @@ export class MainComponent {
           edtSvc.isDragging = false;
           edtSvc.dragStartPage = null;
 
-          if (!edtSvc.imgWasEdited) return;
+          if (!edtSvc.imgWasEdited()) return;
           if (hitPage) edtSvc.hoveringPage(hitPage._id);
           edtSvc.redrawImageOnCanvas();
           edtSvc.currentPages.forEach(p => edtSvc.drawPage(p));
@@ -604,7 +604,7 @@ export class MainComponent {
     );
 
     edtSvc.pageWasEdited = true;
-    edtSvc.imgWasEdited = true;
+    edtSvc.imgWasEdited.set(true);
     edtSvc.redrawImageOnCanvas();
     edtSvc.currentPages.forEach(p => edtSvc.drawPage(p));
   }
@@ -690,7 +690,7 @@ export class MainComponent {
     );
 
     edtSvc.pageWasEdited = true;
-    edtSvc.imgWasEdited = true;
+    edtSvc.imgWasEdited.set(true);
     edtSvc.redrawImageOnCanvas();
     edtSvc.currentPages.forEach(p => edtSvc.drawPage(p));
   }
@@ -714,7 +714,7 @@ export class MainComponent {
     }
 
     edtSvc.pageWasEdited = true;
-    edtSvc.imgWasEdited = true;
+    edtSvc.imgWasEdited.set(true);
   }
 
   // TO DO: REFACTOR!

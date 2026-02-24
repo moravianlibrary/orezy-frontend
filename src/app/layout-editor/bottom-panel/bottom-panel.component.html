@@ -22,7 +22,7 @@
   <!-- @if (edtSvc.selectedFilter === 'flagged') {
     <span
       class="button secondary mark-ok"
-      [class.disabled]="wasAnyPageEdited || edtSvc.imgWasEdited || !edtSvc.displayedImagesFinal().length"
+      [class.disabled]="wasAnyPageEdited || edtSvc.imgWasEdited() || !edtSvc.displayedImagesFinal().length"
       (click)="edtSvc.markImageOK()"
       title="Přesune sken do OK. Použijte v případě, že by sken neměl být podezřelý. Sken je možné přesunout pouze bez jakýchkoliv uživatelských úprav."
     >

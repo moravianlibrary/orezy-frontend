@@ -35,7 +35,7 @@ export class EditorService {
 
   mainImageItem = signal<ImageItem>({ _id: '', url: '', thumbnailUrl: '', edited: false, flags: [], pages: [] });
   emptyImageItem: ImageItem = { _id: '', url: '', edited: false, flags: [], pages: [] };
-  imgWasEdited: boolean = false;
+  imgWasEdited = signal<boolean>(false);
 
   c!: HTMLCanvasElement;
   ctx!: CanvasRenderingContext2D;
@@ -155,7 +155,7 @@ export class EditorService {
   ------------------------------ */
   saveChanges(): void {
     if (this.pageWasEdited) this.updateCurrentPagesWithEdited();
-    if (this.imgWasEdited) this.updateImagesByEdited(this.mainImageItem()._id);
+    if (this.imgWasEdited()) this.updateImagesByEdited(this.mainImageItem()._id);
     this.selectedPage = null;
     this.resetZoom();
     this.redrawImageOnCanvas();
@@ -199,7 +199,7 @@ export class EditorService {
     scrollToSelectedImage(mainImageItemAfter._id);
     this.setMainImage(mainImageItemAfter);
 
-    this.imgWasEdited = false;
+    this.imgWasEdited.set(false);
 
     this.uiSvc.showToast('Změny skenu byly úspěšně resetovány!', { type: 'success' });
   }
@@ -267,7 +267,7 @@ export class EditorService {
     this.selectedFilter = filter;
     
     const mainImageItemId = this.mainImageItem()._id;
-    if (this.imgWasEdited) {
+    if (this.imgWasEdited()) {
       this.updateImagesByEdited(mainImageItemId ?? '');
       // this.uiSvc.showToast('Sken byl přesunut do Upravených.');
     }
@@ -307,7 +307,7 @@ export class EditorService {
 
     this.c.style.visibility = 'hidden';
 
-    const applyFinalImage = (updated: ImageItem) => {
+    const applyFinalImage = async (updated: ImageItem) => {
       const page = this.clickedDiffPage ? this.lastSelectedPage : this.selectedPage;
       if (this.pageWasEdited && page) {
         page.edited = true;
@@ -317,10 +317,12 @@ export class EditorService {
       this.resetZoom();
       this.renderCanvas(updated);
       this.loadingMain = false;
-      defer(() => {
+
+      if (this.imgWasEdited()) {
+        await this.uiSvc.waitForFalse(this.imgWasEdited);
         this.setDisplayedImages();
         if (this.clickedPageNumberFilter) this.clickedPageNumberFilter = false; // Don't move image to edited when click on page number filter
-      }, 100);
+      }
     };
 
     if (img.url) {
@@ -450,7 +452,7 @@ export class EditorService {
 
     if (
       imgItem._id && lastMainImageItemName && imgItem._id !== lastMainImageItemName
-      && this.imgWasEdited && !this.clickedPageNumberFilter
+      && this.imgWasEdited() && !this.clickedPageNumberFilter
     ) {
       this.updateImagesByEdited(lastMainImageItemName);
     }
@@ -788,31 +790,31 @@ export class EditorService {
   /* ------------------------------
     PREV / NEXT IMAGE
   ------------------------------ */
-  showPrevImage(): void {
+  async showPrevImage(): Promise<void> {
     if (this.currentIndex() === 0 || !this.displayedImagesFinal().length) return;
     this.updateImagesByCurrentPages();
     this.showImage(-1);
-    if (this.imgWasEdited) defer(() => {
+    if (this.imgWasEdited()) {
+      await this.uiSvc.waitForFalse(this.imgWasEdited);
       this.setDisplayedImages();
-      // this.uiSvc.showToast('Sken byl přesunut do Upravených.');
-    }, 100);
+    }
   }
 
-  showNextImage(): void {
+  async showNextImage(): Promise<void> {
     const displayedImages = this.displayedImagesFinal();
     if (this.currentIndex() === displayedImages.length - 1 || !displayedImages.length) return;
     this.updateImagesByCurrentPages();
     this.showImage(1);
-    if (this.imgWasEdited) defer(() => {
+    if (this.imgWasEdited()) {
+      await this.uiSvc.waitForFalse(this.imgWasEdited);
       this.setDisplayedImages();
-      // this.uiSvc.showToast('Sken byl přesunut do Upravených.');
-    }, 100);
+    }
   }
 
   markImageOK(): void {
-    if (this.currentPages.find(p => p.edited) || this.imgWasEdited || !this.displayedImagesFinal().length) return;
+    if (this.currentPages.find(p => p.edited) || this.imgWasEdited() || !this.displayedImagesFinal().length) return;
     
-    this.imgWasEdited = false;
+    this.imgWasEdited.set(false);
     this.images.update(prev =>
       prev.map(img => img._id === this.mainImageItem()._id
         ? { 
@@ -1073,7 +1075,7 @@ export class EditorService {
     
     this.currentPages.push(addedPage);
     this.selectedPage = this.currentPages[this.currentPages.length - 1];
-    this.imgWasEdited = true;
+    this.imgWasEdited.set(true);
     this.redrawImageOnCanvas();
     this.currentPages.forEach(p => this.drawPage(p));
   }
@@ -1086,7 +1088,7 @@ export class EditorService {
     this.currentPages.forEach(p => this.drawPage(p));
     this.updateMainImageItem();
     this.pageWasEdited = true;
-    this.imgWasEdited = true;
+    this.imgWasEdited.set(true);
   }
 
   redrawImageOnCanvas(): void {
@@ -1146,7 +1148,7 @@ export class EditorService {
         : img
       )
     );
-    this.imgWasEdited = false;
+    this.imgWasEdited.set(false);
   }
 
 
@@ -1467,7 +1469,7 @@ export class EditorService {
       };
 
       this.pageWasEdited = true;
-      this.imgWasEdited = true;
+      this.imgWasEdited.set(true);
       this.selectedPage = updatedPage;
       this.lastSelectedPage = updatedPage;
       this.currentPages = this.currentPages.map(p =>p._id === updatedPage._id ? updatedPage : p);
@@ -1718,7 +1720,7 @@ export class EditorService {
       }
 
       this.pageWasEdited = true;
-      this.imgWasEdited = true;
+      this.imgWasEdited.set(true);
       this.redrawImageOnCanvas();
       this.currentPages.forEach(p => this.drawPage(p));
     }
@@ -1761,7 +1763,7 @@ export class EditorService {
       page.bottom = bounds.bottom;
 
       this.pageWasEdited = true;
-      this.imgWasEdited = true;
+      this.imgWasEdited.set(true);
       this.redrawImageOnCanvas();
       this.currentPages.forEach(p => this.drawPage(p));
     }

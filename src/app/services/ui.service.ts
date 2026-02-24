@@ -1,4 +1,4 @@
-import { Injectable, signal } from '@angular/core';
+import { effect, EffectRef, inject, Injectable, Injector, runInInjectionContext, Signal, signal } from '@angular/core';
 import { DialogButton, DialogContentType, DrawerButton, DrawerContentType, Toast, ToastType } from '../app.types';
 import { defer, focusElement, focusMainWrapper, waitForElement } from '../utils/utils';
 import { OverlayScrollbars } from 'overlayscrollbars';
@@ -8,6 +8,26 @@ import { OverlayScrollbars } from 'overlayscrollbars';
 })
 export class UiService {
   private osInstance?: ReturnType<typeof OverlayScrollbars>;
+
+
+  /* ------------------------------
+    IMG WAS EDITED
+  ------------------------------ */
+  private injector = inject(Injector);
+
+  waitForFalse(sig: Signal<boolean>): Promise<void> {
+    return runInInjectionContext(this.injector, () => new Promise<void>((resolve) => {
+      let ref!: EffectRef;
+
+      ref = effect(() => {
+        if (sig() === false) {
+          ref.destroy();
+          resolve();
+        }
+      });
+    }));
+  }
+
   
   /* ------------------------------
     TOAST MESSAGES
