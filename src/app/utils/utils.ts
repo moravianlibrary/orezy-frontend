@@ -89,11 +89,9 @@ export function scrollToAndFocusElement(el: HTMLElement): void {
   focusElement(el, -1, true);
 }
 
-export function scrollToSelectedImage(): void {
-  defer(() => {
-    const element = document.querySelector('.thumbnail-wrapper.selected') as HTMLElement;
-    scrollToElement(element, -1);
-  }, 100);
+export async function scrollToSelectedImage(imageId: string, delay: number = -1): Promise<void> {
+  const el = await waitForElement(`#thumbnail-wrapper-${imageId}`);
+  scrollToElement(el, delay);
 }
 
 export function waitForElement(selector: string, root: ParentNode = document): Promise<HTMLElement> {

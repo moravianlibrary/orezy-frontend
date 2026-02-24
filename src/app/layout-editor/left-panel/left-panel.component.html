@@ -87,6 +87,7 @@
       @for (image of edtSvc.displayedImagesFinal(); track image._id) {
         @let mainImageItem = edtSvc.mainImageItem();
         <div
+          [id]="`thumbnail-wrapper-${image._id}`"
           class="thumbnail-wrapper"
           [class.selected]="mainImageItem._id === image._id"
           (click)="clickThumbnail(image)"

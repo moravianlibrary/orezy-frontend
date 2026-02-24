@@ -196,7 +196,7 @@ export class EditorService {
     );
 
     this.setDisplayedImages();
-    scrollToSelectedImage();
+    scrollToSelectedImage(mainImageItemAfter._id);
     this.setMainImage(mainImageItemAfter);
 
     this.imgWasEdited = false;
@@ -278,7 +278,7 @@ export class EditorService {
     const newImage = imageList.find(img => img._id === mainImageItemId) || imageList[0] || { url: '' };
     this.setMainImage(newImage);
 
-    scrollToSelectedImage();
+    scrollToSelectedImage(newImage._id, 100);
   }
 
   togglePageNumberFilter(filter: PageNumberType | null): void {
@@ -295,7 +295,7 @@ export class EditorService {
     const newImage = imageList.find(img => img._id === mainImageItemId) || imageList[0] || { url: '' };
     this.setMainImage(newImage);
 
-    scrollToSelectedImage();
+    scrollToSelectedImage(newImage._id, 100);
   }
 
 
@@ -834,12 +834,13 @@ export class EditorService {
   private showImage(offset: number): void {
     const displayedImages = this.displayedImagesFinal();
     const newIndex = ((this.currentIndex() + offset + displayedImages.length) % displayedImages.length);
-    this.setMainImage(displayedImages.length !== 1 ? displayedImages[newIndex] : this.emptyImageItem);
+    const newImage = displayedImages.length !== 1 ? displayedImages[newIndex] : this.emptyImageItem;
+    this.setMainImage(newImage);
     if (displayedImages.length === 1) {
       this.setDisplayedImages();
       this.mainImageItem.set(this.emptyImageItem);
     }
-    scrollToSelectedImage();
+    scrollToSelectedImage(newImage._id);
   }
 
 
