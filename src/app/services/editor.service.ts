@@ -546,6 +546,8 @@ export class EditorService {
 
   // Default zooming
   setZoomAt(screenX: number, screenY: number, newScale: number): void {
+    this.snapped = false;
+    
     const oldScale = this.viewport.scale;
     const scale = clamp(newScale, this.minZoom, this.maxZoom);
     
@@ -568,6 +570,8 @@ export class EditorService {
   }
 
   panBy(dxScreen: number, dyScreen: number): void {
+    this.snapped = false;
+    
     this.viewport.x += dxScreen;
     this.viewport.y += dyScreen;
 
