@@ -2,7 +2,7 @@ import { HttpClient } from '@angular/common/http';
 import { computed, inject, Injectable, signal } from '@angular/core';
 import { DimColor, GridMode, HitInfo, ImageItem, ImageRect, MousePos, Page, PageNumberType, ScanType, TitleDetail, Viewport } from '../app.types';
 import { catchError, Observable } from 'rxjs';
-import { clamp, defer, degreeToRadian, getColor, roundToDecimals, scrollToSelectedImage } from '../utils/utils';
+import { clamp, degreeToRadian, getColor, roundToDecimals, scrollToSelectedImage } from '../utils/utils';
 import { EnvironmentService } from './environment.service';
 import { dimColorDict, gridColor, transparentColor } from '../app.config';
 import { AuthService } from './auth.service';
@@ -296,6 +296,7 @@ export class EditorService {
     this.setMainImage(newImage);
 
     scrollToSelectedImage(newImage._id, 100);
+    this.clickedPageNumberFilter = false;
   }
 
 
@@ -842,6 +843,7 @@ export class EditorService {
     const newIndex = ((this.currentIndex() + offset + displayedImages.length) % displayedImages.length);
     const newImage = displayedImages.length !== 1 ? displayedImages[newIndex] : this.emptyImageItem;
     this.setMainImage(newImage);
+
     if (displayedImages.length === 1) {
       this.setDisplayedImages();
       this.mainImageItem.set(this.emptyImageItem);
@@ -1332,7 +1334,8 @@ export class EditorService {
       'Control', 'Meta',                                    // + R = reset změn skenu; + shift + R = reset změn dokumentu
       'a', 'A', 's', 'S',                                   // Rotate by 1
       'k', 'K',                                             // Shortcuts
-      'q', 'Q', 'w', 'W', 'e', 'E', 'r', 'R'                // Zooming
+      'q', 'Q', 'w', 'W', 'e', 'E', 'r', 'R',               // Zooming
+      'Tab'                                                 // Cycle through current pages
     ].includes(key);
   }
 
@@ -1822,13 +1825,13 @@ export class EditorService {
         )
       ) {
         this.showNextImage();
-        defer(() => {
+        // defer(() => {
           this.selectedPage = this.currentPages[0];
           this.lastPageCursorIsInside = this.selectedPage;
           this.redrawImageOnCanvas();
           this.currentPages.forEach(p => this.drawPage(p));
           this.updateMainImageItem();
-        }, 200);
+        // }, 200);
       }
     }
 
@@ -1902,6 +1905,18 @@ export class EditorService {
       if (!dialogOpen) {
         this.openShortcutsDialog();
       }
+    };
+
+    // Cycle through current pages
+    if (['Tab'].includes(key) && this.selectedPage && this.currentPages.length > 1 && !dialogOpen) {      
+      if (this.pageWasEdited) this.updateCurrentPagesWithEdited();
+
+      const potentialNewIndex = this.currentPages.findIndex(p => p._id === this.selectedPage?._id) + 1;
+      const newIndex = potentialNewIndex === this.currentPages.length ? 0 : potentialNewIndex;
+      this.selectedPage = this.currentPages[newIndex];
+      this.lastPageCursorIsInside = this.selectedPage;
+      this.redrawImageOnCanvas();
+      this.currentPages.forEach(p => this.drawPage(p));
     };
   }
 
