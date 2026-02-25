@@ -20,7 +20,7 @@
   display: flex;
   flex-direction: column;
   gap: var(--spacing-x3);
-  padding: var(--spacing-x4);
+  padding: var(--spacing-x2) var(--spacing-x4);
   padding-bottom: 0;
   color: var(--text-base);
   max-width: 100%;
@@ -31,7 +31,7 @@
     justify-content: space-between;
 
     h1 {
-      @include font(500, var(--font-size-x3), var(--spacing-x8));
+      @include font(500, var(--font-size-x2-5), var(--spacing-x7));
     }
 
     .menu {
@@ -45,7 +45,7 @@
 
   .flag {
     padding: var(--spacing-x3-5) var(--spacing-x3);
-    border-radius: var(--spacing-x1);
+    border-radius: var(--spacing-x2);
     @include font(500, var(--font-size-x1-5), var(--spacing-x5));
     color: var(--text-secondary);
     display: flex;
@@ -81,7 +81,7 @@
 }
 
 .border-bottom {
-  padding-bottom: var(--spacing-x6);
+  padding-bottom: var(--spacing-x3);
   border-bottom: 1px solid var(--border-color);
 }
 
@@ -91,12 +91,17 @@
 
 .middle {
   flex: 1;
+  padding-top: var(--spacing-x1);
+
+  .header {
+    padding-bottom: var(--spacing-x2);
+  }
 }
 
 .page {
   display: flex;
   flex-direction: column;
-  gap: var(--spacing-x5);
+  gap: var(--spacing-x4);
 }
 
 .action {
@@ -105,7 +110,7 @@
   padding: var(--spacing-x2) var(--spacing-x3);
   background-color: var(--bg-base);
   border: 1px solid var(--border-tertiary-color);
-  border-radius: var(--spacing-x1);
+  border-radius: var(--spacing-x2);
   white-space: nowrap;
   display: flex;
   align-items: center;
@@ -113,7 +118,7 @@
   gap: var(--spacing-x2);
 
   &:hover {
-    cursor: pointer;
+    cursor: url('../../../assets/pointer-cursor.png') 6.5 0, pointer;
   }
 
   svg {
@@ -122,8 +127,8 @@
 }
 
 .disabled { 
-  border-color: var(--border-color);
-  color: var(--text-disabled);
+  border-color: var(--border-color) !important;
+  color: var(--text-disabled) !important;
 
   &:hover {
     cursor: default;
@@ -168,7 +173,7 @@
     height: 52px;
     padding: var(--spacing-x2) var(--spacing-x7-5) var(--spacing-x2) var(--spacing-x7);
     border: 1px solid var(--border-tertiary-color);
-    border-radius: var(--spacing-x1);
+    border-radius: var(--spacing-x2);
     width: 100%;
 
     &:focus {
@@ -193,8 +198,17 @@
       fill: var(--icon-dark);
 
       &:hover {
-        cursor: pointer;
+        cursor: url('../../../assets/pointer-cursor.png') 6.5 0, pointer;
         fill: var(--primary);
+      }
+    }
+
+    .disabled {
+      fill: var(--border-tertiary-color);
+
+      &:hover {
+        cursor: default;
+        fill: var(--border-tertiary-color);
       }
     }
   }

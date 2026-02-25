@@ -1,8 +1,8 @@
 @import "overlayscrollbars/styles/overlayscrollbars.css";
 
-@mixin font($font-weight, $font-size, $line-height, $color) {
+@mixin font($font-weight, $font-size, $line-height, $color, $letter-spacing: 0%) {
   font-family: 'IBM Plex Sans', sans-serif;
-  letter-spacing: 0%;
+  letter-spacing: $letter-spacing;
   font-weight: $font-weight;
   font-size: $font-size;
   line-height: $line-height;
@@ -16,6 +16,8 @@
   --bg-bright: #EFF2F5;
   --bg-selected: #EAF6FA;
   --bg-main-light: #F6F7F9;
+  --bg-main-bright: #DFE5EC;
+  --bg-contrast: #BFCCD9;
   --bg-destructive: #FF3A30;
   --border-color: #DFE5EC;
   --border-light: #EFF2F5;
@@ -28,13 +30,13 @@
   --text-destructive-disabled: #9FB2C6;
   --text-light: #4C6580;
   --text-white: #FFFFFF;
-  --text-disabled: #DFE5EC;
+  --text-disabled: #BFCCD9;
   --text-label-bright: #9FB2C6;
   --icon-black: #0A0D10;
   --icon-dark: #263340;
   --icon-white: #FFFFFF;
   --icon-gray: #4C6580;
-  --icon-disabled: #DFE5EC;
+  --icon-disabled: #BFCCD9;
   --icon-destructive: #FF3A30;
   --status-icon-success: #2AA248;
   --status-icon-warning: #FF9500;
@@ -81,8 +83,7 @@ html, body {
 }
 
 #logo {
-  @include font(400, var(--font-size-x2), var(--spacing-x6), var(--text-base));
-  letter-spacing: 7%;
+  @include font(400, 19.33px, 29px, var(--text-base), 7%);
   display: flex;
   justify-content: center;
   align-items: center;
@@ -96,10 +97,10 @@ html, body {
 }
 
 #logo.clickable {
-  cursor: pointer;
+  cursor: url('/assets/pointer-cursor.png') 6.5 0, pointer;
 
   svg {
-    cursor: pointer;
+    cursor: url('/assets/pointer-cursor.png') 6.5 0, pointer;
   }
 }
 
@@ -117,18 +118,18 @@ html, body {
   display: flex;
   justify-content: center;
   align-items: center;
-  gap: var(--spacing-x3);
+  gap: var(--spacing-x2);
   padding: var(--spacing-x3);
-  border-radius: var(--spacing-x1);
+  border-radius: var(--spacing-x2);
   white-space: nowrap;
 
   &:hover {
-    cursor: pointer;
+    cursor: url('/assets/pointer-cursor.png') 6.5 0, pointer;
   }
 }
 
 .real-button {
-  padding: var(--spacing-x3) var(--spacing-x4);
+  padding: var(--spacing-x2) var(--spacing-x4);
   font-size: var(--font-size-x1-5);
   line-height: var(--spacing-x4);
 }
@@ -139,7 +140,7 @@ html, body {
 
 .primary {
   background-color: var(--primary);
-  color: var(--text-white);
+  @include font(450, var(font-size-x2), var(--spacing-x6), var(--text-white));
 
   svg {
     fill: var(--icon-white);
@@ -284,7 +285,7 @@ html, body {
     display: inline-flex;
     align-items: center;
     gap: var(--spacing-x2);
-    cursor: pointer;
+    cursor: url('/assets/pointer-cursor.png') 6.5 0, pointer;
     
     .radio-value {
       @include font(450, var(--font-size-x1-5), var(--spacing-x5), var(--text-secondary));

@@ -48,7 +48,7 @@
   label {
     display: flex;
     gap: 6px;
-    cursor: pointer;
+    cursor: url('../../../assets/pointer-cursor.png') 6.5 0, pointer;
     margin-bottom: 4px;
 
     &:last-child {
@@ -70,7 +70,7 @@
     fill: var(--icon-dark);
 
     &:hover {
-      cursor: pointer;
+      cursor: url('../../../assets/pointer-cursor.png') 6.5 0, pointer;
     }
   }
 
@@ -110,7 +110,7 @@
         left: var(--spacing-x4);
 
         &:hover {
-          cursor: pointer
+          cursor: url('../../../assets/pointer-cursor.png') 6.5 0, pointer;
         }
       }
 
@@ -192,7 +192,7 @@
             display: inline-flex;
             align-items: center;
             gap: var(--spacing-x2);
-            cursor: pointer;
+            cursor: url('../../../assets/pointer-cursor.png') 6.5 0, pointer;
             user-select: none;
           }
 
@@ -403,7 +403,7 @@
           height: var(--spacing-x9);
           border: 0;
           border-radius: var(--spacing-x1);
-          cursor: pointer;
+          cursor: url('../../../assets/pointer-cursor.png') 6.5 0, pointer;
 
           display: inline-flex;
           align-items: center;
@@ -416,7 +416,7 @@
       }
 
       .clickable:hover {
-        cursor: pointer;
+        cursor: url('../../../assets/pointer-cursor.png') 6.5 0, pointer;
         // background-color: #8099B30D;
         background-color: #EEF1F4;
         outline: 1px solid var(--primary);

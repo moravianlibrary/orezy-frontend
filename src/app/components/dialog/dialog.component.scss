@@ -76,7 +76,7 @@
 }
 
 .dialog-close {
-  cursor: pointer;
+  cursor: url('../../../assets/pointer-cursor.png') 6.5 0, pointer;
 }
 
 .dialog-footer {
@@ -122,7 +122,7 @@
       gap: 8px;
 
       &:hover {
-        cursor: pointer;
+        cursor: url('../../../assets/pointer-cursor.png') 6.5 0, pointer;
       }
 
       input {
@@ -242,7 +242,7 @@
         left: var(--spacing-x4);
 
         &:hover {
-          cursor: pointer
+          cursor: url('../../../assets/pointer-cursor.png') 6.5 0, pointer;
         }
       }
 
@@ -348,7 +348,7 @@
           align-items: center;
           width: 100%;
           @include font(500, var(--font-size-x1-5), var(--spacing-x4), var(--text-secondary));
-          cursor: pointer;
+          cursor: url('../../../assets/pointer-cursor.png') 6.5 0, pointer;
 
           input {
             appearance: none;
@@ -360,7 +360,7 @@
             width: var(--spacing-x4);
             height: var(--spacing-x4);
             border-radius: var(--spacing-x1);
-            cursor: pointer;
+            cursor: url('../../../assets/pointer-cursor.png') 6.5 0, pointer;
             background-color: var(--bg-base);
             transition: background-color 0.2s ease;
             
@@ -415,7 +415,7 @@
         border: 1px solid var(--border-tertiary-color);
 
         &:hover {
-          cursor: pointer;
+          cursor: url('../../../assets/pointer-cursor.png') 6.5 0, pointer;
         }
         
         svg {
@@ -474,7 +474,9 @@
         right: 0 !important;
         left: auto !important;
         fill: var(--primary);
-        &:hover { cursor: pointer; }
+        &:hover { 
+          cursor: url('../../../assets/pointer-cursor.png') 6.5 0, pointer;
+        }
       }
 
       .tooltip {

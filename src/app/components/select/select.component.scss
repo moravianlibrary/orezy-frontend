@@ -26,6 +26,10 @@
   align-items: center;
   overflow: hidden;
 
+  &:hover {
+    cursor: url('../../../assets/pointer-cursor.png') 6.5 0, pointer;
+  }
+
   &:focus-within {
     border-color: var(--primary);
   }
@@ -64,7 +68,7 @@
   border: 0;
   padding-inline: var(--spacing-x4);
   background: transparent;
-  cursor: pointer;
+  cursor: url('../../../assets/pointer-cursor.png') 6.5 0, pointer;
   display: flex;
   justify-content: center;
   align-items: center;
@@ -97,7 +101,7 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  cursor: pointer;
+  cursor: url('../../../assets/pointer-cursor.png') 6.5 0, pointer;
   text-align: left;
 
   &:hover {

@@ -58,7 +58,7 @@
   @include font(500, var(--font-size-x2), var(--spacing-x6), var(--text-secondary));
 
   &:hover {
-    cursor: pointer;
+    cursor: url('../../../assets/pointer-cursor.png') 6.5 0, pointer;
     color: var(--primary);
 
     svg {

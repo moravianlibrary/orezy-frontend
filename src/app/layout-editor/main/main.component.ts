@@ -18,7 +18,12 @@ export class MainComponent {
   private authSvc = inject(AuthService);
   private uiSvc = inject(UiService);
 
+  private pointerCursor: string = "url('/assets/pointer-cursor.png') 6.5 0, pointer";
   private moveCursor: string = "url('/assets/move-cursor.png'), auto";
+  private horizontalEdgeCursor: string = "url('/assets/horizontal-edge-cursor.png') 9.5 0, ew-resize";
+  private verticalEdgeCursor: string = "url('/assets/vertical-edge-cursor.png') 0 9.5, ns-resize";
+  private diagonalTlbrCursor: string = "url('/assets/diagonal-tlbr-cursor.png') 9.5 9.5, nwse-resize";
+  private diagonalBltrCursor: string = "url('/assets/diagonal-bltr-cursor.png') 9.5 9.5, nesw-resize";
   private rotateCursorTopRight: string = "url('/assets/rotate-cursor-top-right.png') 9.5 9.5, auto";
   private rotateCursorTopLeft: string = "url('/assets/rotate-cursor-top-left.png') 9.5 9.5, auto";
   private rotateCursorBottomRight: string = "url('/assets/rotate-cursor-bottom-right.png') 9.5 9.5, auto";
@@ -57,7 +62,6 @@ export class MainComponent {
     const edtSvc = this.edtSvc;
 
     el.onclick = (ev) => {
-      console.log('rest');
       const tagName = (ev.target as HTMLElement).tagName;
       if (tagName === 'APP-RIGHT-PANEL' || el.tagName === 'APP-RIGHT-PANEL') return;
       if (tagName !== 'APP-LEFT-PANEL' && tagName !== 'DIV' && tagName !== 'APP-RIGHT-PANEL' && tagName !== 'APP-BOTTOM-PANEL') return;
@@ -144,7 +148,7 @@ export class MainComponent {
 
     // Assign cursor
     if (canWriteTitle) {
-      edtSvc.cursor = insidePage ? (edtSvc.selectedPage?._id === hitPage?._id ? this.moveCursor : 'pointer') : 'initial';
+      edtSvc.cursor = insidePage ? (edtSvc.selectedPage?._id === hitPage?._id ? this.moveCursor : this.pointerCursor) : 'initial';
 
       if ((ev.type === 'mousedown' && btn === 1) || edtSvc.isPanning) {
         edtSvc.cursor = 'grabbing';
@@ -152,7 +156,7 @@ export class MainComponent {
         if (hit.area === 'inside') {
           edtSvc.cursor = hitPage && edtSvc.selectedPage?._id === hitPage._id
             ? this.moveCursor
-            : 'pointer';
+            : this.pointerCursor;
         } else if (hit.area === 'edge' && hit.edgeOrientation && hitPage) {
           edtSvc.cursor = this.getEdgeCursor(hitPage.angle, hit.edgeOrientation);
         } else if (hit.area === 'corner' && hit.corner && hitPage) {
@@ -170,7 +174,7 @@ export class MainComponent {
 
     // Click
     if (canWriteTitle && ev.type === 'mousedown' && btn === 0) {
-      if (edtSvc.pageWasEdited && (edtSvc.cursor === 'initial' || edtSvc.cursor === 'pointer')) {
+      if (edtSvc.pageWasEdited && (edtSvc.cursor === 'initial' || edtSvc.cursor === this.pointerCursor)) {
         edtSvc.updateCurrentPagesWithEdited();
       }
       edtSvc.isRotating = false;
@@ -207,7 +211,7 @@ export class MainComponent {
       if (ev.type === 'mouseup' && edtSvc.isPanning) {
         edtSvc.isPanning = false;
         hoveringPage();
-        el.style.cursor = insidePage ? (edtSvc.selectedPage?._id === hitPage?._id ? this.moveCursor : 'pointer') : 'initial';
+        el.style.cursor = insidePage ? (edtSvc.selectedPage?._id === hitPage?._id ? this.moveCursor : this.pointerCursor) : 'initial';
         edtSvc.mainImageItem.set({ ...edtSvc.mainImageItem(), url: edtSvc.c.toDataURL('image/jpeg') });
         return;
       }
@@ -504,9 +508,9 @@ export class MainComponent {
     const mostlyHorizontal = a <= 45 || a >= 135;
 
     if (local === 'vertical') {
-      return mostlyHorizontal ? 'ew-resize' : 'ns-resize';
+      return mostlyHorizontal ? this.horizontalEdgeCursor : this.verticalEdgeCursor;
     } else {
-      return mostlyHorizontal ? 'ns-resize' : 'ew-resize';
+      return mostlyHorizontal ? this.verticalEdgeCursor : this.horizontalEdgeCursor;
     }
   }
 
@@ -518,11 +522,11 @@ export class MainComponent {
 
     const baseForCorner =
       userCorner === 'nw' || userCorner === 'se'
-        ? 'nwse-resize'
-        : 'nesw-resize';
+        ? this.diagonalTlbrCursor
+        : this.diagonalBltrCursor;
 
     const flippedForCorner =
-      baseForCorner === 'nwse-resize' ? 'nesw-resize' : 'nwse-resize';
+      baseForCorner === this.diagonalTlbrCursor ? this.diagonalBltrCursor : this.diagonalTlbrCursor;
 
     const flip = a >= 45 && a <= 135;
     return flip ? flippedForCorner : baseForCorner;

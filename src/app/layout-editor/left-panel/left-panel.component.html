@@ -5,12 +5,12 @@
       <!-- Back button -->
       @let canReadGroup = authSvc.canReadGroup();
       @if (canReadGroup.length) {
-        <svg
-          width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"
+        <svg 
+          width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg"
           (click)="backToMyGroupsTitles(canReadGroup)"
         >
-          <path fill-rule="evenodd" clip-rule="evenodd" d="M10.1003 5.39936C10.3932 5.69225 10.3932 6.16712 10.1003 6.46002L4.56066 11.9997L10.1003 17.5394C10.3932 17.8322 10.3932 18.3071 10.1003 18.6C9.80744 18.8929 9.33256 18.8929 9.03967 18.6L2.96967 12.53C2.82902 12.3894 2.75 12.1986 2.75 11.9997C2.75 11.8008 2.82902 11.61 2.96967 11.4694L9.03967 5.39936C9.33256 5.10646 9.80744 5.10646 10.1003 5.39936Z" />
-          <path fill-rule="evenodd" clip-rule="evenodd" d="M2.91992 12C2.91992 11.5858 3.25571 11.25 3.66992 11.25H20.4999C20.9141 11.25 21.2499 11.5858 21.2499 12C21.2499 12.4142 20.9141 12.75 20.4999 12.75H3.66992C3.25571 12.75 2.91992 12.4142 2.91992 12Z" />
+          <path fill-rule="evenodd" clip-rule="evenodd" d="M6.73347 3.59957C6.92873 3.79483 6.92873 4.11142 6.73347 4.30668L3.04036 7.99979L6.73347 11.6929C6.92873 11.8882 6.92873 12.2048 6.73347 12.4C6.53821 12.5953 6.22163 12.5953 6.02637 12.4L1.9797 8.35335C1.88593 8.25958 1.83325 8.1324 1.83325 7.99979C1.83325 7.86718 1.88593 7.74001 1.9797 7.64624L6.02637 3.59957C6.22163 3.40431 6.53821 3.40431 6.73347 3.59957Z" />
+          <path fill-rule="evenodd" clip-rule="evenodd" d="M1.94653 8C1.94653 7.72386 2.17039 7.5 2.44653 7.5H13.6665C13.9427 7.5 14.1665 7.72386 14.1665 8C14.1665 8.27614 13.9427 8.5 13.6665 8.5H2.44653C2.17039 8.5 1.94653 8.27614 1.94653 8Z" />
         </svg>
       }
       
@@ -21,15 +21,15 @@
           class="clickable"
           (click)="backToHomepage()"
         >
-          <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path fill-rule="evenodd" clip-rule="evenodd" d="M9.375 1.875V0.833122H10.625V1.875H11.6667C13.8116 1.875 15.4757 2.30017 16.5878 3.41222C17.6998 4.52428 18.125 6.18836 18.125 8.33333V11.6667C18.125 13.8116 17.6998 15.4757 16.5878 16.5878C15.4757 17.6998 13.8116 18.125 11.6667 18.125H10.625V19.1667H10H9.375V18.125H8.33333C6.18836 18.125 4.52428 17.6998 3.41222 16.5878C2.30017 15.4757 1.875 13.8116 1.875 11.6667V8.33333C1.875 6.18836 2.30017 4.52428 3.41222 3.41222C4.52428 2.30017 6.18836 1.875 8.33333 1.875H9.375ZM9.375 3.125H8.33333C6.31164 3.125 5.05905 3.53316 4.29611 4.29611C3.53317 5.05905 3.125 6.31164 3.125 8.33333V11.6667C3.125 13.6884 3.53317 14.9409 4.29611 15.7039C5.05905 16.4668 6.31164 16.875 8.33333 16.875H9.375V14.9998H10.625V16.875H11.6667C13.6884 16.875 14.9409 16.4668 15.7039 15.7039C16.4668 14.9409 16.875 13.6884 16.875 11.6667V8.33333C16.875 6.31164 16.4668 5.05905 15.7039 4.29611C14.9409 3.53316 13.6884 3.125 11.6667 3.125H10.625V4.99979H9.375V3.125ZM10.625 5.83312V9.16646H9.375V5.83312H10.625ZM9.375 14.1665V10.8331H10.625V14.1665H9.375Z" />
+          <svg width="25" height="25" viewBox="0 0 25 25" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path fill-rule="evenodd" clip-rule="evenodd" d="M11.3281 2.26565V1.00671H12.8385V2.26565H14.0972C16.6891 2.26565 18.6998 2.77939 20.0436 4.12313C21.3873 5.46686 21.901 7.47762 21.901 10.0695V14.0972C21.901 16.6891 21.3873 18.6999 20.0436 20.0436C18.6998 21.3873 16.6891 21.9011 14.0972 21.9011H12.8385V23.1597H12.0833H11.3281V21.9011H10.0694C7.4776 21.9011 5.46684 21.3873 4.12311 20.0436C2.77937 18.6999 2.26562 16.6891 2.26562 14.0972V10.0695C2.26562 7.47762 2.77937 5.46686 4.12311 4.12313C5.46684 2.77939 7.4776 2.26565 10.0694 2.26565H11.3281ZM11.3281 3.77607H10.0694C7.62657 3.77607 6.11302 4.26926 5.19113 5.19115C4.26924 6.11304 3.77604 7.62659 3.77604 10.0695V14.0972C3.77604 16.5401 4.26924 18.0537 5.19113 18.9756C6.11302 19.8974 7.62657 20.3906 10.0694 20.3906H11.3281V18.1248H12.8385V20.3906H14.0972C16.5401 20.3906 18.0536 19.8974 18.9755 18.9756C19.8974 18.0537 20.3906 16.5401 20.3906 14.0972V10.0695C20.3906 7.62659 19.8974 6.11304 18.9755 5.19115C18.0536 4.26926 16.5401 3.77607 14.0972 3.77607H12.8385V6.04144H11.3281V3.77607ZM12.8385 7.04838V11.0762H11.3281V7.04838H12.8385ZM11.3281 17.1178V13.09H12.8385V17.1178H11.3281Z" />
           </svg>
           CROPILOT
         </span>
       } @else {
         <span id="logo">
-          <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path fill-rule="evenodd" clip-rule="evenodd" d="M9.375 1.875V0.833122H10.625V1.875H11.6667C13.8116 1.875 15.4757 2.30017 16.5878 3.41222C17.6998 4.52428 18.125 6.18836 18.125 8.33333V11.6667C18.125 13.8116 17.6998 15.4757 16.5878 16.5878C15.4757 17.6998 13.8116 18.125 11.6667 18.125H10.625V19.1667H10H9.375V18.125H8.33333C6.18836 18.125 4.52428 17.6998 3.41222 16.5878C2.30017 15.4757 1.875 13.8116 1.875 11.6667V8.33333C1.875 6.18836 2.30017 4.52428 3.41222 3.41222C4.52428 2.30017 6.18836 1.875 8.33333 1.875H9.375ZM9.375 3.125H8.33333C6.31164 3.125 5.05905 3.53316 4.29611 4.29611C3.53317 5.05905 3.125 6.31164 3.125 8.33333V11.6667C3.125 13.6884 3.53317 14.9409 4.29611 15.7039C5.05905 16.4668 6.31164 16.875 8.33333 16.875H9.375V14.9998H10.625V16.875H11.6667C13.6884 16.875 14.9409 16.4668 15.7039 15.7039C16.4668 14.9409 16.875 13.6884 16.875 11.6667V8.33333C16.875 6.31164 16.4668 5.05905 15.7039 4.29611C14.9409 3.53316 13.6884 3.125 11.6667 3.125H10.625V4.99979H9.375V3.125ZM10.625 5.83312V9.16646H9.375V5.83312H10.625ZM9.375 14.1665V10.8331H10.625V14.1665H9.375Z" />
+          <svg width="25" height="25" viewBox="0 0 25 25" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path fill-rule="evenodd" clip-rule="evenodd" d="M11.3281 2.26565V1.00671H12.8385V2.26565H14.0972C16.6891 2.26565 18.6998 2.77939 20.0436 4.12313C21.3873 5.46686 21.901 7.47762 21.901 10.0695V14.0972C21.901 16.6891 21.3873 18.6999 20.0436 20.0436C18.6998 21.3873 16.6891 21.9011 14.0972 21.9011H12.8385V23.1597H12.0833H11.3281V21.9011H10.0694C7.4776 21.9011 5.46684 21.3873 4.12311 20.0436C2.77937 18.6999 2.26562 16.6891 2.26562 14.0972V10.0695C2.26562 7.47762 2.77937 5.46686 4.12311 4.12313C5.46684 2.77939 7.4776 2.26565 10.0694 2.26565H11.3281ZM11.3281 3.77607H10.0694C7.62657 3.77607 6.11302 4.26926 5.19113 5.19115C4.26924 6.11304 3.77604 7.62659 3.77604 10.0695V14.0972C3.77604 16.5401 4.26924 18.0537 5.19113 18.9756C6.11302 19.8974 7.62657 20.3906 10.0694 20.3906H11.3281V18.1248H12.8385V20.3906H14.0972C16.5401 20.3906 18.0536 19.8974 18.9755 18.9756C19.8974 18.0537 20.3906 16.5401 20.3906 14.0972V10.0695C20.3906 7.62659 19.8974 6.11304 18.9755 5.19115C18.0536 4.26926 16.5401 3.77607 14.0972 3.77607H12.8385V6.04144H11.3281V3.77607ZM12.8385 7.04838V11.0762H11.3281V7.04838H12.8385ZM11.3281 17.1178V13.09H12.8385V17.1178H11.3281Z" />
           </svg>
           CROPILOT
         </span>
@@ -38,44 +38,59 @@
     <app-menu [type]="'menu-primary'" />
   </div>
 
-  <!-- Main filters -->
-  <div class="filters">
-    <span
-      class="filter"
-      [class.selected-filter]="edtSvc.selectedFilter === 'all'"
-      (click)="edtSvc.switchFilter('all')"
-    >Vše <span class="filter-number">({{ edtSvc.images().length }})</span></span>
-    <span
-      class="filter"
-      [class.selected-filter]="edtSvc.selectedFilter === 'flagged'"
-      (click)="edtSvc.switchFilter('flagged')"
-    >Podezřelé <span class="filter-number">({{ edtSvc.flaggedImages().length }})</span></span>
-    <span
-      class="filter"
-      [class.selected-filter]="edtSvc.selectedFilter === 'edited'"
-      (click)="edtSvc.switchFilter('edited')"
-    >Upravené <span class="filter-number">({{ edtSvc.editedImages().length }})</span></span>
-    <span
-      class="filter"
-      [class.selected-filter]="edtSvc.selectedFilter === 'ok'"
-      (click)="edtSvc.switchFilter('ok')"
-    >OK <span class="filter-number">({{ edtSvc.notFlaggedImages().length }})</span></span>
-  </div>
-
-  <!-- Number of pages filters -->
-  <div>
-    <h2>Počet výřezů</h2>
+  <div class="all-filters-wrapper">
+    <!-- Main filters -->
     <div class="filters">
       <span
         class="filter"
-        [class.selected-filter]="edtSvc.selectedPageNumberFilter() === 'single'"
-        (click)="edtSvc.togglePageNumberFilter('single')"
-      >Jeden <span class="filter-number">({{ pageImagesNumber(1) }})</span></span>
+        [class.selected-filter]="edtSvc.selectedFilter === 'all'"
+        (click)="edtSvc.switchFilter('all')"
+      >Vše <span class="filter-number">({{ edtSvc.images().length }})</span></span>
       <span
         class="filter"
-        [class.selected-filter]="edtSvc.selectedPageNumberFilter() === 'double'"
-        (click)="edtSvc.togglePageNumberFilter('double')"
-      >Dva <span class="filter-number">({{ pageImagesNumber(2) }})</span></span>
+        [class.selected-filter]="edtSvc.selectedFilter === 'flagged'"
+        (click)="edtSvc.switchFilter('flagged')"
+      >Podezřelé <span class="filter-number">({{ edtSvc.flaggedImages().length }})</span></span>
+      <span
+        class="filter"
+        [class.selected-filter]="edtSvc.selectedFilter === 'edited'"
+        (click)="edtSvc.switchFilter('edited')"
+      >Upravené <span class="filter-number">({{ edtSvc.editedImages().length }})</span></span>
+      <span
+        class="filter"
+        [class.selected-filter]="edtSvc.selectedFilter === 'ok'"
+        (click)="edtSvc.switchFilter('ok')"
+      >OK <span class="filter-number">({{ edtSvc.notFlaggedImages().length }})</span></span>
+    </div>
+
+    <!-- Number of pages filters -->
+    <div class="number-filters-wrapper">
+      <!-- <h2>Počet výřezů</h2> -->
+      <h2>Strany</h2>
+      <div class="filters">
+        <!-- <span
+          class="filter"
+          [class.selected-filter]="edtSvc.selectedPageNumberFilter() === 'single'"
+          (click)="edtSvc.togglePageNumberFilter('single')"
+        >Jeden <span class="filter-number">({{ pageImagesNumber(1) }})</span></span>
+        <span
+          class="filter"
+          [class.selected-filter]="edtSvc.selectedPageNumberFilter() === 'double'"
+          (click)="edtSvc.togglePageNumberFilter('double')"
+        >Dva <span class="filter-number">({{ pageImagesNumber(2) }})</span></span> -->
+        <span
+          class="filter"
+          [class.selected-filter]="edtSvc.selectedPageNumberFilter() === 'single'"
+          [class.disabled-filter]="pageImagesNumber(1) === 0"
+          (click)="edtSvc.togglePageNumberFilter('single')"
+        >Jednostrany</span>
+        <span
+          class="filter"
+          [class.selected-filter]="edtSvc.selectedPageNumberFilter() === 'double'"
+          [class.disabled-filter]="pageImagesNumber(2) === 0"
+          (click)="edtSvc.togglePageNumberFilter('double')"
+        >Dvoustrany</span>
+      </div>
     </div>
   </div>
 </div>
