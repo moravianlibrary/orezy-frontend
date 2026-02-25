@@ -40,9 +40,9 @@ export class MainComponent {
     this.attachMainCanvasEvents();
     [
       // '#main-container',
-      'app-left-panel',
-      'app-bottom-panel',
-      'app-right-panel'
+      'app-left-panel-editor',
+      'app-bottom-panel-editor',
+      'app-right-panel-editor'
     ].forEach(el => this.attachEventsRest(document.querySelector(el)));
     
     document.onpointerup = (ev) => {
@@ -57,6 +57,7 @@ export class MainComponent {
     const edtSvc = this.edtSvc;
 
     el.onclick = (ev) => {
+      console.log('rest');
       const tagName = (ev.target as HTMLElement).tagName;
       if (tagName === 'APP-RIGHT-PANEL' || el.tagName === 'APP-RIGHT-PANEL') return;
       if (tagName !== 'APP-LEFT-PANEL' && tagName !== 'DIV' && tagName !== 'APP-RIGHT-PANEL' && tagName !== 'APP-BOTTOM-PANEL') return;
