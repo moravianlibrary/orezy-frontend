@@ -274,14 +274,7 @@
           padding-right: var(--spacing-x6);
         }
       }
-
-      .value.api-key {
-        display: inline;
-        overflow-x: hidden;
-        white-space: nowrap;
-        text-overflow: ellipsis;
-      }
-
+      
       .value.date-time {
         display: flex;
         flex-direction: row;
