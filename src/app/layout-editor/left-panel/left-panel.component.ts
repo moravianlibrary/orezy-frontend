@@ -8,8 +8,6 @@ import { flagMessages } from '../../app.config';
 import { AuthService } from '../../services/auth.service';
 import { DashboardService } from '../../services/dashboard.service';
 import { OverlayScrollbars } from 'overlayscrollbars';
-import { defer } from '../../utils/utils';
-// import { Subscription } from 'rxjs';
 
 @Component({
   selector: 'app-left-panel-editor',

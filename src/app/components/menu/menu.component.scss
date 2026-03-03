@@ -1,11 +1,4 @@
-@mixin font($font-weight, $font-size, $line-height, $color) {
-  font-family: 'IBM Plex Sans', sans-serif;
-  letter-spacing: 0%;
-  font-weight: $font-weight;
-  font-size: $font-size;
-  line-height: $line-height;
-  color: $color;
-}
+@use '../../../styles' as styles;
 
 .menu-container {
   position: relative;

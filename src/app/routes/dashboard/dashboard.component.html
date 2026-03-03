@@ -4,8 +4,8 @@
   (keydown)="dashSvc.onKeyDown($event)"
   tabindex="0"
 >
-  <app-left-panel-groups></app-left-panel-groups>
-  <app-main-groups></app-main-groups>
+  <app-top-panel-dashboard></app-top-panel-dashboard>
+  <app-main-dashboard></app-main-dashboard>
   @if (uiSvc.drawerOpen()) {
     <div
       class="drawer-backdrop"

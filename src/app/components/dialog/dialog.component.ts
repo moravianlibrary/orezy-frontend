@@ -30,7 +30,7 @@ export class DialogComponent {
 
   autoFocus = effect(async () => {
     const open = this.open();
-    if (open && this.uiSvc.dialogContent() && !['shortcuts', 'settings'].includes(this.uiSvc.dialogContentType() ?? '')) {
+    if (open && this.uiSvc.dialogContent() && !['shortcuts', 'settings', 'new-password', 'edit-password'].includes(this.uiSvc.dialogContentType() ?? '')) {
       const el = await waitForElement('input:first-of-type', this.newNameLabel.nativeElement);
       focusElement(el, 100);
     }

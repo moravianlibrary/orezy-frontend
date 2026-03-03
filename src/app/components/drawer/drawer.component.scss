@@ -1,11 +1,4 @@
-@mixin font($font-weight, $font-size, $line-height, $color) {
-  font-family: 'IBM Plex Sans', sans-serif;
-  letter-spacing: 0%;
-  font-weight: $font-weight;
-  font-size: $font-size;
-  line-height: $line-height;
-  color: $color;
-}
+@use '../../../styles' as styles;
 
 :host {
   display: flex;
@@ -34,7 +27,7 @@
   padding: var(--spacing-x3) var(--spacing-x4);
 
   h2 {
-    @include font(450, var(--font-size-x3), var(--spacing-x8), var(--text-base));
+    @include styles.font(450, var(--font-size-x3), var(--spacing-x8), var(--text-base));
   }
 
   .drawer-actions {
@@ -60,9 +53,11 @@
       gap: var(--spacing-x3);
 
       .icon-button {
+        width: var(--spacing-x8);
+        height: var(--spacing-x8);
         background-color: var(--bg-base);
         padding: var(--spacing-x2);
-        border-radius: var(--spacing-x1);
+        border-radius: var(--spacing-x2);
         border: 1px solid var(--border-tertiary-color);
 
         svg {
@@ -88,24 +83,39 @@
     display: flex;
     flex-direction: column;
     gap: var(--spacing-x2);
-    padding: var(--spacing-x3) var(--spacing-x4);
+    padding-block: var(--spacing-x3) var(--spacing-x4);
 
     .many-blocks {
       display: flex;
-      gap: 40px;
+
+      .block {
+        &:first-of-type {
+          width: 50%;
+          // width: 253px;
+        }
+
+        &:last-of-type {
+          // width: 339px;
+          width: 50%;
+        }
+      }
+    }
+
+    .many-blocks.dates {
+      padding-bottom: var(--spacing-x2);
     }
 
     .block {
       display: flex;
       flex-direction: column;
       gap: var(--spacing-x1);
-      padding-block: var(--spacing-x2);
+      padding: var(--spacing-x2) var(--spacing-x4);
 
       label, .label {
         display: flex;
         align-items: center;
         gap: var(--spacing-x2);
-        @include font(400, var(--font-size-x1), var(--spacing-x5), var(--text-light));
+        @include styles.font(400, var(--font-size-x1), var(--spacing-x5), var(--text-light));
 
         svg {
           fill: var(--primary);
@@ -133,7 +143,7 @@
           width: 100%;
           border: 1px solid var(--border-tertiary-color);
           border-radius: var(--spacing-x1);
-          @include font(400, var(--font-size-x2), var(--spacing-x6), var(--text-base));
+          @include styles.font(400, var(--font-size-x2), var(--spacing-x6), var(--text-base));
 
           &:focus {
             border-color: var(--primary);
@@ -141,7 +151,7 @@
           }
 
           &::placeholder {
-            @include font(400, var(--font-size-x2), var(--spacing-x6), var(--text-label-bright));
+            @include styles.font(400, var(--font-size-x2), var(--spacing-x6), var(--text-bright));
           }
         }
 
@@ -166,29 +176,12 @@
         }
       }
 
-      .label.with-remove-all {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-
-        .remove-all {
-          padding: 0;
-          margin-bottom: var(--spacing-x1-5);
-        }
-      }
-
       label.select {
         width: max-content;
       }
 
       .error {
-        @include font(400, var(--font-size-x1-5), var(--spacing-x6), var(--text-destructive));
-      }
-
-      .reset-password {
-        width: fit-content;
-        padding-inline: var(--spacing-x4);
-        margin-top: var(--spacing-x1);
+        @include styles.font(400, var(--font-size-x1-5), var(--spacing-x6), var(--text-destructive));
       }
 
       .copy-wrap {
@@ -213,7 +206,7 @@
           border: 1px solid var(--border-light);
           background-color: var(--bg-base);
           box-shadow: 0 2px var(--spacing-x4) 2px #00000014;
-          @include font(400, var(--font-size-x1), var(--spacing-x4), var(--text-base));
+          @include styles.font(400, var(--font-size-x1), var(--spacing-x4), var(--text-base));
           white-space: nowrap;
 
           opacity: 0;
@@ -227,7 +220,7 @@
       }
 
       .value {
-        @include font(400, var(--font-size-x2), var(--spacing-x6), var(--text-base));
+        @include styles.font(400, var(--font-size-x2), var(--spacing-x6), var(--text-base));
         display: flex;
         flex-direction: column;
         gap: var(--spacing-x2);
@@ -236,7 +229,7 @@
           display: flex;
           gap: var(--spacing-x2);
           width: fit-content;
-          @include font(500, var(--font-size-x1-5), var(--spacing-x4), var(--text-base));
+          @include styles.font(500, var(--font-size-x1-5), var(--spacing-x4), var(--text-base));
           border-radius: var(--spacing-x1);
           padding: var(--spacing-x1) var(--spacing-x2);
         }
@@ -269,17 +262,24 @@
         }
 
         .date {
-          @include font(400, var(--font-size-x2), var(--spacing-x6), var(--text-base));
+          @include styles.font(400, var(--font-size-x2), var(--spacing-x6), var(--text-base));
         }
 
         .time {
-          @include font(400, var(--font-size-x2), var(--spacing-x6), var(--text-light));
+          @include styles.font(400, var(--font-size-x2), var(--spacing-x6), var(--text-light));
         }
 
         .button {
           width: fit-content;
           padding-right: var(--spacing-x6);
         }
+      }
+
+      .value.api-key {
+        display: inline;
+        overflow-x: hidden;
+        white-space: nowrap;
+        text-overflow: ellipsis;
       }
 
       .value.date-time {
@@ -298,19 +298,19 @@
         }
 
         .user-fullname {
-          @include font(500, var(--font-size-x1-5), var(--spacing-x4), var(--text-base));
+          @include styles.font(500, var(--font-size-x1-5), var(--spacing-x4), var(--text-base));
         }
 
         .tag {
           display: flex;
           gap: var(--spacing-x2);
           width: fit-content;
-          @include font(500, var(--font-size-x1-5), var(--spacing-x4), var(--text-base));
+          @include styles.font(500, var(--font-size-x1-5), var(--spacing-x4), var(--text-base));
           border-radius: var(--spacing-x1);
           padding: var(--spacing-x1) var(--spacing-x2);
 
           .tag-label {
-            @include font(500, var(--font-size-x1-5), var(--spacing-x4), var(--text-base));
+            @include styles.font(500, var(--font-size-x1-5), var(--spacing-x4), var(--text-base));
           }
 
           svg {
@@ -349,6 +349,21 @@
           .tag-label { color: inherit; }
         }
       }
+    }
+
+    & > :first-child {
+      padding-top: var(--spacing-x1);
+    }
+
+    .block.permissions {
+      gap: var(--spacing-x2);
+      padding-top: var(--spacing-x4);
+      border-top: 1px solid var(--border-color);
+
+      .no-results {
+        @include styles.font(400, var(--font-size-x2), var(--spacing-x4), var(--text-base));
+        font-style: italic;
+      }
 
       .add-permission-wrapper {
         display: flex;
@@ -360,16 +375,24 @@
           display: flex;
           align-items: center;
           gap: var(--spacing-x3);
+
+          .add-perm {
+            padding-right: var(--spacing-x6);
+          }
+
+          .remove-all {
+            padding: 0;
+          }
         }
       }
 
       .permissions-row {
         width: 100%;
-        border-radius: var(--spacing-x1);
+        border-radius: var(--spacing-x2);
         background-color: #8099B31A;
 
         .name {
-          @include font(500, var(--font-size-x2), var(--spacing-x6), var(--text-base));
+          @include styles.font(500, var(--font-size-x2), var(--spacing-x6), var(--text-base));
         }
 
         .permissions {
@@ -383,8 +406,14 @@
             justify-content: flex-start;
             align-items: center;
             width: 100%;
-            @include font(500, var(--font-size-x1-5), var(--spacing-x4), var(--text-secondary));
+            @include styles.font(500, var(--font-size-x1-5), var(--spacing-x4), var(--text-secondary));
             cursor: url('../../../assets/pointer-cursor.png') 6.5 0, pointer;
+
+            &:hover {
+              input {
+                border-color: var(--primary);
+              }
+            }
 
             input {
               appearance: none;
@@ -399,10 +428,6 @@
               cursor: url('../../../assets/pointer-cursor.png') 6.5 0, pointer;
               background-color: var(--bg-base);
               transition: background-color 0.2s ease;
-              
-              &:hover {
-                border-color: var(--primary);
-              }
 
               &:focus {
                 border-color: var(--primary);
@@ -465,7 +490,7 @@
           justify-content: center;
           align-items: center;
           padding: var(--spacing-x2);
-          border-radius: var(--spacing-x1);
+          border-radius: var(--spacing-x2);
           background-color: var(--bg-base);
           border: 1px solid var(--border-tertiary-color);
 
@@ -477,19 +502,6 @@
             fill: var(--icon-dark);
           }
         }
-      }
-    }
-
-    & > :first-child {
-      padding-top: var(--spacing-x3);
-    }
-
-    .block.permissions {
-      gap: var(--spacing-x2);
-
-      .no-results {
-        @include font(400, var(--font-size-x2), var(--spacing-x4), var(--text-base));
-        font-style: italic;
       }
 
       .permission-error {

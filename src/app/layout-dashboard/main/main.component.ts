@@ -3,8 +3,8 @@ import { DashboardService } from '../../services/dashboard.service';
 import { FormsModule } from '@angular/forms';
 import { AuthService } from '../../services/auth.service';
 import { permissionDict, titleStateDict, titleStateFilterDict } from '../../app.config';
-import { Group, GroupPage, Permission, Position, User, UserInGroup } from '../../app.types';
-import { defer, focusElement, getDate, waitForElement } from '../../utils/utils';
+import { Group, GroupPage, Permission, PermissionType, Position, User, UserInGroup } from '../../app.types';
+import { focusElement, getDate, waitForElement } from '../../utils/utils';
 import { OverlayScrollbars } from 'overlayscrollbars';
 import { ActivatedRoute, Router } from '@angular/router';
 import { catchError, map, of, Subscription, switchMap, tap } from 'rxjs';
@@ -15,7 +15,7 @@ import { ToastComponent } from '../../components/toast/toast.component';
 import { UiService } from '../../services/ui.service';
 
 @Component({
-  selector: 'app-main-groups',
+  selector: 'app-main-dashboard',
   imports: [FormsModule, CommonModule, OverlayModule, ToastComponent],
   templateUrl: './main.component.html',
   styleUrl: './main.component.scss'
@@ -30,7 +30,7 @@ export class MainComponent {
   private paramsOnGroupId = new Subscription();
 
   getDate = getDate;
-  maxUsers: number = 1;
+  maxUsers: number = 2;
   maxGroups: number = 2;
   tableHasScrollbar = signal<boolean>(false);
 
@@ -77,7 +77,7 @@ export class MainComponent {
                   this.dashSvc.selectedGroupPage.set(res);
                   this.dashSvc.titles.set(res.titles);
                   this.dashSvc.displayedTitles.set(res.titles);
-                  this.title.setTitle(`Skupina: ${res.name} | CROPILOT`);
+                  this.title.setTitle(`${res.name} | CROPILOT`);
                   
                   this.authSvc.canReadTitle.set(false);
                   if (this.authSvc.user()?.permissions.find(group => group.group_id === group_id && group.permission.includes('read_title'))) this.authSvc.canReadTitle.set(true);
@@ -88,7 +88,7 @@ export class MainComponent {
                 catchError(err => {
                   err.status === 403
                     ? this.router.navigate(['/forbidden'])
-                    : this.uiSvc.showToast('Při načítání knih se něco pokazilo. Zkuste stránku znovu načíst.', { type: 'error' });
+                    : this.uiSvc.showToast('Při načítání titulů se něco pokazilo. Zkuste stránku znovu načíst.', { type: 'error' });
                   console.error('Fetching titles failed:', err);
                   throw err;
                 })
@@ -161,6 +161,27 @@ export class MainComponent {
     return group.users ?? [];
   }
 
+  getGroupPermissionsCounts(users: UserInGroup[]): Partial<Record<PermissionType, number>> {
+    return users.reduce<Partial<Record<PermissionType, number>>>(
+      (acc, user) => {
+        user.permission.forEach(p => {
+          acc[p] = (acc[p] ?? 0) + 1;
+        });
+        return acc;
+      },
+      {
+        upload: 0,
+        write: 0,
+        read_title: 0,
+        read_group: 0
+      }
+    )
+  };
+
+  getPermissionsTypes(aggregations: Partial<Record<PermissionType, number>>): PermissionType[] {
+    return Object.keys(aggregations) as PermissionType[];
+  }
+
 
   /* ------------------------------
     TITLES
@@ -169,7 +190,7 @@ export class MainComponent {
 
   get totalTitlesLabel(): string {
     const length = this.dashSvc.displayedTitles().length;
-    return `Celkem ${length} knih${length === 1 ? 'a' : [2, 3, 4].includes(length) ? 'y' : '' }`;
+    return `Celkem ${length} titul${length === 1 ? '' : [2, 3, 4].includes(length) ? 'y' : 'ů' }`;
   }
 
   filterTitles(): void {
@@ -265,11 +286,7 @@ export class MainComponent {
     ));
   }
 
-  getGroupsShort(user: User): Permission[] {
-    return user.permissions.slice(0, this.maxGroups);
-  }
-
-  getGroupsLong(user: User): Permission[] {
-    return user.permissions;
+  getUserPermissions(perms: Permission[]): PermissionType[] {
+    return [...new Set(perms.flatMap(p => p.permission))];
   }
 }

@@ -17,7 +17,7 @@ export const routes: Routes = [
     path: 'group/:group_id',
     pathMatch: 'full',
     loadComponent: () => import('./routes/dashboard/dashboard.component').then((m) => m.DashboardComponent),
-    title: 'Skupiny - Knihy | CROPILOT',
+    title: 'Skupiny - Tituly | CROPILOT',
     canActivate: [ AuthService ]
   },
   {

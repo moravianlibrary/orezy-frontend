@@ -8,6 +8,7 @@ import { OverlayScrollbars } from 'overlayscrollbars';
 })
 export class UiService {
   private osInstance?: ReturnType<typeof OverlayScrollbars>;
+  private osInstance2?: ReturnType<typeof OverlayScrollbars>;
 
 
   /* ------------------------------
@@ -66,6 +67,7 @@ export class UiService {
   ------------------------------ */
   dialogOpened: boolean = false;
   dialogOpen = signal<boolean>(false);
+  dialogWidth = signal<number | null>(null);
   dialogTitle = signal<string>('');
   dialogContent = signal<boolean>(false);
   dialogContentType = signal<DialogContentType | null>(null);
@@ -89,11 +91,27 @@ export class UiService {
     });
     dialogBody.classList.remove('os-pending');
     if (document.activeElement?.className !== 'main-wrapper') focusMainWrapper();
+
+    if (this.dialogContentType()?.includes('group')) {
+      // const groupDescription = await waitForElement('.group-description-wrap');
+      // this.osInstance2 = OverlayScrollbars(groupDescription, {
+      //   overflow: { x: 'hidden', y: 'scroll' },
+      //   scrollbars: {
+      //     theme: 'os-theme-orezy',
+      //     autoHide: 'leave',
+      //     autoHideDelay: 250,
+      //     dragScroll: true,
+      //     clickScroll: true,
+      //   },
+      // });
+      // groupDescription.classList.remove('os-pending');
+    }
   }
 
   closeDialog(): void {
     this.dialogOpen.set(false);
     this.dialogOpened = false;
+    defer(() => this.dialogWidth.set(null), 300);
   }
 
 
@@ -101,7 +119,6 @@ export class UiService {
     DRAWER
   ------------------------------ */
   drawerOpen = signal<boolean>(false);
-  drawerEditMode = signal<boolean>(false);
   drawerTitle = signal<string>('');
   drawerContent = signal<boolean>(false);
   drawerContentType = signal<DrawerContentType | null>(null);
@@ -110,7 +127,6 @@ export class UiService {
   
   async openDrawer(): Promise<void> {
     this.drawerOpen.set(true);
-    this.drawerEditMode.set(false);
 
     const drawerBody = await waitForElement('#drawer-body');
     this.osInstance = OverlayScrollbars(drawerBody, {
@@ -129,6 +145,5 @@ export class UiService {
 
   closeDrawer(): void {
     this.drawerOpen.set(false);
-    defer(() => this.drawerEditMode.set(false), 300);
   }
 }

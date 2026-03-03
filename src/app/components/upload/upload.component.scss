@@ -1,11 +1,4 @@
-@mixin font($font-weight, $font-size, $line-height, $color) {
-  font-family: 'IBM Plex Sans', sans-serif;
-  letter-spacing: 0%;
-  font-weight: $font-weight;
-  font-size: $font-size;
-  line-height: $line-height;
-  color: $color;
-}
+@use '../../../styles' as styles;
 
 :host {
   width: 100%;
@@ -15,7 +8,7 @@
   display: block;
   width: 100%;
   border: 2px dashed var(--border-tertiary-color);
-  border-radius: var(--spacing-x1);
+  border-radius: var(--spacing-x2);
   padding: var(--spacing-x8);
   text-align: center;
   background: var(--bg-base);
@@ -43,12 +36,12 @@
   }
 
   h3 {
-    @include font(500, var(--font-size-x2), var(--spacing-x6), var(--text-base));
+    @include styles.font(500, var(--font-size-x2), var(--spacing-x6), var(--text-base));
     margin: 0;
   }
 
   p {
-    @include font(400, var(--font-size-x1-5), var(--spacing-x4), var(--text-label-bright));
+    @include styles.font(400, var(--font-size-x1-5), var(--spacing-x4), var(--text-bright));
     margin: 0;
   }
 

@@ -1,11 +1,4 @@
-@mixin font($font-weight, $font-size, $line-height, $color, $letter-spacing: 0%) {
-  font-family: 'IBM Plex Sans', sans-serif;
-  letter-spacing: $letter-spacing;
-  font-weight: $font-weight;
-  font-size: $font-size;
-  line-height: $line-height;
-  color: $color;
-}
+@use '../../../styles' as styles;
 
 :host {
   min-width: 250px;
@@ -51,7 +44,7 @@
   }
 
   h2 {
-    @include font(400, var(--font-size-x1-5), var(--spacing-x5), var(--text-light));
+    @include styles.font(400, var(--font-size-x1-5), var(--spacing-x5), var(--text-light));
     margin-bottom: var(--spacing-x1);
   }
 
@@ -69,7 +62,7 @@
       max-width: 100%;
 
       .filter {
-        @include font(400, var(--font-size-x1-5), var(--spacing-x5), var(--text-base));
+        @include styles.font(400, var(--font-size-x1-5), var(--spacing-x5), var(--text-base));
         padding: var(--spacing-x1) var(--spacing-x2);
         background-color: var(--bg-base);
         border: 1px solid var(--border-tertiary-color);
@@ -81,7 +74,7 @@
         }
 
         .filter-number {
-          @include font(400, var(--font-size-x1-5), var(--spacing-x5), var(--text-light));
+          @include styles.font(400, var(--font-size-x1-5), var(--spacing-x5), var(--text-light));
         }
       }
 
@@ -175,7 +168,7 @@
       left: 21px;
       transform: translateY(50%);
       background-color: var(--bg-base);
-      @include font(400, var(--font-size-x1), var(--spacing-x4), var(--text-base));
+      @include styles.font(400, var(--font-size-x1), var(--spacing-x4), var(--text-base));
       font-family: 'Karla', sans-serif;
       padding: var(--spacing-x2) var(--spacing-x3);
       border-radius: var(--spacing-x1);

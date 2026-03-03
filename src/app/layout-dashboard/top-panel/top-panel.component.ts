@@ -6,12 +6,12 @@ import { DashboardService } from '../../services/dashboard.service';
 import { Router } from '@angular/router';
 
 @Component({
-  selector: 'app-left-panel-groups',
+  selector: 'app-top-panel-dashboard',
   // imports: [MenuComponent],
-  templateUrl: './left-panel.component.html',
-  styleUrl: './left-panel.component.scss'
+  templateUrl: './top-panel.component.html',
+  styleUrl: './top-panel.component.scss'
 })
-export class LeftPanelComponent {
+export class TopPanelComponent {
   authSvc = inject(AuthService);
   dashSvc = inject(DashboardService);
   router = inject(Router);

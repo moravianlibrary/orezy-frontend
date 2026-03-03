@@ -80,7 +80,7 @@ export const titleStateFilterDict: Record<string, string> = {
 export const inlineErrors: Record<string, string> = {
   'groupNameEmpty': 'Zadejte název skupiny.',
   'groupNameExists': 'Skupina s daným názvem už existuje. Zadejte prosím jiný název.',
-  'titleNameEmpty': 'Zadejte název knihy.',
+  'titleNameEmpty': 'Zadejte název titulu.',
   'filesEmpty': 'Nahrajte skeny.',
   'userNameEmpty': 'Zadejte jméno uživatele.',
   'userEmailEmpty': 'Zadejte e-mail uživatele.',

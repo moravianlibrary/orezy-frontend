@@ -26,9 +26,6 @@ export class DashboardService {
   searchGroups = signal<string>('');
   selectedGroupDetail = signal<Group | null>(null);
   selectedGroupPage = signal<GroupPage | null>(null);
-  newGroupName = signal<string>('');
-  newGroupDescription = signal<string>('');
-  newGroupNameError = signal<string>('');
   groupName = signal<string>('');
   groupDescription = signal<string>('');
   groupPermissions = signal<UserInGroup[]>([]);
@@ -103,8 +100,8 @@ export class DashboardService {
   displayedTitles = signal<Title[]>([]);
   searchTitles = signal<string>('');
   selectedTitle = signal<Title | null>(null);
-  newTitleName = signal<string>('');
-  newTitleNameError = signal<string>('');
+  titleName = signal<string>('');
+  titleNameError = signal<string>('');
   availableModels = signal<SelectOption[]>([]);
   selectedModel = signal<string>('');
   selectedModelUsed = signal<boolean>(false);
@@ -116,10 +113,6 @@ export class DashboardService {
   displayedUsers = signal<User[]>([]);
   searchUsers = signal<string>('');
   selectedUser = signal<User | null>(null);
-  newUserEmail = signal<string>('');
-  newUserFullname = signal<string>('');
-  newUserNameError = signal<string>('');
-  newUserEmailError = signal<string>('');
   newPassword = signal<string>('');
   userFullname = signal<string>('');
   userEmail = signal<string>('');
@@ -153,8 +146,8 @@ export class DashboardService {
 
   createGroup(): Observable<NewGroup> {
     const payload = {
-      name: this.newGroupName(),
-      description: this.newGroupDescription(),
+      name: this.groupName(),
+      description: this.groupDescription(),
       default_model: this.selectedModel()
     };
     return this.http.post<NewGroup>(`${this.authSvc.apiUrl}/groups`, payload, { headers: this.authSvc.authHeaders('json', true) });
@@ -203,7 +196,7 @@ export class DashboardService {
 
   createTitle(groupId: string): Observable<{ id: string }> {
     const payload = {
-      external_id: this.newTitleName(),
+      external_id: this.titleName(),
       model: this.selectedModel()
     };
     return this.http.post<{ id: string }>(`${this.authSvc.apiUrl}/create?group_id=${groupId}`, payload, { headers: this.authSvc.authHeaders('json', true) });
@@ -239,8 +232,8 @@ export class DashboardService {
   createUser(): Observable<NewUser> {
     const permissions = this.userPermissions();
     const payload = {
-      email: this.newUserEmail(),
-      full_name: this.newUserFullname(),
+      email: this.userEmail(),
+      full_name: this.userFullname(),
       ...(permissions && { permissions: permissions })
     };
 
@@ -312,6 +305,7 @@ export class DashboardService {
   createGroupDialog(): void {
     const uiSvc = this.uiSvc;
     
+    uiSvc.dialogWidth.set(593);
     uiSvc.dialogTitle.set('Nová skupina');
     uiSvc.dialogContent.set(true);
     uiSvc.dialogContentType.set('new-group');
@@ -321,18 +315,18 @@ export class DashboardService {
         label: 'Vytvořit',
         primary: true,
         action: () => {
-          const newGroupName = this.newGroupName();
+          const groupName = this.groupName();
 
-          if (!newGroupName) {
-            this.newGroupNameError.set(this.errors['groupNameEmpty']);
-            const el = document.getElementById('new-group-name') as HTMLElement;
+          if (!groupName) {
+            this.groupNameError.set(this.errors['groupNameEmpty']);
+            const el = document.getElementById('group-name') as HTMLElement;
             scrollToAndFocusElement(el);
             return;
           }
 
-          if (this.groups().some(g => g.name === newGroupName)) {
-            this.newGroupNameError.set(this.errors['groupNameExists']);
-            const el = document.getElementById('new-group-name') as HTMLElement;
+          if (this.groups().some(g => g.name === groupName)) {
+            this.groupNameError.set(this.errors['groupNameExists']);
+            const el = document.getElementById('group-name') as HTMLElement;
             scrollToAndFocusElement(el);
             return;
           }
@@ -358,12 +352,12 @@ export class DashboardService {
               const permissions = ['read_group', 'read_title', 'write', 'upload'] as PermissionType[];
               const newGroup = {
                 _id: res.id,
-                name: newGroupName,
+                name: groupName,
                 api_key: {
                   key: res?.api_key ?? '',
                   created_at: now  
                 },
-                description: this.newGroupDescription(),
+                description: this.groupDescription(),
                 default_model: this.selectedModel(),
                 created_at: now,
                 modified_at: now,
@@ -380,9 +374,9 @@ export class DashboardService {
               this.groups.update(prev => [ ...prev, newGroup ]);
               this.displayedGroups.set(this.groups());;
               this.selectedGroupDetail.set(newGroup);
-              this.newGroupName.set('');
-              this.newGroupDescription.set('');
-              this.newGroupNameError.set('');
+              this.groupName.set('');
+              this.groupDescription.set('');
+              this.groupNameError.set('');
             }),
             catchError(err => {
               this.uiSvc.showToast('Při vytváření skupiny se něco pokazilo. Zkuste to znovu.', { type: 'error' });
@@ -394,9 +388,9 @@ export class DashboardService {
       }
     ]);
 
-    this.newGroupName.set('');
-    this.newGroupDescription.set('');
-    this.newGroupNameError.set('');
+    this.groupName.set('');
+    this.groupDescription.set('');
+    this.groupNameError.set('');
 
     this.fetchModels().pipe(
       tap((res: Models) => {
@@ -406,17 +400,91 @@ export class DashboardService {
       }),
       switchMap(() => this.fetchUsers()),
       catchError(err => {
-        this.uiSvc.showToast('Nepodařilo se načíst data. Zkuste dialogové okno zavřít a znovu otevřít.', { type: 'error' });
+        this.uiSvc.showToast('Nepodařilo se načíst uživatele. Zkuste dialogové okno znovu otevřít.', { type: 'error' });
         console.error(err);
         throw err;
       })
     ).subscribe((res: User[]) => {
       this.users.set(res);
-      this.availableUsers.set(res.map(u => ({ value: u._id, label: u.full_name })));
+      this.availableUsers.set(res.filter(u => u.role !== 'admin').map(u => ({ value: u._id, label: u.full_name })));
       this.selectedUserError.set('');
       this.groupPermissions.set([]);
       this.userPermissionsError = {};
       this.closeDrawer();
+      uiSvc.openDialog();
+    });
+  }
+
+  editGroupDialog(): void {
+    const uiSvc = this.uiSvc;
+    const group = this.selectedGroupDetail();
+    if (!group) return;
+    
+    uiSvc.dialogWidth.set(476);
+    uiSvc.dialogTitle.set('Úprava skupiny');
+    uiSvc.dialogContent.set(true);
+    uiSvc.dialogContentType.set('edit-group');
+    uiSvc.dialogButtons.set([
+      { label: 'Zrušit' },
+      {
+        label: 'Upravit',
+        primary: true,
+        action: () => {
+          const groupName = this.groupName();
+
+          if (!groupName) {
+            this.groupNameError.set(this.errors['groupNameEmpty']);
+            const el = document.getElementById('group-name') as HTMLElement;
+            scrollToAndFocusElement(el);
+            return;
+          }
+
+          if (this.groups().some(g => g.name === groupName)) {
+            this.groupNameError.set(this.errors['groupNameExists']);
+            const el = document.getElementById('group-name') as HTMLElement;
+            scrollToAndFocusElement(el);
+            return;
+          }
+
+          uiSvc.closeDialog();
+          
+          return this.updateGroup(group._id).pipe(
+            catchError(err => {
+              this.uiSvc.showToast('Nepodařilo se upravit skupinu. Zkuste to znovu.', { type: 'error' });
+              console.error(err);
+              throw err;
+            })
+          ).subscribe(() => {
+            this.searchGroups.set('');
+            const updatedGroup = {
+              ...group,
+              name: this.groupName(),
+              description: this.groupDescription(),
+              default_model: this.selectedModel()
+            };
+            this.groups.update(prev => prev.map(g => g._id === group?._id ? updatedGroup : g))
+            this.displayedGroups.set(this.groups());
+            this.selectedGroupDetail.set(updatedGroup);
+            this.groupNameError.set('');
+          })
+        }
+      }
+    ]);
+
+    this.groupName.set(group.name);
+    this.groupDescription.set(group.description);
+    this.groupNameError.set('');
+
+    this.fetchModels().pipe(
+      catchError(err => {
+        this.uiSvc.showToast('Nepodařilo se načíst dostupné AI modely. Zkuste dialogové okno znovu otevřít.', { type: 'error' });
+        console.error(err);
+        throw err;
+      })
+    ).subscribe((res: Models) => {
+      this.availableModels.set(res.available_models.map(m => ({ value: m, label: m })));
+      this.selectedModel.set(res.available_models[0]);
+      this.selectedModelUsed.set(false);
       uiSvc.openDialog();
     });
   }
@@ -459,7 +527,8 @@ export class DashboardService {
     const uiSvc = this.uiSvc;
     this.files.set([]);
     
-    uiSvc.dialogTitle.set('Nová kniha');
+    uiSvc.dialogWidth.set(593);
+    uiSvc.dialogTitle.set('Nový titul');
     uiSvc.dialogContent.set(true);
     uiSvc.dialogContentType.set('new-title');
     uiSvc.dialogButtons.set([
@@ -468,10 +537,10 @@ export class DashboardService {
         label: 'Vytvořit',
         primary: true,
         action: () => {
-          const newTitleName = this.newTitleName();
+          const titleName = this.titleName();
 
-          if (!newTitleName) {
-            this.newTitleNameError.set(this.errors['titleNameEmpty']);
+          if (!titleName) {
+            this.titleNameError.set(this.errors['titleNameEmpty']);
             const el = document.getElementById('new-title-name') as HTMLElement;
             scrollToAndFocusElement(el);
             return;
@@ -491,7 +560,7 @@ export class DashboardService {
               const now = Date();
               const newTitle: Title = {
                 _id: res.id,
-                external_id: newTitleName,
+                external_id: titleName,
                 model: this.selectedModel(),
                 created_at: now,
                 modified_at: now,
@@ -507,7 +576,7 @@ export class DashboardService {
             switchMap(id => this.uploadAllScans(id, this.files())),
             switchMap(id => this.processTitle(id)),
             catchError(err => {
-              this.uiSvc.showToast(`Při nahrávání skenů se něco pokazilo. Knihu smažte a přidejte ji jako novou.`, { type: 'error' });
+              this.uiSvc.showToast(`Při nahrávání skenů se něco pokazilo. Titul smažte a přidejte ji jako novou.`, { type: 'error' });
               console.error(err);
               throw err;
             })
@@ -518,13 +587,13 @@ export class DashboardService {
 
     this.fetchModels().pipe(
       catchError(err => {
-        this.uiSvc.showToast('Nepodařilo se načíst dostupné AI modely. Zkuste dialogové okno zavřít a znovu otevřít.', { type: 'error' });
+        this.uiSvc.showToast('Nepodařilo se načíst dostupné AI modely. Zkuste dialogové okno znovu otevřít.', { type: 'error' });
         console.error(err);
         throw err;
       })
     ).subscribe((res: Models) => {
-      this.newTitleName.set('');
-      this.newTitleNameError.set('');
+      this.titleName.set('');
+      this.titleNameError.set('');
       this.uploadFilesError.set('');
       this.availableModels.set(res.available_models.map(m => ({ value: m, label: m })));
       this.selectedModel.set(this.selectedGroupPage()?.default_model ?? res.available_models[0]);
@@ -542,28 +611,26 @@ export class DashboardService {
     this.files.update(prev => [ ...prev, ...Array.from(files) ]);
   }
 
-  deleteTitleDialog(): void {
+  deleteTitleDialog(title: Title): void {
     const uiSvc = this.uiSvc;
-    const title = this.selectedTitle();
     
-    uiSvc.dialogTitle.set('Smazat knihu');
-    uiSvc.dialogDescription.set(`Opravdu chcete smazat knihu${' ' + title?.external_id}?`);
+    uiSvc.dialogTitle.set('Smazat titul');
+    uiSvc.dialogDescription.set(`Opravdu chcete smazat titul${' ' + title?.external_id}?`);
     uiSvc.dialogContent.set(false);
     uiSvc.dialogButtons.set([
       { label: 'Zrušit' },
       {
-        label: 'Smazat knihu',
+        label: 'Smazat titul',
         primary: true,
         destructive: true,
         action: () => this.deleteTitle(title?._id ?? '').pipe(
           tap(() => {
             this.titles.update(prev => prev.filter(t => t._id !== (title?._id ?? '')));
             this.displayedTitles.set(this.titles());
-            this.selectedTitle.set(null);
             uiSvc.closeDialog();
           }),
           catchError(err => {
-            this.uiSvc.showToast('Nepodařilo se smazat knihu. Zkuste to znovu.', { type: 'error' })
+            this.uiSvc.showToast('Nepodařilo se smazat titul. Zkuste to znovu.', { type: 'error' })
             console.error(err);
             throw err;
           })
@@ -578,6 +645,7 @@ export class DashboardService {
   createUserDialog(): void {
     const uiSvc = this.uiSvc;
     
+    uiSvc.dialogWidth.set(593);
     uiSvc.dialogTitle.set('Nový uživatel');
     uiSvc.dialogContent.set(true);
     uiSvc.dialogContentType.set('new-user');
@@ -587,32 +655,32 @@ export class DashboardService {
         label: 'Vytvořit',
         primary: true,
         action: () => {
-          if (!this.newUserFullname()) {
-            this.newUserNameError.set(this.errors['userNameEmpty']);
-            const el = document.getElementById('new-user-fullname') as HTMLElement;
+          if (!this.userFullname()) {
+            this.userNameError.set(this.errors['userNameEmpty']);
+            const el = document.getElementById('user-fullname') as HTMLElement;
             scrollToAndFocusElement(el);
             return;
           }
 
-          const newUserEmail = this.newUserEmail();
+          const userEmail = this.userEmail();
 
-          if (!newUserEmail) {
-            this.newUserEmailError.set(this.errors['userEmailEmpty']);
-            const el = document.getElementById('new-user-email') as HTMLElement;
+          if (!userEmail) {
+            this.userEmailError.set(this.errors['userEmailEmpty']);
+            const el = document.getElementById('user-email') as HTMLElement;
             scrollToAndFocusElement(el);
             return;
           }
 
-          if (!checkEmailValidity(newUserEmail)) {
-            this.newUserEmailError.set(this.errors['userEmailInvalid']);
-            const el = document.getElementById('new-user-email') as HTMLElement;
+          if (!checkEmailValidity(userEmail)) {
+            this.userEmailError.set(this.errors['userEmailInvalid']);
+            const el = document.getElementById('user-email') as HTMLElement;
             scrollToAndFocusElement(el);
             return;
           }
 
-          if (this.users().some(u => u.email === this.newUserEmail())) {
-            this.newUserEmailError.set(this.errors['userEmailExists']);
-            const el = document.getElementById('new-user-email') as HTMLElement;
+          if (this.users().some(u => u.email === this.userEmail())) {
+            this.userEmailError.set(this.errors['userEmailExists']);
+            const el = document.getElementById('user-email') as HTMLElement;
             scrollToAndFocusElement(el);
             return;
           }
@@ -631,8 +699,8 @@ export class DashboardService {
 
               const newUser: User = {
                 _id: res.id,
-                email: this.newUserEmail(),
-                full_name: this.newUserFullname(),
+                email: this.userEmail(),
+                full_name: this.userFullname(),
                 password: res.password,
                 role: 'user',
                 permissions: this.userPermissions(),
@@ -643,11 +711,11 @@ export class DashboardService {
               this.users.update(prev => [ ...prev, newUser ]);
               this.displayedUsers.set(this.users());
               this.selectedUser.set(newUser);
-              this.newUserEmail.set('');
-              this.newUserFullname.set('');
+              this.userEmail.set('');
+              this.userFullname.set('');
               this.userPermissions.set([]);
-              this.newUserNameError.set('');
-              this.newUserEmailError.set('');
+              this.userNameError.set('');
+              this.userEmailError.set('');
               this.openUserDetail(this.selectedUser());
               
               uiSvc.dialogTitle.set('Nový uživatel');
@@ -669,15 +737,15 @@ export class DashboardService {
       }
     ])
 
-    this.newUserEmail.set('');
-    this.newUserFullname.set('');
+    this.userEmail.set('');
+    this.userFullname.set('');
     this.userPermissions.set([]);
-    this.newUserNameError.set('');
-    this.newUserEmailError.set('');
+    this.userNameError.set('');
+    this.userEmailError.set('');
 
     this.fetchGroups().pipe(
       catchError(err => {
-        this.uiSvc.showToast('Nepodařilo se načíst data. Zkuste dialogové okno zavřít a znovu otevřít.', { type: 'error' });
+        this.uiSvc.showToast('Nepodařilo se načíst skupiny. Zkuste dialogové okno znovu otevřít.', { type: 'error' });
         console.error(err);
         throw err;
       })
@@ -690,6 +758,73 @@ export class DashboardService {
       this.closeDrawer();
       uiSvc.openDialog();
     });
+  }
+
+  editUserDialog(): void {
+    const uiSvc = this.uiSvc;
+    
+    uiSvc.dialogWidth.set(360);
+    uiSvc.dialogTitle.set('Změna údajů');
+    uiSvc.dialogContent.set(true);
+    uiSvc.dialogContentType.set('edit-user');
+    uiSvc.dialogButtons.set([
+      { label: 'Zrušit' },
+      {
+        label: 'Uložit',
+        primary: true,
+        action: () => {
+          if (!this.userFullname()) {
+            this.userNameError.set(this.errors['userNameEmpty']);
+            const el = document.getElementById('user-fullname') as HTMLElement;
+            scrollToAndFocusElement(el);
+            return;
+          }
+
+          const userEmail = this.userEmail();
+
+          if (!userEmail) {
+            this.userEmailError.set(this.errors['userEmailEmpty']);
+            const el = document.getElementById('user-email') as HTMLElement;
+            scrollToAndFocusElement(el);
+            return;
+          }
+
+          if (!checkEmailValidity(userEmail)) {
+            this.userEmailError.set(this.errors['userEmailInvalid']);
+            const el = document.getElementById('user-email') as HTMLElement;
+            scrollToAndFocusElement(el);
+            return;
+          }
+
+          if (this.users().some(u => u.email === this.userEmail())) {
+            this.userEmailError.set(this.errors['userEmailExists']);
+            const el = document.getElementById('user-email') as HTMLElement;
+            scrollToAndFocusElement(el);
+            return;
+          }
+
+          return this.updateUser(this.selectedUser()?._id ?? '').pipe(
+            tap((res: User) => {
+              this.searchUsers.set('');
+              this.users.update(prev => prev.map(u => u._id === res._id ? res : u));
+              this.displayedUsers.set(this.users());
+              this.selectedUser.set(null);
+            }),
+            catchError(err => {
+              this.uiSvc.showToast('Nepodařilo se uložit změny. Zkuste to znovu.', { type: 'error' });
+              console.error(err);
+              throw err;
+            })
+          ).subscribe(() => this.closeDrawer());
+        }
+      }
+    ])
+
+    this.userFullname.set('');
+    this.userEmail.set('');
+    this.userNameError.set('');
+    this.userEmailError.set('');
+    uiSvc.openDialog();
   }
 
   deleteUserDialog(): void {
@@ -739,7 +874,7 @@ export class DashboardService {
     
       uiSvc.dialogTitle.set('Nové heslo');
       uiSvc.dialogContent.set(true);
-      uiSvc.dialogContentType.set('new-password');
+      uiSvc.dialogContentType.set('edit-password');
       uiSvc.dialogButtons.set([
         {
           label: 'Rozumím',
@@ -795,6 +930,7 @@ export class DashboardService {
       this.users.set(res);
       this.availableUsers.set(res
         .filter(u => !group.users.map(p => p._id).includes(u._id))
+        .filter(u => u.role !== 'admin')
         .map(u => ({ value: u._id, label: u.full_name })))
     });
     
@@ -808,7 +944,6 @@ export class DashboardService {
           label: 'Uložit změny',
           primary: true,
           action: () => {
-            if (!uiSvc.drawerEditMode()) return;
             const group = this.selectedGroupDetail();
             if (!group) return;
 
@@ -818,22 +953,6 @@ export class DashboardService {
             if (this.membersUpdated().length) requests.push(this.bulkUpdateGroupMembers(group._id));
             if (this.membersRemoved().length) requests.push(this.bulkRemoveGroupMembers(group._id));
             if (!requests.length) return;
-
-            const groupName = this.groupName();
-
-            if (!groupName) {
-              this.groupNameError.set(this.errors['groupNameEmpty']);
-              const el = document.getElementById('new-group-name') as HTMLElement;
-              scrollToAndFocusElement(el);
-              return;
-            }
-
-            if (this.groups().filter(g => g !== group).some(g => g.name === groupName)) {
-              this.groupNameError.set(this.errors['groupNameExists']);
-              const el = document.getElementById('new-group-name') as HTMLElement;
-              scrollToAndFocusElement(el);
-              return;
-            }
 
             const emptyUsers = this.groupPermissions().filter(u => !u.permission.length);
             if (emptyUsers.length) {
@@ -848,14 +967,10 @@ export class DashboardService {
                 this.searchGroups.set('');
                 this.groups.update(prev => prev.map(g => g._id === group?._id ? {
                   ...group,
-                  name: this.groupName(),
-                  description: this.groupDescription(),
-                  default_model: this.selectedModel(),
                   users: this.groupPermissions()
                 } : g))
                 this.displayedGroups.set(this.groups());
                 this.selectedGroupDetail.set(null);
-                this.groupNameError.set('');
               }),
               catchError(err => {
                 this.uiSvc.showToast('Nepodařilo se uložit změny. Zkuste to znovu.', { type: 'error' });
@@ -954,7 +1069,7 @@ export class DashboardService {
       this.titles.update( prev => prev.map(t => t._id === selectedTitle?._id ? updatedTitle : t));
       this.displayedTitles.set(this.titles());
       this.selectedTitle.set(updatedTitle);
-      this.uiSvc.showToast(`AI model byl úspěšně aplikován na knihu ${selectedTitle.external_id}!`, { type: 'success' });
+      this.uiSvc.showToast(`AI model byl úspěšně aplikován na titul ${selectedTitle.external_id}!`, { type: 'success' });
     });
   }
 
@@ -1001,7 +1116,6 @@ export class DashboardService {
         primary: true,
         action: () => {
           if (!this.userChanged()) return;
-          if (!uiSvc.drawerEditMode()) return;
 
           const userName = this.userFullname();
           const userEmail = this.userEmail();
@@ -1117,55 +1231,20 @@ export class DashboardService {
     INPUT INLINE VALIDATION
   ------------------------------ */
   // Group
-  checkNewGroupNameUniqueness(): void {
-    this.newGroupNameError.set(this.groups()
-      .some(g => g.name === this.newGroupName())
+  checkGroupNameUniqueness(): void {
+    this.groupNameError.set(this.groups()
+      .some(g => g.name === this.groupName())
         ? this.errors['groupNameExists']
         : ''
     );
   }
 
-  checkGroupNameUniqueness(): void {
-    this.groupNameError.set(
-      this.groups()
-        .filter(g => g._id !== this.selectedGroupDetail()?._id)
-        .some(g => g.name === this.groupName())
-          ? this.errors['groupNameExists']
-          : ''
-    );
-  }
-
   // Title
-  checkNewTitleName(): void {
-    this.newTitleNameError.set('');
+  checkTitleName(): void {
+    this.titleNameError.set('');
   }
 
   // User
-  checkNewUserName(): void {
-    this.newUserNameError.set('');
-  }
-
-  checkNewUserEmail(): void {
-    this.checkNewUserEmailValidity();
-    this.checkNewUserEmailUniqueness();
-  }
-
-  private checkNewUserEmailValidity(): void {
-    this.newUserEmailError.set(checkEmailValidity(this.newUserEmail())
-      ? this.errors['userEmailInvalid']
-      : ''
-    );
-  }
-
-  private checkNewUserEmailUniqueness(): void {
-    this.newUserEmailError.set(
-      this.users()
-        .some(u => u.email === this.newUserEmail())
-          ? this.errors['userEmailExists']
-          : ''
-    );
-  }
-
   checkUserName(): void {
     this.userNameError.set('');
   }
@@ -1185,7 +1264,6 @@ export class DashboardService {
   private checkUserEmailUniqueness(): void {
     this.userEmailError.set(
       this.users()
-        .filter(u => u._id !== this.selectedUser()?._id)
         .some(u => u.email === this.userEmail())
           ? this.errors['userEmailExists']
           : ''
@@ -1213,7 +1291,7 @@ export class DashboardService {
     const dashboardPage = this.dashboardPage();
 
     const el = (event.target as HTMLElement);
-    if (el.tagName === 'INPUT') {
+    if (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA') {
       if (key !== 'Escape') return;
       focusMainWrapper();
       return;

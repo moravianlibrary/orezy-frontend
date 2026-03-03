@@ -1,6 +1,6 @@
-@import "overlayscrollbars/styles/overlayscrollbars.css";
+@import 'overlayscrollbars/styles/overlayscrollbars.css';
 
-@mixin font($font-weight, $font-size, $line-height, $color, $letter-spacing: 0%) {
+@mixin font($font-weight, $font-size, $line-height, $color: var(--text-base), $letter-spacing: 0%) {
   font-family: 'IBM Plex Sans', sans-serif;
   letter-spacing: $letter-spacing;
   font-weight: $font-weight;
@@ -21,8 +21,9 @@
   --bg-destructive: #FF3A30;
   --border-color: #DFE5EC;
   --border-light: #EFF2F5;
-  --border-tertiary-color: #BFCCD9;
   --border-tertiary-pressed: #8099B3;
+  --border-tertiary-color: #BFCCD9;
+  --border-tertiary-hover: #9FB2C6;
   --text-base: #0A0D10;
   --text-secondary: #263340;
   --text-tertiary: #394C60;
@@ -30,6 +31,7 @@
   --text-destructive-disabled: #9FB2C6;
   --text-light: #4C6580;
   --text-white: #FFFFFF;
+  --text-bright: #8099B3;
   --text-disabled: #BFCCD9;
   --text-label-bright: #9FB2C6;
   --icon-black: #0A0D10;
@@ -51,6 +53,8 @@
   --font-size-x2: 16px;
   --font-size-x2-5: 18px;
   --font-size-x3: 20px;
+  --spacing-x0-5: 2px;
+  --spacing-x0-7-5: 3px;
   --spacing-x1: 4px;
   --spacing-x1-5: 6px;
   --spacing-x2: 8px;
@@ -136,11 +140,12 @@ html, body {
 
 .with-icon {
   padding: var(--spacing-x2) var(--spacing-x6) var(--spacing-x2) var(--spacing-x4);
+  gap: var(--spacing-x2);
 }
 
 .primary {
   background-color: var(--primary);
-  @include font(450, var(font-size-x2), var(--spacing-x6), var(--text-white));
+  @include font(400, var(--font-size-x2), var(--spacing-x6), var(--text-white));
 
   svg {
     fill: var(--icon-white);
@@ -160,6 +165,7 @@ html, body {
 .tertiary {
   background-color: var(--bg-base);
   border: 1px solid var(--border-tertiary-color);
+  font-size: var(--font-size-x2);
   color: var(--text-tertiary);
 
   svg {
@@ -194,7 +200,7 @@ html, body {
 }
 
 .primary.soft {
-  @include font(500, var(--font-size-x1-5), var(--spacing-x4), var(--primary));
+  @include font(450, var(--font-size-x2), var(--spacing-x6), var(--primary));
   background-color: var(--bg-selected);
 
   svg {
@@ -316,7 +322,6 @@ html, body {
     content: "";
     width: 16px;
     height: 16px;
-    box-sizing: border-box;
     border-radius: 999px;
     border: 1px solid #BFCCD9;
     background: transparent;

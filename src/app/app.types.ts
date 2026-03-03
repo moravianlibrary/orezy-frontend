@@ -185,7 +185,9 @@ export interface DrawerButton {
 }
 
 // Dialog
-export type DialogContentType = 'settings' | 'shortcuts' | 'new-group' | 'new-title' | 'new-user' | 'new-password';
+export type DialogContentType = 'settings' | 'shortcuts' |
+  'new-group' | 'new-title' | 'new-user' | 'new-password' |
+  'edit-group' | 'edit-title' | 'edit-user' | 'edit-password';
 export interface DialogButton {
   label: string;
   primary?: boolean;

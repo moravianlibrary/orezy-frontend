@@ -1,5 +1,5 @@
 import { Component, inject } from '@angular/core';
-import { LeftPanelComponent } from '../../layout-dashboard/left-panel/left-panel.component';
+import { TopPanelComponent } from '../../layout-dashboard/top-panel/top-panel.component';
 import { MainComponent } from '../../layout-dashboard/main/main.component';
 import { DrawerComponent } from '../../components/drawer/drawer.component';
 import { DashboardService } from '../../services/dashboard.service';
@@ -10,7 +10,7 @@ import { UiService } from '../../services/ui.service';
 
 @Component({
   selector: 'app-dashboard',
-  imports: [LeftPanelComponent, MainComponent, DrawerComponent, DialogComponent],
+  imports: [TopPanelComponent, MainComponent, DrawerComponent, DialogComponent],
   templateUrl: './dashboard.component.html',
   styleUrl: './dashboard.component.scss'
 })

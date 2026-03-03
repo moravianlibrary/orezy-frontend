@@ -36,22 +36,15 @@ export class DrawerComponent {
     this.copiedTimers[key] = window.setTimeout(() => this.copied[key] = false, 1200);
   }
 
-  openEditMode(): void {
-    this.uiSvc.drawerEditMode.set(true)
+  drawerEditAction(): void {
     const dashSvc = this.dashSvc;
-
-    if (dashSvc.dashboardPage() === 'groups') {
-      dashSvc.fetchModels().pipe(
-        catchError(err => {
-          this.uiSvc.showToast('Nepodařilo se načíst dostupné AI modely. Zkuste panel zavřít a znovu otevřít.', { type: 'error' });
-          console.error(err);
-          throw err;
-        })
-      ).subscribe((res: Models) => {
-        dashSvc.availableModels.set(res.available_models.map(m => ({ value: m, label: m })));
-        dashSvc.selectedModel.set(dashSvc.selectedGroupDetail()?.default_model ?? res.available_models[0]);
-        dashSvc.selectedModelUsed.set(false);
-      });
+    switch (dashSvc.dashboardPage()) {
+      case 'groups':
+        dashSvc.editGroupDialog();
+        break;
+      case 'users':
+        dashSvc.editUserDialog();
+        break;
     }
   }
 
@@ -61,9 +54,9 @@ export class DrawerComponent {
       case 'groups':
         dashSvc.deleteGroupDialog();
         break;
-      case 'titles':
-        dashSvc.deleteTitleDialog();
-        break;
+      // case 'titles':
+      //   dashSvc.deleteTitleDialog();
+      //   break;
       case 'users':
         dashSvc.deleteUserDialog();
         break;

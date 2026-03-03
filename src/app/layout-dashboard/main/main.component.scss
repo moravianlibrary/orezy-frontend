@@ -1,20 +1,12 @@
-@mixin font($font-weight, $font-size, $line-height, $color) {
-  font-family: 'IBM Plex Sans', sans-serif;
-  letter-spacing: 0%;
-  font-weight: $font-weight;
-  font-size: $font-size;
-  line-height: $line-height;
-  color: $color;
-}
+@use '../../../styles' as styles;
 
 :host {
   position: relative;
   display: flex;
   flex-direction: column;
-  height: 100%;
+  height: calc(100% - 58px);
   width: 100%;
-  max-width: calc(100dvw - 250px);
-  background-color: var(--bg-main-light);
+  background-color: var(--bg-bright);
 
   .tooltip {
     position: absolute;
@@ -23,7 +15,7 @@
     border: 1px solid var(--border-light);
     background-color: var(--bg-base);
     box-shadow: 0 2px var(--spacing-x4) 2px #00000014;
-    @include font(400, var(--font-size-x1), var(--spacing-x4), var(--text-base));
+    @include styles.font(400, var(--font-size-x1), var(--spacing-x4), var(--text-base));
     white-space: nowrap;
 
     z-index: 515;
@@ -42,7 +34,7 @@
   padding: var(--spacing-x3) var(--spacing-x4);
   background-color: var(--bg-base);
   border: 1px solid var(--primary);
-  border-radius: var(--spacing-x1);
+  border-radius: var(--spacing-x2);
   box-shadow: 0 2px var(--spacing-x4) 2px #00000014;
 
   label {
@@ -54,28 +46,6 @@
     &:last-child {
       margin-bottom: 0;
     }
-  }
-}
-
-.top-panel {
-  display: flex;
-  align-items: center;
-  gap: var(--spacing-x3);
-  padding: var(--spacing-x3) var(--spacing-x4);
-  background-color: var(--bg-base);
-  border-left: 1px solid var(--border-light);
-  z-index: 510;
-
-  svg {
-    fill: var(--icon-dark);
-
-    &:hover {
-      cursor: url('../../../assets/pointer-cursor.png') 6.5 0, pointer;
-    }
-  }
-
-  h1 {
-    @include font(500, var(--font-size-x3), var(--spacing-x8), var(--text-base));
   }
 }
 
@@ -96,7 +66,7 @@
     .left-part {
       display: flex;
       align-items: center;
-      gap: var(--spacing-x2);
+      gap: var(--spacing-x4);
       z-index: 510; // On click don't close drawer
     }
 
@@ -117,11 +87,11 @@
       input {
         background-color: var(--bg-base);
         padding: var(--spacing-x2) var(--spacing-x4) var(--spacing-x2) 44px;
-        width: 280px;
+        width: 340px;
         height: 40px;
         border: 1px solid var(--border-tertiary-color);
-        border-radius: var(--spacing-x1);
-        @include font(400, var(--font-size-x2), var(--spacing-x6), var(--text-base));
+        border-radius: var(--spacing-x2);
+        @include styles.font(400, var(--font-size-x2), var(--spacing-x6), var(--text-base));
 
         &:focus {
           border-color: var(--primary);
@@ -129,13 +99,13 @@
         }
         
         &::placeholder {
-          @include font(400, var(--font-size-x2), var(--spacing-x6), var(--text-label-bright));
+          @include styles.font(400, var(--font-size-x2), var(--spacing-x6), var(--text-bright));
         }
       }
     }
 
     .total {
-      @include font(400, var(--font-size-x1-5), var(--spacing-x5), var(--text-light));
+      @include styles.font(400, var(--font-size-x2), var(--spacing-x6), var(--text-light));
     }
   }
 
@@ -150,18 +120,21 @@
       flex-direction: column;
       overflow-x: auto;
       scrollbar-width: none;
+      border-radius: var(--spacing-x2) var(--spacing-x2) 0 0;
       
 
       .table-body-y-scroll, table {
         width: max-content;
         min-width: 100%;
         table-layout: auto;
+        background-color: var(--bg-base);
       }
     }
 
     .table-body-y-scroll {
       overflow-x: hidden;
       overflow-y: auto;
+      border-radius: 0 0 var(--spacing-x2) var(--spacing-x2);
     }
 
     table {
@@ -173,22 +146,22 @@
           background-color: var(--border-color);
 
           th {
-            @include font(500, var(--font-size-x1-5), var(--spacing-x4), var(--text-base));
+            @include styles.font(500, var(--font-size-x1-5), var(--spacing-x4), var(--text-base));
             text-align: left;
             padding-block: var(--spacing-x2);
             background-color: var(--border-color);
 
             &:first-child {
-              border-radius: var(--spacing-x1) 0 0 0;
+              border-radius: var(--spacing-x2) 0 0 0;
             }
 
             &:last-child {
-              border-radius: 0 var(--spacing-x1) 0 0;
+              border-radius: 0 var(--spacing-x2) 0 0;
             }
           }
 
           .state-dropdown-title {
-            @include font(500, var(--font-size-x1-5), var(--spacing-x4), var(--text-base));
+            @include styles.font(500, var(--font-size-x1-5), var(--spacing-x4), var(--text-base));
             display: inline-flex;
             align-items: center;
             gap: var(--spacing-x2);
@@ -220,30 +193,30 @@
 
         tr {
           background-color: var(--bg-base);
-          border-bottom: 1px solid var(--border-light);
 
           &:last-child {
             td:first-child {
-              border-radius: 0 0 0 var(--spacing-x1);
+              border-radius: 0 0 0 var(--spacing-x2);
             }
 
             td:last-child {
-              border-radius: 0 0 var(--spacing-x1) 0;
+              border-radius: 0 0 var(--spacing-x2) 0;
             }
           }
 
-          &:not(:last-child) {
+          &:not(:first-child) {
             td {
-              border-bottom: 1px solid var(--border-light);
+              border-top: 1px solid var(--border-light);
             }
           }
 
           &.active {
             outline: 1px solid var(--primary);
             outline-offset: -1px;
+            border-radius: var(--spacing-x2);
 
             &:last-child {
-              border-radius: 0 0 var(--spacing-x1) var(--spacing-x1);
+              border-radius: var(--spacing-x2);
             }
             
             &:first-child, &:nth-child(2) {
@@ -252,81 +225,108 @@
           }
 
           td {
-            @include font(400, var(--font-size-x1-5), var(--spacing-x5), var(--text-base));
-            padding-block: var(--spacing-x3);
+            @include styles.font(400, var(--font-size-x1-5), var(--spacing-x5), var(--text-base));
+            padding-block: var(--spacing-x2);
+
+            .user-name {
+              display: flex;
+              align-items: center;
+              gap: var(--spacing-x2);
+              @include styles.font(400, var(--font-size-x1-5), var(--spacing-x5), var(--text-base));
+
+              svg {
+                fill: var(--primary);
+              }
+            }
+
+            .tags {
+              display: flex;
+              align-items: center;
+              gap: var(--spacing-x2);
+              width: fit-content;
+            }
 
             .tag {
               display: flex;
-              gap: var(--spacing-x2);
+              justify-content: center;
+              align-items: center;
+              gap: var(--spacing-x1);
               width: fit-content;
-              @include font(500, var(--font-size-x1-5), var(--spacing-x4), var(--text-base));
               border-radius: var(--spacing-x1);
-              padding: var(--spacing-x1) var(--spacing-x2);
-
-              .tag-label {
-                @include font(500, var(--font-size-x1-5), var(--spacing-x4), var(--text-base));
-              }
-
-              svg {
-                background-color: transparent;
-              }
+              padding-inline: var(--spacing-x2);
             }
 
-            .common {
+            .title-count {
+              padding-block: var(--spacing-x1);
+              background-color: var(--bg-bright);
+              @include styles.font(400, var(--font-size-x2), var(--spacing-x4), var(--text-base));
+            }
+
+            .user {
+              padding-block: var(--spacing-x0-5);
+              background-color: var(--bg-bright);
+              @include styles.font(400, var(--font-size-x1-5), var(--spacing-x5), var(--text-base));
+            }
+
+            .count {
+              padding-block: var(--spacing-x0-7-5);
               border: 1px solid var(--border-color);
+              @include styles.font(500, var(--font-size-x1-5), var(--spacing-x4), var(--text-base));
             }
 
-            .combined {
-              fill: #6D3FA3;
-              color: #2E0F4F;
-              background-color: #8E44AD1A;
-              .tag-label { color: inherit; }
+            .permission {
+              padding-block: var(--spacing-x1);
+              @include styles.font(500, var(--font-size-x1-5), var(--spacing-x4), var(--text-base));
+            }
+
+            .state {
+              @include styles.font(500, var(--font-size-x1-5), var(--spacing-x4), var(--text-base));
+              padding: var(--spacing-x1) var(--spacing-x2);
             }
 
             .info {
-              fill: #0C3D77;
               color: #08203C;
               background-color: #007BFF1A;
-              .tag-label { color: inherit; }
+
+              svg {
+                fill: #0C3D77;
+              }
             }
 
             .success {
-              fill: #3F764D;
               color: #00310D;
               background-color: #34C7591A;
-              .tag-label { color: inherit; }
+
+              svg {
+                fill: #3F764D;
+              }
             }
             
             .pending {
-              fill: #775A32;
               color: #362000;
               background-color: #FF95001A;
-              .tag-label { color: inherit; }
+
+              svg {
+                fill: #775A32;
+              }
             }
 
             .error {
-              fill: #853D38;
               color: #390400;
               background-color: #FF3A301A;
-              .tag-label { color: inherit; }
+
+              svg {
+                fill: #853D38;
+              }
             }
 
             .date {
-              @include font(400, var(--font-size-x1-5), var(--spacing-x5), var(--text-base));
+              @include styles.font(400, var(--font-size-x1-5), var(--spacing-x5), var(--text-base));
             }
 
             .time {
-              @include font(400, var(--font-size-x1-5), var(--spacing-x5), var(--text-light));
+              @include styles.font(400, var(--font-size-x1-5), var(--spacing-x5), var(--text-light));
             }
-          }
-
-          .title-id {
-            @include font(400, var(--font-size-x1-5), var(--spacing-x5), var(--text-light));
-          }
-
-          .tags {
-            display: flex;
-            gap: var(--spacing-x2);
           }
         }
 
@@ -345,105 +345,59 @@
           overflow-x: hidden;
           text-overflow: ellipsis;
           white-space: nowrap;
-          padding-inline: var(--spacing-x2);
+          padding-inline: var(--spacing-x3-5);
 
           &:first-child {
-            padding-inline: var(--spacing-x6) var(--spacing-x2);
+            padding-inline: var(--spacing-x6) var(--spacing-x3-5);
           }
 
           &:last-child {
-            padding-inline: var(--spacing-x2) var(--spacing-x6);
+            padding-inline: var(--spacing-x3-5) var(--spacing-x6);
           }
         }
       }
 
-      // Action butons
+      // Action buttons
       tbody {
-        tr {
-          position: relative;
-        }
-
-        td.row-actions-cell {
-          width: 0;
-          padding: 0;
-          border: 0;
-        }
-
-        /* the overlay */
-        .row-actions {
-          position: absolute;
-          top: 50%;
-          right: 1px;
-          transform: translateY(-50%);
-          transition: right .3s ease-out;
-
+        .actions {
           display: flex;
           align-items: center;
+          gap: var(--spacing-x2);
 
-          border-radius: var(--spacing-x1);
+          .action {
+            width: var(--spacing-x8);
+            height: var(--spacing-x8);
+            padding: var(--spacing-x2);
 
-          opacity: 0;
-          pointer-events: none;
+            &:hover {
+              border-color: var(--border-tertiary-hover);
+              outline: 5px solid var(--border-light);
 
-          .empty-space {
-            width: var(--spacing-x4);
-            height: var(--spacing-x9);
-            color: transparent;
-          }
-        }
-
-        /* show on hover */
-        tr:hover .row-actions {
-          opacity: 1;
-          pointer-events: auto;
-        }
-
-        .icon-btn {
-          width: var(--spacing-x10);
-          height: var(--spacing-x9);
-          border: 0;
-          border-radius: var(--spacing-x1);
-          cursor: url('../../../assets/pointer-cursor.png') 6.5 0, pointer;
-
-          display: inline-flex;
-          align-items: center;
-          justify-content: center;
-
-          svg {
-            fill: var(--icon-dark);
+              svg {
+                fill: var(--primary);
+              }
+            }
           }
         }
       }
 
-      .clickable:hover {
+      .clickable:hover:not(:has(.action:hover)) {
         cursor: url('../../../assets/pointer-cursor.png') 6.5 0, pointer;
-        // background-color: #8099B30D;
-        background-color: #EEF1F4;
-        outline: 1px solid var(--primary);
-        outline-offset: -1px;
+        background-color: #F9FAFB;
+        position: relative;
+        z-index: 512;
+        box-shadow: 0px 0px 12px 2px #0000000A, 0px 0px 4px 0px #00000005;
 
         &:last-child {
-          border-radius: 0 0 var(--spacing-x1) var(--spacing-x1);
+          border-radius: 0 0 var(--spacing-x2) var(--spacing-x2);
         }
 
         td {
-          &:nth-last-child(3) {
-            border-right: 1px solid var(--primary);
-          }
+          border-bottom: 1px solid var(--border-light);
         }
 
-        .no-border-right {
-          border-right-width: 0px !important;
-        }
-
-        .row-actions {
-          .empty-space.gradient {
-            background: linear-gradient(to left, #EEF1F4, transparent);
-          }
-
-          .empty-space.fill, .empty-space.last {
-            background: #EEF1F4;
-          }
+        + tr td {
+          border-top: none;
         }
 
         .icon-btn {
@@ -456,16 +410,6 @@
       }
 
       &:not(.clickable):hover {
-        .row-actions {
-          .empty-space.gradient {
-            background: linear-gradient(to left, var(--bg-base), transparent);
-          }
-
-          .empty-space.fill, .empty-space.last {
-            background: var(--bg-base);
-          }
-        }
-
         .icon-btn {
           background: var(--bg-base);
 

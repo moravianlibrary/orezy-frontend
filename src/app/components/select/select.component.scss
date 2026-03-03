@@ -1,11 +1,4 @@
-@mixin font($font-weight, $font-size, $line-height, $color) {
-  font-family: 'IBM Plex Sans', sans-serif;
-  letter-spacing: 0%;
-  font-weight: $font-weight;
-  font-size: $font-size;
-  line-height: $line-height;
-  color: $color;
-}
+@use '../../../styles' as styles;
 
 :host {
   display: inline-block;
@@ -18,9 +11,9 @@
 
 .trigger {
   height: 40px;
-  width: 280px;
+  width: 326px;
   border: 1px solid var(--border-tertiary-color);
-  border-radius: var(--spacing-x1);
+  border-radius: var(--spacing-x2);
   background: var(--bg-base);
   display: flex;
   align-items: center;
@@ -52,10 +45,10 @@
   flex: 1;
   min-width: 0;
   background: transparent;
-  @include font(500, var(--font-size-x1-5), var(--spacing-x4), var(--text-label-bright));
+  @include styles.font(400, var(--font-size-x2), var(--spacing-x6), var(--text-bright));
 
   &::placeholder {
-    @include font(400, var(--font-size-x1-5), var(--spacing-x4), var(--text-label-bright));
+    @include styles.font(400, var(--font-size-x2), var(--spacing-x6), var(--text-bright));
   }
 }
 
@@ -83,7 +76,7 @@
   width: 100%;
   background: var(--bg-base);
   border: 1px solid var(--primary);;
-  border-radius: var(--spacing-x1);
+  border-radius: var(--spacing-x2);
   overflow: hidden;
   z-index: 20;
 }
@@ -113,7 +106,7 @@
   }
 
   .label {
-    @include font(500, var(--font-size-x1-5), var(--spacing-x4), var(--text-secondary));
+    @include styles.font(400, var(--font-size-x2), var(--spacing-x6), var(--text-secondary));
   }
 
   svg {
@@ -123,7 +116,7 @@
 
 .empty {
   padding: var(--spacing-x3) var(--spacing-x4);
-  @include font(400, var(--font-size-x1-5), var(--spacing-x4), var(--text-label-bright));
+  @include styles.font(400, var(--font-size-x2), var(--spacing-x6), var(--text-label-bright));
 }
 
 .check {

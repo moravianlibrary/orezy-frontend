@@ -1,11 +1,4 @@
-@mixin font($font-weight, $font-size, $line-height, $color) {
-  font-family: 'IBM Plex Sans', sans-serif;
-  letter-spacing: 0%;
-  font-weight: $font-weight;
-  font-size: $font-size;
-  line-height: $line-height;
-  color: $color;
-}
+@use '../../../styles' as styles;
 
 :host {
   display: flex;
@@ -19,7 +12,7 @@
 }
 
 h1 {
-  @include font(500, var(--font-size-x3), var(--spacing-x8), var(--text-base));
+  @include styles.font(500, var(--font-size-x3), var(--spacing-x8), var(--text-base));
 }
 
 .inputs {
@@ -28,7 +21,7 @@ h1 {
   gap: var(--spacing-x6);
 
   label {
-    @include font(400, var(--font-size-x1), var(--spacing-x5), var(--text-light));
+    @include styles.font(400, var(--font-size-x1), var(--spacing-x5), var(--text-light));
     display: flex;
     flex-direction: column;
     gap: var(--spacing-x2);
@@ -38,7 +31,7 @@ h1 {
       padding: var(--spacing-x3) var(--spacing-x4);
       width: 300px;
       border: 1px solid var(--border-tertiary-color);
-      border-radius: var(--spacing-x1);
+      border-radius: var(--spacing-x2);
 
       &:focus {
         border-color: var(--primary);
@@ -59,13 +52,13 @@ h1 {
 }
 
 .error {
-  @include font(500, var(--font-size-x1-5), var(--spacing-x5), var(--text-secondary));
+  @include styles.font(500, var(--font-size-x1-5), var(--spacing-x5), var(--text-secondary));
   display: flex;
   align-items: center;
   gap: var(--spacing-x2);
   width: 300px;
   padding: var(--spacing-x3-5) var(--spacing-x3);
-  border-radius: var(--spacing-x1);
+  border-radius: var(--spacing-x2);
   border: 1px solid var(--status-icon-error);
   background-color: var(--bg-color-error);
 
