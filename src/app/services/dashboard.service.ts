@@ -363,11 +363,7 @@ export class DashboardService {
                 modified_at: now,
                 title_count: 0,
                 permissions: permissions,
-                users: [{
-                  _id: user?._id ?? '',
-                  full_name: user?.full_name ?? '',
-                  permission: permissions
-                }, ...this.membersAddedWithFullname()]
+                users: this.membersAddedWithFullname()
               };
 
               this.searchGroups.set('');
