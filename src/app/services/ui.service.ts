@@ -8,7 +8,6 @@ import { OverlayScrollbars } from 'overlayscrollbars';
 })
 export class UiService {
   private osInstance?: ReturnType<typeof OverlayScrollbars>;
-  private osInstance2?: ReturnType<typeof OverlayScrollbars>;
 
 
   /* ------------------------------
@@ -73,6 +72,8 @@ export class UiService {
   dialogContentType = signal<DialogContentType | null>(null);
   dialogDescription = signal<string | null>(null);
   dialogButtons = signal<DialogButton[]>([]);
+  confirmBtnDisabled = signal<boolean>(false);
+  confirmBtnDisabledTimer!: number; 
   
   async openDialog(): Promise<void> {
     this.dialogOpen.set(true);
@@ -92,7 +93,7 @@ export class UiService {
     dialogBody.classList.remove('os-pending');
     if (document.activeElement?.className !== 'main-wrapper') focusMainWrapper();
 
-    if (this.dialogContentType()?.includes('group')) {
+    // if (this.dialogContentType()?.includes('group')) {
       // const groupDescription = await waitForElement('.group-description-wrap');
       // this.osInstance2 = OverlayScrollbars(groupDescription, {
       //   overflow: { x: 'hidden', y: 'scroll' },
@@ -105,13 +106,12 @@ export class UiService {
       //   },
       // });
       // groupDescription.classList.remove('os-pending');
-    }
+    // }
   }
 
   closeDialog(): void {
     this.dialogOpen.set(false);
     this.dialogOpened = false;
-    defer(() => this.dialogWidth.set(null), 300);
   }
 
 

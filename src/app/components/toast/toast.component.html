@@ -5,7 +5,7 @@
       [ngClass]="'toast--' + (t.type ?? 'info')"
       role="status"
     >
-      <div class="toast__msg">{{ t.message }}</div>
+      <div class="toast__msg" [innerText]="t.message"></div>
       <button
         type="button"
         class="toast__close"

@@ -116,7 +116,7 @@
 
 .empty {
   padding: var(--spacing-x3) var(--spacing-x4);
-  @include styles.font(400, var(--font-size-x2), var(--spacing-x6), var(--text-label-bright));
+  @include styles.font(400, var(--font-size-x2), var(--spacing-x6), var(--text-bright));
 }
 
 .check {

@@ -81,9 +81,6 @@ export class MainComponent {
                   
                   this.authSvc.canReadTitle.set(false);
                   if (this.authSvc.user()?.permissions.find(group => group.group_id === group_id && group.permission.includes('read_title'))) this.authSvc.canReadTitle.set(true);
-                  
-                  clearTimeout(this.timerTooltip);
-                  this.visibleTooltip = false;
                 }),
                 catchError(err => {
                   err.status === 403
@@ -204,39 +201,6 @@ export class MainComponent {
 
   shouldHaveLink(state: string): boolean {
     return ['ready', 'user_approved', 'completed'].includes(state);
-  }
-
-  // Hover
-  visibleTooltip = false;
-  positionTooltip: Position = { x: 0, y: 0 };
-  private timerTooltip: any;
-
-  showTooltip(event: MouseEvent, isClickable: boolean): void {
-    this.clearTimerTooltip();
-    if (!isClickable) return;
-
-    this.timerTooltip = setTimeout(() => {
-      this.visibleTooltip = true;
-      this.updatePosition(event);
-    }, 500);
-  }
-
-  onActionsHover(event: MouseEvent): void {
-    event.stopPropagation();
-    this.clearTimerTooltip();
-    this.visibleTooltip = false;
-  }
-
-  clearTimerTooltip(): void {
-    clearTimeout(this.timerTooltip);
-    this.visibleTooltip = false;
-  }
-
-  private updatePosition(event: MouseEvent): void {
-    this.positionTooltip = {
-      x: event.clientX + 12,
-      y: event.clientY + 12
-    };
   }
 
   // State filter

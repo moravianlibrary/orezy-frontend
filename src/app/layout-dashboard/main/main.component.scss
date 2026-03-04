@@ -1,32 +1,11 @@
 @use '../../../styles' as styles;
 
 :host {
-  position: relative;
   display: flex;
   flex-direction: column;
   height: calc(100% - 58px);
   width: 100%;
   background-color: var(--bg-bright);
-
-  .tooltip {
-    position: absolute;
-    padding: var(--spacing-x2) var(--spacing-x3);
-    border-radius: var(--spacing-x1);
-    border: 1px solid var(--border-light);
-    background-color: var(--bg-base);
-    box-shadow: 0 2px var(--spacing-x4) 2px #00000014;
-    @include styles.font(400, var(--font-size-x1), var(--spacing-x4), var(--text-base));
-    white-space: nowrap;
-
-    z-index: 515;
-    opacity: 0;
-    pointer-events: none;
-    transition: opacity .12s ease;
-  }
-
-  .tooltip.show {
-    opacity: 1;
-  }
 }
 
 ::ng-deep .state-dropdown {
@@ -164,19 +143,33 @@
             @include styles.font(500, var(--font-size-x1-5), var(--spacing-x4), var(--text-base));
             display: inline-flex;
             align-items: center;
-            gap: var(--spacing-x2);
+            gap: var(--spacing-x1);
             cursor: url('../../../assets/pointer-cursor.png') 6.5 0, pointer;
             user-select: none;
           }
 
-          .chevron {
-            font-size: 10px;
-            transition: transform 0.2s ease;
-            fill: var(--primary);
-          }
+          .state-icon-wrapper {
+            position: relative;
+            display: flex;
+            justify-content: center;
+            align-items: center;
 
-          .chevron.open {
-            transform: rotate(180deg);
+            .state-icon {
+              font-size: 10px;
+              transition: transform 0.2s ease;
+              fill: var(--primary);
+            }
+
+            .active {
+              position: absolute;
+              top: 0;
+              right: 0;
+              width: 5px;
+              height: 5px;
+              border-radius: 50%;
+              outline: 1px solid var(--border-light);
+              background-color: var(--status-icon-success);
+            }
           }
         }
       }
@@ -359,29 +352,40 @@
 
       // Action buttons
       tbody {
+        .actions-cell {
+          padding: 0 var(--spacing-x2-5) 0 var(--spacing-x5) !important;
+        }
+
         .actions {
           display: flex;
           align-items: center;
-          gap: var(--spacing-x2);
+
+          .action-wrapper {
+            padding: var(--spacing-x2) var(--spacing-x1);
+
+            &:hover {
+              cursor: url('../../../assets/pointer-cursor.png') 6.5 0, pointer;
+
+              .action {
+                border-color: var(--border-tertiary-hover);
+                outline: 5px solid var(--border-light);
+
+                svg {
+                  fill: var(--primary);
+                }
+              }
+            }
+          }
 
           .action {
             width: var(--spacing-x8);
             height: var(--spacing-x8);
             padding: var(--spacing-x2);
-
-            &:hover {
-              border-color: var(--border-tertiary-hover);
-              outline: 5px solid var(--border-light);
-
-              svg {
-                fill: var(--primary);
-              }
-            }
           }
         }
       }
 
-      .clickable:hover:not(:has(.action:hover)) {
+      .clickable:hover:not(:has(.action-wrapper:hover)) {
         cursor: url('../../../assets/pointer-cursor.png') 6.5 0, pointer;
         background-color: #F9FAFB;
         position: relative;

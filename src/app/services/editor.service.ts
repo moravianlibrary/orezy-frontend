@@ -154,6 +154,7 @@ export class EditorService {
     API ACTIONS
   ------------------------------ */
   saveChanges(): void {
+    if (!this.authSvc.canWriteTitle()) return;
     if (this.pageWasEdited) this.updateCurrentPagesWithEdited();
     if (this.imgWasEdited()) this.updateImagesByEdited(this.mainImageItem()._id);
     this.selectedPage = null;
@@ -1171,6 +1172,7 @@ export class EditorService {
   openSettingsDialog(): void {
     const uiSvc = this.uiSvc;
     
+    uiSvc.dialogWidth.set(593);
     uiSvc.dialogTitle.set('Nastavení');
     uiSvc.dialogContent.set(true);
     uiSvc.dialogContentType.set('settings');
@@ -1232,6 +1234,7 @@ export class EditorService {
   openShortcutsDialog(): void {
     const uiSvc = this.uiSvc;
 
+    uiSvc.dialogWidth.set(593);
     uiSvc.dialogTitle.set('Klávesové zkratky');
     uiSvc.dialogContent.set(true);
     uiSvc.dialogContentType.set('shortcuts');
@@ -1245,6 +1248,7 @@ export class EditorService {
     if (!this.authSvc.canWriteTitle()) return;
     const uiSvc = this.uiSvc;
     
+    uiSvc.dialogWidth.set(593);
     uiSvc.dialogTitle.set('Opravdu chcete resetovat změny dokumentu?');
     uiSvc.dialogContent.set(false);
     uiSvc.dialogContentType.set(null);
@@ -1269,6 +1273,7 @@ export class EditorService {
     if (!this.authSvc.canWriteTitle()) return;
     const uiSvc = this.uiSvc;
 
+    uiSvc.dialogWidth.set(593);
     uiSvc.dialogTitle.set('Opravdu chcete resetovat změny skenu?');
     uiSvc.dialogContent.set(false);
     uiSvc.dialogContentType.set(null);
@@ -1293,6 +1298,7 @@ export class EditorService {
     if (!this.authSvc.canWriteTitle()) return;
     const uiSvc = this.uiSvc;
     
+    uiSvc.dialogWidth.set(593);
     uiSvc.dialogTitle.set('Opravdu chcete uložit změny?');
     uiSvc.dialogContent.set(false);
     uiSvc.dialogContentType.set(null);

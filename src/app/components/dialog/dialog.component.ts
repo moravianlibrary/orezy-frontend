@@ -26,12 +26,10 @@ export class DialogComponent {
   closed = output<void>();
   backdropClick = output<void>();
 
-  @ViewChild('newNameLabel', { static: false }) newNameLabel!: ElementRef<HTMLElement>;
-
   autoFocus = effect(async () => {
     const open = this.open();
     if (open && this.uiSvc.dialogContent() && !['shortcuts', 'settings', 'new-password', 'edit-password'].includes(this.uiSvc.dialogContentType() ?? '')) {
-      const el = await waitForElement('input:first-of-type', this.newNameLabel.nativeElement);
+      const el = await waitForElement('input:first-of-type', document.querySelector('app-dialog') as HTMLElement); 
       focusElement(el, 100);
     }
   });
@@ -70,4 +68,14 @@ export class DialogComponent {
     const edtSvc = this.edtSvc;
     if (this.uiSvc.dialogTitle() === 'Nastavení') this.edtSvc.gridRadio.set(edtSvc.gridMode());
   }
+
+  // onGroupDescriptionInput(): void {
+  //   const groupDescription = this.dashSvc.groupDescription();
+  //   if (groupDescription.length > 40) {
+  //     this.dashSvc.groupDescriptionError.set('Popis nesmí být delší než 40 znaků.');
+  //     this.dashSvc.groupDescription.set('groupDescription.slice(0,40)');
+  //   } else {
+  //     this.dashSvc.groupDescriptionError.set('');
+  //   }
+  // }
 }

@@ -33,6 +33,7 @@ export class DashboardService {
   selectedUserId = signal<string>('');
   selectedUserUsed = signal<boolean>(false);
   groupNameError = signal<string>('');
+  // groupDescriptionError = signal<string>('');
   selectedUserError = signal<string>('');
   userPermissionsError: Record<string, string> = {};
   groupChanged = computed<boolean>(() => {
@@ -128,11 +129,19 @@ export class DashboardService {
     const user = this.selectedUser();
     if (!user) return false;
 
-    const fullnameChanged = user.full_name !== this.userFullname();
-    const emailChanged = user.email !== this.userEmail();
+    const userNonmembersDataChanged = this.userNonmembersDataChanged();
     const permissionsChanged = user.permissions !== this.userPermissions();
 
-    return fullnameChanged || emailChanged || permissionsChanged;
+    return userNonmembersDataChanged || permissionsChanged;
+  });
+  userNonmembersDataChanged = computed<boolean>(() => {
+    const user = this.selectedUser();
+    if (!user) return false;
+
+    const fullnameChanged = user.full_name !== this.userFullname();
+    const emailChanged = user.email !== this.userEmail();
+
+    return fullnameChanged || emailChanged;
   });
 
 
@@ -416,7 +425,7 @@ export class DashboardService {
     const group = this.selectedGroupDetail();
     if (!group) return;
     
-    uiSvc.dialogWidth.set(476);
+    uiSvc.dialogWidth.set(360);
     uiSvc.dialogTitle.set('Úprava skupiny');
     uiSvc.dialogContent.set(true);
     uiSvc.dialogContentType.set('edit-group');
@@ -426,6 +435,11 @@ export class DashboardService {
         label: 'Upravit',
         primary: true,
         action: () => {
+          if (!this.groupNonmembersDataChanged()) {
+            uiSvc.closeDialog();
+            return;
+          }
+
           const groupName = this.groupName();
 
           if (!groupName) {
@@ -435,7 +449,7 @@ export class DashboardService {
             return;
           }
 
-          if (this.groups().some(g => g.name === groupName)) {
+          if (this.groups().filter(g => g._id !== group._id).some(g => g.name === groupName)) {
             this.groupNameError.set(this.errors['groupNameExists']);
             const el = document.getElementById('group-name') as HTMLElement;
             scrollToAndFocusElement(el);
@@ -451,7 +465,7 @@ export class DashboardService {
               throw err;
             })
           ).subscribe(() => {
-            this.searchGroups.set('');
+            // this.searchGroups.set('');
             const updatedGroup = {
               ...group,
               name: this.groupName(),
@@ -489,6 +503,7 @@ export class DashboardService {
     const uiSvc = this.uiSvc;
     const group = this.selectedGroupDetail();
     
+    uiSvc.dialogWidth.set(593);
     uiSvc.dialogTitle.set('Smazat skupinu');
     uiSvc.dialogDescription.set(`Opravdu chcete smazat skupinu${' ' + group?.name}?`);
     uiSvc.dialogContent.set(false);
@@ -610,6 +625,7 @@ export class DashboardService {
   deleteTitleDialog(title: Title): void {
     const uiSvc = this.uiSvc;
     
+    uiSvc.dialogWidth.set(593);
     uiSvc.dialogTitle.set('Smazat titul');
     uiSvc.dialogDescription.set(`Opravdu chcete smazat titul${' ' + title?.external_id}?`);
     uiSvc.dialogContent.set(false);
@@ -714,13 +730,20 @@ export class DashboardService {
               this.userEmailError.set('');
               this.openUserDetail(this.selectedUser());
               
+              uiSvc.confirmBtnDisabledTimer = 0;
+              uiSvc.confirmBtnDisabled.set(true);
+              uiSvc.confirmBtnDisabledTimer = window.setTimeout(() => uiSvc.confirmBtnDisabled.set(false), 3000);
+              uiSvc.dialogWidth.set(593);
               uiSvc.dialogTitle.set('Nový uživatel');
               uiSvc.dialogContent.set(true);
               uiSvc.dialogContentType.set('new-password');
               uiSvc.dialogButtons.set([{
                 label: 'Rozumím',
                 primary: true,
-                action: () => uiSvc.closeDialog()
+                action: () => {
+                  if (uiSvc.confirmBtnDisabled()) return;
+                    uiSvc.closeDialog();
+                  }
               }]);
             }),
             catchError(err => {
@@ -769,14 +792,21 @@ export class DashboardService {
         label: 'Uložit',
         primary: true,
         action: () => {
-          if (!this.userFullname()) {
+          if (!this.userNonmembersDataChanged()) {
+            uiSvc.closeDialog();
+            return;
+          }
+
+          const userFullname = this.userFullname();
+          const userEmail = this.userEmail();
+          const selectedUser = this.selectedUser();
+          
+          if (!userFullname) {
             this.userNameError.set(this.errors['userNameEmpty']);
             const el = document.getElementById('user-fullname') as HTMLElement;
             scrollToAndFocusElement(el);
             return;
           }
-
-          const userEmail = this.userEmail();
 
           if (!userEmail) {
             this.userEmailError.set(this.errors['userEmailEmpty']);
@@ -792,32 +822,33 @@ export class DashboardService {
             return;
           }
 
-          if (this.users().some(u => u.email === this.userEmail())) {
+          if (this.users().filter(u => u._id !== selectedUser?._id).some(u => u.email === this.userEmail())) {
             this.userEmailError.set(this.errors['userEmailExists']);
             const el = document.getElementById('user-email') as HTMLElement;
             scrollToAndFocusElement(el);
             return;
           }
 
-          return this.updateUser(this.selectedUser()?._id ?? '').pipe(
+          return this.updateUser(selectedUser?._id ?? '').pipe(
             tap((res: User) => {
-              this.searchUsers.set('');
+              // this.searchUsers.set('');
               this.users.update(prev => prev.map(u => u._id === res._id ? res : u));
               this.displayedUsers.set(this.users());
-              this.selectedUser.set(null);
+              this.selectedUser.set(res);
+              uiSvc.drawerTitle.set(userFullname);
             }),
             catchError(err => {
               this.uiSvc.showToast('Nepodařilo se uložit změny. Zkuste to znovu.', { type: 'error' });
               console.error(err);
               throw err;
             })
-          ).subscribe(() => this.closeDrawer());
+          ).subscribe(() => uiSvc.closeDialog());
         }
       }
     ])
 
-    this.userFullname.set('');
-    this.userEmail.set('');
+    this.userFullname.set(this.userFullname());
+    this.userEmail.set(this.userEmail());
     this.userNameError.set('');
     this.userEmailError.set('');
     uiSvc.openDialog();
@@ -827,6 +858,7 @@ export class DashboardService {
     const uiSvc = this.uiSvc;
     const user = this.selectedUser();
     
+    uiSvc.dialogWidth.set(593);
     uiSvc.dialogTitle.set('Smazat uživatele');
     uiSvc.dialogDescription.set(`Opravdu chcete smazat uživatele${' ' + user?.full_name}?`);
     uiSvc.dialogContent.set(false);
@@ -868,6 +900,10 @@ export class DashboardService {
     ).subscribe((res: NewPassword) => {
       this.newPassword.set(res.new_password);
     
+      uiSvc.confirmBtnDisabledTimer = 0;
+      uiSvc.confirmBtnDisabled.set(true);
+      uiSvc.confirmBtnDisabledTimer = window.setTimeout(() => uiSvc.confirmBtnDisabled.set(false), 3000);
+      uiSvc.dialogWidth.set(593);
       uiSvc.dialogTitle.set('Nové heslo');
       uiSvc.dialogContent.set(true);
       uiSvc.dialogContentType.set('edit-password');
@@ -875,7 +911,10 @@ export class DashboardService {
         {
           label: 'Rozumím',
           primary: true,
-          action: () => uiSvc.closeDialog()
+          action: () => {
+            if (uiSvc.confirmBtnDisabled()) return;
+            uiSvc.closeDialog();
+          }
         }
       ])
 
@@ -1002,6 +1041,8 @@ export class DashboardService {
   }
 
   addUserToGroup(userId: string): void {
+    if (!this.availableUsers().length) return;
+    
     if (!this.selectedUserId()) {
       this.selectedUserError.set(this.errors['selectedUserEmpty']);
       return;
@@ -1229,6 +1270,7 @@ export class DashboardService {
   // Group
   checkGroupNameUniqueness(): void {
     this.groupNameError.set(this.groups()
+      .filter(g => g._id !== this.selectedGroupDetail()?._id)
       .some(g => g.name === this.groupName())
         ? this.errors['groupNameExists']
         : ''
@@ -1260,6 +1302,7 @@ export class DashboardService {
   private checkUserEmailUniqueness(): void {
     this.userEmailError.set(
       this.users()
+        .filter(u => u._id !== this.selectedUser()?._id)
         .some(u => u.email === this.userEmail())
           ? this.errors['userEmailExists']
           : ''
